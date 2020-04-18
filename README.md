@@ -1,29 +1,13 @@
-gentoo repository
+gnome-extra/gnome-shell-extension-unite-shell/gnome-shell-extension-unite-shell-9999.ebuild
 
- create mode 100644 gnome-extra/gnome-shell-extension-unite-shell/Manifest
- create mode 100644 gnome-extra/gnome-shell-extension-unite-shell/gnome-shell-extension-unite-shell-9999.ebuild
- create mode 100644 gnome-extra/gnome-shell-extension-unite-shell/metadata.xml
- create mode 100644 media-sound/mpd/Manifest
- create mode 100644 media-sound/mpd/files/mpd-0.18.conf.patch
- create mode 100644 media-sound/mpd/files/mpd-0.21.1.logrotate
- create mode 100644 media-sound/mpd/files/mpd-0.21.4.init
- create mode 100644 media-sound/mpd/metadata.xml
- create mode 100644 media-sound/mpd/mpd-9999.ebuild
- create mode 100644 media-sound/ympd/Manifest
- create mode 100644 media-sound/ympd/ympd-1.3.0.ebuild
- create mode 100644 metadata/layout.conf
- create mode 100644 profiles/repo_name
- create mode 100644 sys-kernel/ck-sources/Manifest
- create mode 100644 sys-kernel/ck-sources/ck-sources-5.4.28.ebuild
- create mode 100644 sys-kernel/ck-sources/files/ck-5.4-revert-version.patch
- create mode 100644 sys-kernel/ck-sources/files/enable_additional_cpu_optimizations_for_gcc_v9.1+_kernel_v4.13+.patch
- create mode 100644 sys-kernel/ck-sources/metadata.xml
- create mode 100644 x11-misc/fqterm/Manifest
- create mode 100644 x11-misc/fqterm/fqterm-9999.ebuild
- create mode 100644 x11-misc/fqterm/metadata.xml
- create mode 100644 x11-misc/nvtop/Manifest
- create mode 100644 x11-misc/nvtop/files/FindCurses.cmake
- create mode 100644 x11-misc/nvtop/files/nvml.h
- create mode 100644 x11-misc/nvtop/nvtop-9999.ebuild
- create mode 100644 x11-misc/zotero/Manifest
- create mode 100644 x11-misc/zotero/zotero-5.0.85.ebuild
+media-sound/mpd/mpd-9999.ebuild
+
+media-sound/ympd/ympd-1.3.0.ebuild
+
+sys-kernel/ck-sources/ck-sources-5.4.28.ebuild
+
+x11-misc/fqterm/fqterm-9999.ebuild
+
+x11-misc/nvtop/nvtop-9999.ebuild
+
+x11-misc/zotero/zotero-5.0.85.ebuild
