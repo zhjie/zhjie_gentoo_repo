@@ -1,0 +1,12 @@
+--- a/usr/sbin/start_pms	2020-03-10 17:12:10.000000000 -0500
++++ b/usr/sbin/start_pms	2020-03-15 13:35:55.680975514 -0500
+@@ -29,6 +29,9 @@
+   export PLEX_MEDIA_SERVER_USER="$PLEX_USER"
+ fi
+ 
++# Activate python virtualenv
++. "${PLEX_MEDIA_SERVER_HOME}"/Resources/Python/bin/activate
++
+ # Create AppSuppDir if not present
+ if [ ! -d "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR" ]; then
+   mkdir -p "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR"
