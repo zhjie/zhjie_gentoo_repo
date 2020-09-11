@@ -8,7 +8,7 @@ inherit flag-o-matic linux-info meson systemd user git-r3
 DESCRIPTION="The Music Player Daemon (mpd) Fork with SACD ISO support"
 HOMEPAGE="https://www.musicpd.org https://github.com/archphile/mpd-manisiutkin"
 
-EGIT_REPO_URI="https://github.com/archphile/mpd-manisiutkin.git"
+EGIT_REPO_URI="https://git.code.sf.net/p/sacddecoder/mpd/MPD.git"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -96,7 +96,7 @@ RDEPEND="
 	systemd? ( sys-apps/systemd )
 	twolame? ( media-sound/twolame )
 	udisks? ( sys-fs/udisks:2 )
-	upnp? ( net-libs/libupnp:0 )
+	upnp? ( >=net-libs/libupnp-1.8 )
 	vorbis? ( media-libs/libvorbis )
 	wavpack? ( media-sound/wavpack )
 	wildmidi? ( media-sound/wildmidi )
