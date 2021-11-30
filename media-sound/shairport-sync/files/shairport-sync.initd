@@ -1,0 +1,28 @@
+#!/sbin/openrc-run
+
+
+user="shairport-sync"
+
+description="emulates an AirPort Express to stream music from i-devices"
+start_stop_daemon_args="--user $user"
+
+command="/usr/local/bin/shairport-sync"
+#command_args="
+#	--log=/var/log/shairport-sync.log
+#	--name=$HOSTNAME
+#"
+
+command_background=yes
+pidfile=/run/shairport-sync.pid
+
+depend() {
+    need localmount avahi-daemon
+    after bootmisc net*
+}
+
+stop() {
+    ebegin "Stopping Shaitport-sync"
+    start-stop-daemon --stop --quiet \
+        --exec /usr/local/bin/shairport-sync
+    eend $?
+}
