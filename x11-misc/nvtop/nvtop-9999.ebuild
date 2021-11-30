@@ -12,7 +12,7 @@ SLOT="0"
 IUSE="unicode"
 
 RDEPEND="
-	sys-libs/ncurses:0=[unicode?]
+	sys-libs/ncurses
 	dev-vcs/git
 	x11-drivers/nvidia-drivers
 "
