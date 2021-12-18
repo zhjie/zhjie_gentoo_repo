@@ -18,9 +18,8 @@ RESTRICT="mirror bindist"
 
 IUSE="systemd"
 
-RDEPEND=">=media-libs/alsa-lib-1.0.27
+RDEPEND=">=media-libs/alsa-lib-1.0.29
 media-video/ffmpeg
-net-fs/cifs-utils
 dev-libs/icu"
 
 DEPEND="${RDEPEND}"
