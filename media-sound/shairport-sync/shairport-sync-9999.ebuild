@@ -15,20 +15,22 @@ EGIT_BRANCH="development"
 
 LICENSE="GPL-2"
 SLOT="0"
-#KEYWORDS="~amd64 ~x86 ~arm ~arm64"
-KEYWORDS=""
-IUSE="convolution ap2"
+KEYWORDS="~amd64 ~x86 ~arm ~arm64"
+# KEYWORDS=""
+IUSE="convolution airplay-2 soxr alac"
 
-DEPEND="dev-libs/openssl
-	media-libs/soxr
+DEPEND="media-libs/alsa-lib
+	dev-libs/openssl
 	dev-libs/libconfig
 	dev-libs/libdaemon
+	alac? ( media-libs/alac )
+        soxr? ( media-libs/soxr )
 	convolution? ( media-libs/libsndfile )
-	ap2? ( app-pda/libplist )
-	ap2? ( dev-util/xxd )
-	ap2? ( dev-libs/libsodium )
-	ap2? ( app-doc/xmltoman )
-	ap2? ( net-misc/nqptp )"
+	airplay-2? ( app-pda/libplist )
+	airplay-2? ( dev-util/xxd )
+	airplay-2? ( dev-libs/libsodium )
+	airplay-2? ( app-doc/xmltoman )
+	airplay-2? ( net-misc/nqptp )"
 RDEPEND="${DEPEND}
 	net-dns/avahi"
 
@@ -38,28 +40,19 @@ pkg_setup() {
 	enewuser shairport-sync -1 -1 -1 audio
 }
 
-src_compile() {
-        #default
-        autoreconf -fi
-				if use convolution; then
-				    if use ap2; then
-					    ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-libdaemon --with-convolution --with-airplay-2
-						else
-						  ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-libdaemon --with-convolution
-						fi
-				else
-				    if use ap2; then
-				     ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-libdaemon --with-airplay-2
-						else
-						 ./configure --sysconfdir=/etc --with-alsa --with-soxr --with-avahi --with-ssl=openssl --with-libdaemon
-					  fi
-				fi
-				make
+src_configure() {
+	autoreconf -i -f
+	econf \
+		--with-alsa --with-avahi --with-ssl=openssl --with-libdaemon
+		$(use_with soxr) \
+		$(use_with alac apple-alac) \
+		$(use_with convolution) \
+		$(use_with airplay-2)
 }
 
 src_install() {
 	emake DESTDIR="${D}" install
-	if use ap2; then
+	if use airplay-2; then
 		newinitd "${FILESDIR}"/${MY_PN}-ap2.initd ${MY_PN}
 	else
 	  newinitd "${FILESDIR}"/${MY_PN}.initd ${MY_PN}
