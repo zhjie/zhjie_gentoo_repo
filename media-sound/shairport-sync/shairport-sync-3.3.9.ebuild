@@ -12,23 +12,25 @@ SRC_URI="https://github.com/mikebrady/shairport-sync/archive/${PV}.tar.gz -> ${P
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 x86 arm arm64"
-IUSE="alac"
+IUSE=""
 
 RDEPEND="media-libs/alsa-lib
         net-dns/avahi
         dev-libs/libdaemon
         dev-libs/libconfig
 	dev-libs/openssl
-	alac? ( media-libs/alac )"
+	media-libs/alac
+"
 
 RDEPEND="${DEPEND}
 	media-libs/alsa-lib
-	net-dns/avahi"
+	net-dns/avahi
+	media-libs/alac
+"
 
 src_configure() {
 	autoreconf -i -f
-	econf -with-alsa --with-avahi --with-libdaemon --with-ssl=openssl
-		$(use_with alac apple-alac)
+	econf -with-alsa --with-avahi --with-libdaemon --with-ssl=openssl --with-apple-alac
 }
 
 src_install() {
