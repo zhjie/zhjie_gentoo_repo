@@ -55,6 +55,6 @@ src_install() {
 	if use airplay-2; then
 		newinitd "${FILESDIR}"/${MY_PN}-ap2.initd ${MY_PN}
 	else
-	  newinitd "${FILESDIR}"/${MY_PN}.initd ${MY_PN}
+		newinitd "${FILESDIR}"/${MY_PN}.initd ${MY_PN}
 	fi
 }
