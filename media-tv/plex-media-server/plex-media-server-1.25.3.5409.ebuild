@@ -5,7 +5,7 @@ EAPI=7
 
 inherit readme.gentoo-r1 systemd unpacker pax-utils
 
-COMMIT="c43dc0277"
+COMMIT="f11334058"
 _APPNAME="plexmediaserver"
 _USERNAME="plex"
 _SHORTNAME="${_USERNAME}"
@@ -16,13 +16,12 @@ URI="https://downloads.plex.tv/plex-media-server-new"
 DESCRIPTION="Free media library that is intended for use with a plex client"
 HOMEPAGE="https://www.plex.tv/"
 SRC_URI="
-	amd64? ( ${URI}/${_FULL_VERSION}/debian/plexmediaserver_${_FULL_VERSION}_amd64.deb )
-	x86? ( ${URI}/${_FULL_VERSION}/debian/plexmediaserver_${_FULL_VERSION}_i386.deb )"
+	amd64? ( ${URI}/${_FULL_VERSION}/debian/plexmediaserver_${_FULL_VERSION}_amd64.deb )"
 S="${WORKDIR}"
 
 LICENSE="Plex"
 SLOT="0"
-KEYWORDS="-* ~amd64 ~x86"
+KEYWORDS="-* ~amd64"
 RESTRICT="mirror bindist"
 
 DEPEND="
@@ -52,6 +51,16 @@ src_install() {
 
 	# Remove Debian specific files
 	rm -r "usr/share/doc" || die
+
+	# Remove tuner and useless plugins
+	rm -r usr/lib/plexmediaserver/Plex\ Tuner\ Service
+        rm -r usr/lib/plexmediaserver/Resources/Fonts
+	rm -r usr/lib/plexmediaserver/Resources/Tuner
+	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/Musicbrainz.bundle
+	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/PlexMusic.bundle
+	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/LyricFind.bundle
+	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/OpenSubtitles.bundle
+        rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/LastFM.bundle
 
 	# Copy main files over to image and preserve permissions so it is portable
 	cp -rp usr/ "${ED}" || die

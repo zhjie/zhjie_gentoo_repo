@@ -16,11 +16,11 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd"
+IUSE="systemd ffmpeg"
 
-RDEPEND=">=media-libs/alsa-lib-1.0.29
-media-video/ffmpeg
-dev-libs/icu"
+RDEPEND="dev-libs/icu
+	 >=media-libs/alsa-lib-1.0.29
+	 ffmpeg? ( media-video/ffmpeg )"
 
 DEPEND="${RDEPEND}"
 
