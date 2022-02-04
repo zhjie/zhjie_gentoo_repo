@@ -16,45 +16,33 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd ffmpeg"
+IUSE="+systemd ffmpeg +system-dotnet"
 
 RDEPEND="dev-libs/icu
 	 >=media-libs/alsa-lib-1.0.29
-	 ffmpeg? ( media-video/ffmpeg )"
+	 ffmpeg? ( media-video/ffmpeg )
+         system-dotnet? ( dev-dotnet/dotnet-sdk-bin )"
 
 DEPEND="${RDEPEND}"
 
 
 S="${WORKDIR}"
 
+src_prepare() {
+  default
+  if use system-dotnet; then
+    rm -vrf "${S}"/RoonServer/RoonDotnet/* || die
+    ln -sf /usr/bin/dotnet "${S}"/RoonServer/RoonDotnet/dotnet || die
+  fi
+}
+
 src_install() {
   insinto "/opt/${PN}/"
   insopts -m755
   doins -r RoonServer/*
   if use systemd; then
-  systemd_dounit "${FILESDIR}/roonserver.service"
+    systemd_dounit "${FILESDIR}/roonserver.service"
   else
-  newinitd "${FILESDIR}/roonserver.init.d" "roonserver"
+    newinitd "${FILESDIR}/roonserver.init.d" "roonserver"
   fi
-}
-
-pkg_postinst() {
-	# Provide some post-installation tips.
-  elog ""
-	elog ""
-	elog ""
-  elog "RoonServer can be started with the following command (OpenRC):"
-  elog "\t/etc/init.d/roonserver start"
-  elog "or (systemd):"
-  elog "\tsystemctl start roonserver"
-  elog ""
-  elog "RoonServer can be automatically started on each boot"
-  elog "with the following command (OpenRC):"
-  elog "\trc-update add roonserver default"
-  elog "or (systemd):"
-  elog "\tsystemctl enable roonserver"
-  elog ""
-  elog ""
-	elog ""
-	elog ""
 }
