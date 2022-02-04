@@ -1,30 +1,29 @@
-[I] acct-group/plex (1[1]@12/22/2021): Plex Media Server group
+acct-group/plex
 
-[I] acct-user/plex (1-r1[1]@12/22/2021): Plex Media Server user
+acct-user/plex
 
-[I] dev-dotnet/dotnet-runtime [1] (5.0.13(5.0)@02/04/2022): .NET is a free, cross-platform, open-source developer platform
+dev-dotnet/dotnet-runtime
 
-[N] gnome-extra/gnome-shell-extension-unite-shell [1] (--): Unite is an extension that makes GNOME Shell look like Ubuntu Unity Shell.
+gnome-extra/gnome-shell-extension-unite-shell
 
-[N] media-libs/alac [1] (0.0.7): Apple Lossless Audio Codec library
+media-libs/alac
 
-[N] media-sound/RoonBridge [1] (~1.8.880): music player
+media-sound/RoonBridge
 
-[I] media-sound/RoonServer [1] (1.8.898@02/04/2022): music player sever
+media-sound/RoonServer
 
-[I] media-sound/sacd-extract [1] (9999@12/24/2021): SACD ripping software using a PS3
+media-sound/sacd-extract
 
-[N] media-sound/shairport-sync [1] ((~)9999): Shairport Sync is an AirPlay audio player
+media-sound/shairport-sync
 
-[I] media-tv/plex-media-server (1.25.4.5487[1]@02/02/2022): Free media library that is intended for use with a plex client
+media-tv/plex-media-server
 
-[N] sys-boot/rpi4-firmware [1] (--): Raspberry PI boot loader and firmware, for 64-bit mode
+sys-boot/rpi4-firmware
 
-[N] sys-process/rtirq (~20191121[1]): Modify realtime scheduling policy and priority of IRQ handlers
+sys-process/rtirq
 
-[N] x11-misc/fqterm [1] (--): a modern terminal emulator for Linux with qt5
+x11-misc/fqterm
 
-[N] x11-misc/nvtop [1] (--): NVIDIA GPUs htop like monitoring tool
+x11-misc/nvtop
 
-[N] x11-misc/zotero [1] (~5.0.96.3): Zotero is a free, easy-to-use tool to help you collect, organize, cite, and share research.
-
+x11-misc/zotero
