@@ -9,13 +9,16 @@ DESCRIPTION=".NET is a free, cross-platform, open-source developer platform"
 HOMEPAGE="https://dotnet.microsoft.com/"
 LICENSE="MIT"
 
+P1="60ab6867-f33d-4708-8eb0-83018e4c22bd"
+P2="04fb765d876f26c50cdc818323e6aaa6"
+
 SRC_URI="
-amd64? ( https://dotnetcli.azureedge.net/dotnet/Sdk/${MY_PV}/dotnet-sdk-${MY_PV}-linux-x64.tar.gz )
+amd64? ( https://download.visualstudio.microsoft.com/download/pr/${P1}/${P2}/dotnet-runtime-${MY_PV}-linux-x64.tar.gz )
 "
 
 SLOT="5.0"
 KEYWORDS="~amd64"
-IUSE="+dotnet-symlink +core-only"
+IUSE="+dotnet-symlink"
 REQUIRED_USE="elibc_glibc"
 QA_PREBUILT="*"
 RESTRICT+=" splitdebug"
@@ -23,20 +26,11 @@ RDEPEND="
 	app-crypt/mit-krb5:0/0
 	dev-util/lttng-ust:0
 	sys-libs/zlib:0/1
-	dotnet-symlink? ( !dev-dotnet/dotnet-sdk[dotnet-symlink(+)] )
+	dotnet-symlink? ( !dev-dotnet/dotnet-runtime[dotnet-symlink(+)] )
+        !dev-dotnet/dotnet-sdk-bin
 "
 
 S=${WORKDIR}
-
-src_prepare() {
-  default
-  if use core-only; then
-    rm -vrf "${S}"/packs || die
-    rm -vrf "${S}"/sdk || die
-    rm -vrf "${S}"/templates || die
-    rm -vrf "${S}"/shared/Microsoft.AspNetCore.App || die
-  fi
-}
 
 src_install() {
 	local dest="opt/${PN}-${SLOT}"
