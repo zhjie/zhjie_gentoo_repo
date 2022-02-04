@@ -16,12 +16,13 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="+systemd ffmpeg +system-dotnet"
+IUSE="+systemd ffmpeg +system-dotnet embedded-fonts"
 
 RDEPEND="dev-libs/icu
 	 >=media-libs/alsa-lib-1.0.29
 	 ffmpeg? ( media-video/ffmpeg )
-         system-dotnet? ( dev-dotnet/dotnet-sdk-bin )"
+         system-dotnet? ( || ( dev-dotnet/dotnet-sdk-bin dev-dotnet/dotnet-runtime ) )
+"
 
 DEPEND="${RDEPEND}"
 
@@ -33,6 +34,10 @@ src_prepare() {
   if use system-dotnet; then
     rm -vrf "${S}"/RoonServer/RoonDotnet/* || die
     ln -sf /usr/bin/dotnet "${S}"/RoonServer/RoonDotnet/dotnet || die
+  fi
+  if ! use embedded-fonts; then
+    rm -vrf "${S}"/RoonServer/Appliance/*.otf || die
+    rm -vrf "${S}"/RoonServer/Appliance/*.ttf || die
   fi
 }
 
