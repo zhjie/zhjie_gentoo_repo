@@ -6,8 +6,8 @@ EAPI=6
 inherit systemd
 
 
-DESCRIPTION="music player sever"
-HOMEPAGE="https://roonlabs.com/index.html"
+DESCRIPTION="THE ULTIMATE MUSIC PLAYER FOR MUSIC FANATICS"
+HOMEPAGE="https://roonlabs.com"
 SRC_URI="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2  -> ${P}.tar.bz2"
 
 LICENSE="roonlabs"
@@ -25,7 +25,6 @@ RDEPEND="dev-libs/icu
 "
 
 DEPEND="${RDEPEND}"
-
 
 S="${WORKDIR}"
 
