@@ -16,10 +16,11 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="+systemd ffmpeg +system-dotnet embedded-fonts"
+IUSE="+systemd samba ffmpeg +system-dotnet embedded-fonts"
 
 RDEPEND="dev-libs/icu
 	 >=media-libs/alsa-lib-1.0.29
+         samba? ( net-fs/cifs-utils )
 	 ffmpeg? ( media-video/ffmpeg )
          system-dotnet? ( || ( dev-dotnet/dotnet-sdk-bin dev-dotnet/dotnet-runtime ) )
 "
