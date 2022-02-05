@@ -1,3 +1,5 @@
+zhjie's personal overlay.
+
 acct-group/plex
 
 acct-user/plex
@@ -27,3 +29,5 @@ x11-misc/fqterm
 x11-misc/nvtop
 
 x11-misc/zotero
+
+thanks for https://github.com/antonellocaroli/GP-overlay
