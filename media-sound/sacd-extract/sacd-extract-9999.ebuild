@@ -8,12 +8,9 @@ EAPI=6
 
 inherit git-r3 eutils cmake-utils
 
-MY_PN="myMPD"
-
 DESCRIPTION="SACD ripping software using a PS3"
-HOMEPAGE="https://github.com/setmind/sacd-ripper.git"
+HOMEPAGE="https://github.com/EuFlo/sacd-ripper.git"
 EGIT_REPO_URI="https://github.com/EuFlo/sacd-ripper.git"
-# EGIT_COMMIT="58db5f16fcf410ae4d6aeca226a067b37ade136a"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -25,7 +22,6 @@ RDEPEND="${DEPEND}"
 BDEPEND=""
 
 S="${WORKDIR}/${PN}-${PV}/tools/sacd_extract"
-
 
 src_compile() {
     default
