@@ -9,6 +9,7 @@ DESCRIPTION="NVIDIA GPUs htop like monitoring tool"
 HOMEPAGE="https://github.com/Syllo/nvtop"
 LICENSE="GPL-3"
 SLOT="0"
+KEYWORDS="~amd64"
 IUSE="unicode"
 
 RDEPEND="

@@ -11,6 +11,7 @@ HOMEPAGE="https://github.com/mytbk/fqterm"
 
 LICENSE="GPL-2"
 SLOT="0"
+KEYWORDS="~amd64"
 IUSE=""
 
 RDEPEND="
