@@ -20,15 +20,32 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~arm"
 RESTRICT="mirror bindist"
 
-IUSE="systemd"
+IUSE="systemd debug +system-mono"
 
-RDEPEND=">=media-libs/alsa-lib-1.0.27"
+RDEPEND=">=media-libs/alsa-lib-1.0.27
+         system-mono? ( dev-lang/mono )
+"
 
 DEPEND="${RDEPEND}"
 
 
 S="${WORKDIR}"
 MY_PN=RoonBridge
+
+src_prepare() {
+  default
+  if use system-mono; then
+    rm -vrf "${S}"/RoonBridge/RoonMono/* || die
+    sed -i 's/$MONO_DIR\/bin\/mono-sgen/mono-sgen/g' "${S}"/RoonBridge/Bridge/RoonBridge       || die
+    sed -i 's/$MONO_DIR\/bin\/mono-sgen/mono-sgen/g' "${S}"/RoonBridge/Bridge/RoonBridgeHelper || die
+    sed -i 's/$MONO_DIR\/bin\/mono-sgen/mono-sgen/g' "${S}"/RoonBridge/Bridge/RAATServer       || die
+  fi
+  if ! use debug; then
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridge       || die
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridgeHelper || die
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RAATServer       || die
+  fi
+}
 
 src_install() {
   insinto "/opt/${PN}/"
