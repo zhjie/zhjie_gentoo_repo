@@ -6,8 +6,8 @@ EAPI=6
 inherit systemd
 
 
-DESCRIPTION="THE ULTIMATE MUSIC PLAYER FOR MUSIC FANATICS"
-HOMEPAGE="https://roonlabs.com"
+DESCRIPTION="music player"
+HOMEPAGE="https://roonlabs.com/index.html"
 SRC_URI="
   amd64? ( http://download.roonlabs.com/builds/RoonBridge_linuxx64.tar.bz2 -> ${P}_x64.tar.bz2 )
   arm64? ( http://download.roonlabs.com/builds/RoonBridge_linuxarmv8.tar.bz2 -> ${P}_armv8.tar.bz2 )
@@ -26,13 +26,18 @@ RDEPEND=">=media-libs/alsa-lib-1.0.27"
 
 DEPEND="${RDEPEND}"
 
+
+S="${WORKDIR}"
+MY_PN=RoonBridge
+
 src_install() {
   insinto "/opt/${PN}/"
   insopts -m755
   doins -r RoonBridge/*
   if use systemd; then
-    systemd_dounit "${FILESDIR}/roonbridge.service"
+      systemd_dounit "${FILESDIR}/roonbridge.service"
   else
-    newinitd "${FILESDIR}/roonbridge.init.d" "roonbridge"
+      newinitd "${FILESDIR}/roonbridge.init.d" "roonbridge"
   fi
 }
+

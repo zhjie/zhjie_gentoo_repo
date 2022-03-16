@@ -22,7 +22,7 @@ RDEPEND="dev-libs/icu
 	 >=media-libs/alsa-lib-1.0.29
          samba? ( net-fs/cifs-utils )
 	 ffmpeg? ( media-video/ffmpeg )
-         system-dotnet? ( || ( dev-dotnet/dotnet-sdk-bin dev-dotnet/dotnet-runtime ) )
+         system-dotnet? ( || ( dev-dotnet/dotnet-sdk-bin:6.0 dev-dotnet/dotnet-runtime:6.0 ) )
 "
 
 DEPEND="${RDEPEND}"

@@ -9,12 +9,11 @@ DESCRIPTION=".NET is a free, cross-platform, open-source developer platform"
 HOMEPAGE="https://dotnet.microsoft.com/"
 LICENSE="MIT"
 
+SRC_URI="amd64? (
+https://download.visualstudio.microsoft.com/download/pr/4e766615-57e6-4b1d-a574-25eeb7a71107/9f95f74c33711e085302ffd644ef86ee/dotnet-runtime-6.0.3-linux-x64.tar.gz
+)"
 
-SRC_URI="
-https://download.visualstudio.microsoft.com/download/pr/546d50b2-d85c-433f-b13b-b896f1bc1916/17d7bbb674bf67c3d490489b20a437b7/dotnet-runtime-5.0.15-linux-x64.tar.gz
-"
-
-SLOT="5.0"
+SLOT="6.0"
 KEYWORDS="~amd64"
 IUSE="+dotnet-symlink"
 REQUIRED_USE="elibc_glibc"
