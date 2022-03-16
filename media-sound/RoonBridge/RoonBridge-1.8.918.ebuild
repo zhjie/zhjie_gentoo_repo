@@ -20,7 +20,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~arm"
 RESTRICT="mirror bindist"
 
-IUSE="systemd debug +system-mono"
+IUSE="systemd debug"
 
 RDEPEND=">=media-libs/alsa-lib-1.0.27"
 
