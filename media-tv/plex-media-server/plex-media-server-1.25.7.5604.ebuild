@@ -5,7 +5,7 @@ EAPI=7
 
 inherit readme.gentoo-r1 systemd unpacker pax-utils
 
-COMMIT="12f6b8c83"
+COMMIT="980a13e02"
 _APPNAME="plexmediaserver"
 _USERNAME="plex"
 _SHORTNAME="${_USERNAME}"
@@ -16,8 +16,7 @@ URI="https://downloads.plex.tv/plex-media-server-new"
 DESCRIPTION="Free media library that is intended for use with a plex client"
 HOMEPAGE="https://www.plex.tv/"
 SRC_URI="
-plexmediaserver_1.25.6.5577-c8bd13540_amd64.deb
-"
+	amd64? ( ${URI}/${_FULL_VERSION}/debian/plexmediaserver_${_FULL_VERSION}_amd64.deb )"
 S="${WORKDIR}"
 
 LICENSE="Plex"
