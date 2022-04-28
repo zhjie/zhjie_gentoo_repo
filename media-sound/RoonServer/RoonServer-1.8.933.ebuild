@@ -36,8 +36,8 @@ src_prepare() {
     ln -sf /usr/bin/dotnet "${S}"/RoonServer/RoonDotnet/dotnet || die
   fi
   if ! use embedded-fonts; then
-    rm -vrf "${S}"/RoonServer/Appliance/*.otf || die
-    rm -vrf "${S}"/RoonServer/Appliance/*.ttf || die
+    rm -vrf "${S}"/RoonServer/*/*.otf || die
+    rm -vrf "${S}"/RoonServer/*/*.ttf || die
   fi
 }
 
