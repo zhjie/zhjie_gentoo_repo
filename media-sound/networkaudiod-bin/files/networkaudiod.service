@@ -1,0 +1,23 @@
+[Unit]
+Description=Network Audio Adapter daemon
+#Requires=network-online.target sound.target systemd-udev-settle.service
+#After=network-online.target sound.target systemd-udev-settle.service
+Requires=sound.target
+After=sound.target
+
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/networkaudiod
+Restart=always
+RestartSec=1
+EnvironmentFile=-/etc/default/networkaudiod
+User=root
+Nice=-10
+IOSchedulingClass=realtime
+LimitMEMLOCK=1G
+LimitNICE=-10
+LimitRTPRIO=98
+
+[Install]
+WantedBy=multi-user.target
