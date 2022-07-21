@@ -12,6 +12,7 @@ DESCRIPTION="Network Audio Daemon"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
     amd64? ( https://www.signalyst.eu/bins/naa/linux/bullseye/${MY_PN}_${PV}-50_amd64.deb )
+    arm64? ( https://www.signalyst.eu/bins/naa/linux/bullseye/${MY_PN}_${PV}-50_arm64.deb )
 "
 
 LICENSE="Signalyst"
@@ -21,8 +22,7 @@ RESTRICT="mirror bindist"
 
 IUSE="systemd"
 
-RDEPEND=">=sys-devel/gcc-5.1.0[openmp]
-	>=media-libs/alsa-lib-1.0.16
+RDEPEND=">=media-libs/alsa-lib-1.0.16
 	systemd? ( sys-apps/systemd )"
 
 DEPEND="${RDEPEND}"

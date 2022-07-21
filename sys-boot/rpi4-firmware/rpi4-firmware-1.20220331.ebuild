@@ -41,9 +41,9 @@ src_install() {
 	doins start4db.elf
 	doins start4x.elf
 	# allow for the dtbos to be provided by the kernel package
-	#if use dtbo; then
-	#	doins -r overlays
-	#fi
+	if use dtbo; then
+		doins -r overlays
+	fi
 	doins fixup4.dat
 	doins fixup4cd.dat
 	doins fixup4db.dat
