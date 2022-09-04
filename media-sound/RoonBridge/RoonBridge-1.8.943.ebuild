@@ -20,7 +20,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~arm"
 RESTRICT="mirror bindist"
 
-IUSE="systemd debug"
+IUSE="systemd debug +rt"
 
 RDEPEND=">=media-libs/alsa-lib-1.0.27"
 
@@ -29,6 +29,8 @@ DEPEND="${RDEPEND}"
 
 S="${WORKDIR}"
 MY_PN=RoonBridge
+
+QA_PREBUILT="*"
 
 src_prepare() {
   default
@@ -45,6 +47,8 @@ src_install() {
   doins -r RoonBridge/*
   if use systemd; then
       systemd_dounit "${FILESDIR}/roonbridge.service"
+  elif use rt; then
+      newinitd "${FILESDIR}/roonbridge.init.d.rt" "roonbridge"
   else
       newinitd "${FILESDIR}/roonbridge.init.d" "roonbridge"
   fi

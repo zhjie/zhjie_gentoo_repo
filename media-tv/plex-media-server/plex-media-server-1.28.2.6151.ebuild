@@ -5,7 +5,7 @@ EAPI=7
 
 inherit readme.gentoo-r1 systemd unpacker pax-utils
 
-COMMIT="a806c5905"
+COMMIT="914ddd2b3"
 _APPNAME="plexmediaserver"
 _USERNAME="plex"
 _SHORTNAME="${_USERNAME}"
@@ -46,14 +46,13 @@ BINS_TO_PAX_MARK=(
 )
 
 src_install() {
-	# Remove Debian apt repo files
-	rm -r "etc/apt" || die
-
-	# Remove Debian specific files
-	rm -r "usr/share/doc" || die
+	rm -r "usr/share" || die
 
 	# Remove tuner and useless plugins
+	rm -r usr/lib/plexmediaserver/CrashUploader
 	rm -r usr/lib/plexmediaserver/Plex\ Tuner\ Service
+	rm -r usr/lib/plexmediaserver/Plex\ DLNA\ Server
+	rm -r usr/lib/plexmediaserver/Plex\ Transcoder
         rm -r usr/lib/plexmediaserver/Resources/Fonts
 	rm -r usr/lib/plexmediaserver/Resources/Tuner
 	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/Musicbrainz.bundle
