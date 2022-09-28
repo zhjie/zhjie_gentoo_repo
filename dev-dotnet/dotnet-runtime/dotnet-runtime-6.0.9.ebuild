@@ -10,7 +10,7 @@ HOMEPAGE="https://dotnet.microsoft.com/"
 LICENSE="MIT"
 
 SRC_URI="amd64? (
-https://download.visualstudio.microsoft.com/download/pr/ec4172e3-077a-42c0-859d-349e517d7935/82d945cdc4c33fbe440a86a240a58a41/dotnet-runtime-6.0.6-linux-x64.tar.gz
+https://download.visualstudio.microsoft.com/download/pr/05f1a3dd-75f2-49f4-a976-25ce08f77cbb/b6e8e327a84b91513c2744bfccf90140/dotnet-runtime-6.0.9-linux-x64.tar.gz
 )"
 
 SLOT="6.0"
