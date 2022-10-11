@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="+systemd samba ffmpeg +system-dotnet embedded-fonts alsa"
+IUSE="systemd samba ffmpeg system-dotnet embedded-fonts alsa rt"
 
 RDEPEND="dev-libs/icu
 	 alsa? ( media-libs/alsa-lib )
@@ -51,6 +51,8 @@ src_install() {
   doins -r RoonServer/*
   if use systemd; then
     systemd_dounit "${FILESDIR}/roonserver.service"
+  elif use rt; then
+    newinitd "${FILESDIR}/roonserver.init.d.rt" "roonserver"
   else
     newinitd "${FILESDIR}/roonserver.init.d" "roonserver"
   fi
