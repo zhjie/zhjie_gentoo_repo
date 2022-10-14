@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg system-dotnet embedded-fonts alsa rt"
+IUSE="systemd samba ffmpeg system-dotnet web alsa rt"
 
 RDEPEND="dev-libs/icu
 	 alsa? ( media-libs/alsa-lib )
@@ -35,9 +35,10 @@ src_prepare() {
     rm -vrf "${S}"/RoonServer/RoonDotnet/* || die
     ln -sf /usr/bin/dotnet "${S}"/RoonServer/RoonDotnet/dotnet || die
   fi
-  if ! use embedded-fonts; then
+  if ! use web; then
     rm -vrf "${S}"/RoonServer/*/*.otf || die
     rm -vrf "${S}"/RoonServer/*/*.ttf || die
+    rm -vrf "${S}"/RoonServer/Appliance/webroot || die
   fi
   if ! use alsa; then
     rm -vrf "${S}"/RoonServer/Appliance/check_alsa || die

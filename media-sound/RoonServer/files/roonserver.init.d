@@ -8,9 +8,9 @@ logfile="/var/log/roonserver.log"
 
 start_stop_daemon_args="--user $user"
 
-command="/opt/RoonServer/start.sh"
+command="nice"
 command_args="
-	-f $logfile
+	-n -15 /opt/RoonServer/start.sh -f $logfile
 "
 
 command_background=yes
