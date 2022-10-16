@@ -23,4 +23,6 @@ RDEPEND="
 		sys-kernel/gentoo-kernel-bin
 		sys-kernel/vanilla-kernel
 		sys-kernel/xanmod-sources
+                sys-kernel/xanmod-rt-sources
+                sys-kernel/xanmod-tt-sources
 	)"

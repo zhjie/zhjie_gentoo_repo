@@ -17,12 +17,13 @@ KEYWORDS="~amd64"
 
 RDEPEND="
 	!sys-kernel/xanmod-rt-sources
+	!sys-kernel/xanmod-tt-sources
 "
 
 inherit kernel-2
 detect_version
 
-DESCRIPTION="XanMod Kernel sources including the Gentoo patchset - Real-time (RT) branch"
+DESCRIPTION="XanMod Kernel sources including the Gentoo patchset - Current Stable (CURRENT) branch"
 SRC_URI="
 	${KERNEL_BASE_URI}/linux-${KV_MAJOR}.${KV_MINOR}.tar.xz
 	${GENPATCHES_URI}

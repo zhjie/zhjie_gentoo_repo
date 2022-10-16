@@ -16,6 +16,11 @@ HOMEPAGE="https://xanmod.org"
 LICENSE+=" CDDL"
 KEYWORDS="~amd64"
 
+RDEPEND="
+	!sys-kernel/xanmod-sources
+        !sys-kernel/xanmod-tt-sources
+"
+
 inherit kernel-2
 detect_version
 
@@ -25,9 +30,6 @@ SRC_URI="
 	${GENPATCHES_URI}
 	${XANMOD_URI}/${OKV}-rt${RT_VERSION}-xanmod${XANMOD_VERSION}/patch-${OKV}-rt${RT_VERSION}-xanmod${XANMOD_VERSION}.xz
 "
-
-# excluding all minor kernel revision patches; XanMod will take care of that
-UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
 
 # excluding all minor kernel revision patches; XanMod will take care of that
 UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
