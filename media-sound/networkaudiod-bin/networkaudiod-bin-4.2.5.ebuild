@@ -44,7 +44,7 @@ src_unpack() {
 
 src_install() {
 	mv usr etc lib "${D}" || die
-	rm "${D}usr/share/doc/networkaudiod/changelog.Debian.gz"
+	rm -rf  "${D}usr/share/doc/networkaudiod/"
 	if use systemd; then
 		systemd_dounit "${FILESDIR}/${MY_PN}.service"
 	elif use rt; then

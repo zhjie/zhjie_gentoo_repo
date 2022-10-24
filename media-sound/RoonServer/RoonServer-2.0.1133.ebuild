@@ -35,6 +35,9 @@ src_prepare() {
     rm -vrf "${S}"/RoonServer/RoonDotnet/* || die
     ln -sf /usr/bin/dotnet "${S}"/RoonServer/RoonDotnet/dotnet || die
   fi
+  if ! use samba; then
+    rm -vrf "${S}"/RoonServer/Appliance/roon_smb_watcher || die
+  fi
   if ! use web; then
     rm -vrf "${S}"/RoonServer/*/*.otf || die
     rm -vrf "${S}"/RoonServer/*/*.ttf || die

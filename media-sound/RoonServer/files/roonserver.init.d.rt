@@ -4,13 +4,13 @@ export ROON_DATAROOT=/var/roon
 export ROON_ID_DIR=/var/roon
 
 user="root:root"
-logfile="/tmp/networkaudiod.log"
+logfile="/var/log/roonserver.log"
 
 start_stop_daemon_args="--user $user"
 
 command="chrt"
 command_args="
-        -r 96 /opt/RoonServer/start.sh -f $logfile
+    -r  96 /opt/RoonServer/start.sh -f $logfile
 "
 
 command_background=yes
@@ -18,7 +18,7 @@ pidfile=/run/roonserver.pid
 
 #need net
 depend() {
-#    use alsasound
+    # use alsasound
     after bootmisc
 }
 
