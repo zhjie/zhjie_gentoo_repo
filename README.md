@@ -18,6 +18,8 @@ media-tv/plex-media-server
 
 sys-boot/rpi4-firmware
 
+sys-kernel/{xanmod-rt-sources, xanmod-sources, xanmod-tt-sources}
+
 sys-process/rtirq
 
 x11-misc/fqterm
