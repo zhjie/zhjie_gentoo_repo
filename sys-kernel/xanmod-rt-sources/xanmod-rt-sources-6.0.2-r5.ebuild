@@ -5,16 +5,17 @@ EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
 K_EXP_GENPATCHES_NOUSE="1"
-K_GENPATCHES_VER="78"
+K_GENPATCHES_VER="5"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 XANMOD_VERSION="1"
-RT_VERSION="48"
+RT_VERSION="11"
 XANMOD_URI="https://github.com/xanmod/linux/releases/download/"
 
 HOMEPAGE="https://xanmod.org"
 LICENSE+=" CDDL"
 KEYWORDS="~amd64"
+IUSE="naa"
 
 RDEPEND="
 	!sys-kernel/xanmod-sources
@@ -36,6 +37,9 @@ UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
 
 src_unpack() {
 	UNIPATCH_LIST+="${DISTDIR}/patch-${OKV}-rt${RT_VERSION}-xanmod${XANMOD_VERSION}.xz"
+        if use naa; then
+                UNIPATCH_LIST+=" ${FILESDIR}/*.patch"
+        fi
 	kernel-2_src_unpack
 }
 
