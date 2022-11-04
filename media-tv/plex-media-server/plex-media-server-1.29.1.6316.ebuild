@@ -5,7 +5,7 @@ EAPI=7
 
 inherit readme.gentoo-r1 systemd unpacker pax-utils
 
-COMMIT="819d3678c"
+COMMIT="f4cdfea9c"
 _APPNAME="plexmediaserver"
 _USERNAME="plex"
 _SHORTNAME="${_USERNAME}"
