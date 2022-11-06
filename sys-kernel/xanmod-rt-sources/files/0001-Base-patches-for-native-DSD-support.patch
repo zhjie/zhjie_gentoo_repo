@@ -1,17 +1,7 @@
-From a8eba0addad4b786df3f304dc610e8bec5f80934 Mon Sep 17 00:00:00 2001
-From: Jussi Laako <jussi@sonarnerd.net>
-Date: Sun, 19 Mar 2017 23:10:12 +0200
-Subject: [PATCH 1/4] Base patches for native DSD support
-
----
- sound/usb/quirks.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
-index ab9f3da49941..9d3711335230 100644
---- a/sound/usb/quirks.c
-+++ b/sound/usb/quirks.c
-@@ -1610,6 +1610,8 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
+diff -ur a/sound/usb/quirks.c b/sound/usb/quirks.c
+--- a/sound/usb/quirks.c	2022-11-05 19:08:22.968355898 +0800
++++ b/sound/usb/quirks.c	2022-11-05 19:13:46.746284842 +0800
+@@ -1913,6 +1913,8 @@
  	/* XMOS based USB DACs */
  	switch (chip->usb_id) {
  	case USB_ID(0x1511, 0x0037): /* AURALiC VEGA */
@@ -20,9 +10,11 @@ index ab9f3da49941..9d3711335230 100644
  	case USB_ID(0x2522, 0x0012): /* LH Labs VI DAC Infinity */
  	case USB_ID(0x2772, 0x0230): /* Pro-Ject Pre Box S2 Digital */
  		if (fp->altsetting == 2)
-@@ -1619,16 +1621,20 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
+@@ -1921,17 +1923,22 @@
+ 
  	case USB_ID(0x0d8c, 0x0316): /* Hegel HD12 DSD */
  	case USB_ID(0x10cb, 0x0103): /* The Bit Opus #3; with fp->dsd_raw */
++	case USB_ID(0x152a, 0x87c0): /* Holo May Level 3 R2R DAC */
  	case USB_ID(0x16d0, 0x06b2): /* NuPrime DAC-10 */
 -	case USB_ID(0x16d0, 0x09dd): /* Encore mDSD */
 +	case USB_ID(0x16d0, 0x06b4): /* NuPrime Audio HD-AVP/AVA */
@@ -42,6 +34,3 @@ index ab9f3da49941..9d3711335230 100644
  	case USB_ID(0x6b42, 0x0042): /* MSB Technology */
  		if (fp->altsetting == 3)
  			return SNDRV_PCM_FMTBIT_DSD_U32_BE;
--- 
-2.25.1
-

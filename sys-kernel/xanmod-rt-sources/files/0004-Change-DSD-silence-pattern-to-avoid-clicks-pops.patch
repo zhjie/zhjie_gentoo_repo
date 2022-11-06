@@ -1,17 +1,7 @@
-From 0b34a222011e0fdb91e2acd01cd65ae311284a16 Mon Sep 17 00:00:00 2001
-From: Jussi Laako <jussi@sonarnerd.net>
-Date: Mon, 6 Jan 2020 20:41:42 +0200
-Subject: [PATCH 4/4] Change DSD silence pattern to avoid clicks/pops
-
----
- sound/usb/endpoint.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/sound/usb/endpoint.c b/sound/usb/endpoint.c
-index 743b8287cfcd..ff8f4718cc21 100644
---- a/sound/usb/endpoint.c
-+++ b/sound/usb/endpoint.c
-@@ -1053,7 +1053,7 @@ static int data_ep_set_params(struct snd_usb_endpoint *ep)
+diff -ur a/sound/usb/endpoint.c b/sound/usb/endpoint.c
+--- a/sound/usb/endpoint.c	2022-11-05 18:06:18.143864685 +0800
++++ b/sound/usb/endpoint.c	2022-11-05 18:25:01.113120479 +0800
+@@ -1096,7 +1096,7 @@
  	case SNDRV_PCM_FORMAT_DSD_U32_LE:
  	case SNDRV_PCM_FORMAT_DSD_U16_BE:
  	case SNDRV_PCM_FORMAT_DSD_U32_BE:
@@ -20,6 +10,3 @@ index 743b8287cfcd..ff8f4718cc21 100644
  		break;
  	default:
  		ep->silence_value = 0;
--- 
-2.25.1
-

@@ -9,7 +9,7 @@ K_GENPATCHES_VER="7"
 K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 XANMOD_VERSION="1"
-RT_VERSION="11"
+RT_VERSION="14"
 XANMOD_URI="https://github.com/xanmod/linux/releases/download/"
 
 HOMEPAGE="https://xanmod.org"
