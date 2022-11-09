@@ -39,6 +39,8 @@ src_prepare() {
     sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridgeHelper || die
     sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RAATServer       || die
   fi
+  rm -rf "${S}"/RoonBridge/RoonMono/etc/mono/2.0 || die
+  rm -rf "${S}"/RoonBridge/RoonMono/lib/mono/2.0 || die
 }
 
 src_install() {
