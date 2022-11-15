@@ -1,0 +1,52 @@
+From 0dfde616e66035ad7d7183ffac3d8298e71164bd Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Wed, 16 Jan 2019 14:50:26 +0200
+Subject: [PATCH 3/6] Adjust USB audio buffer maximum size and isochronous
+ packet size
+
+---
+ drivers/usb/core/config.c | 4 ++--
+ sound/usb/pcm.c           | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/core/config.c b/drivers/usb/core/config.c
+index 562a730befda..5f3a0797e0eb 100644
+--- a/drivers/usb/core/config.c
++++ b/drivers/usb/core/config.c
+@@ -190,7 +190,7 @@ static const unsigned short full_speed_maxpacket_maxes[4] = {
+ };
+ static const unsigned short high_speed_maxpacket_maxes[4] = {
+ 	[USB_ENDPOINT_XFER_CONTROL] = 64,
+-	[USB_ENDPOINT_XFER_ISOC] = 1024,
++	[USB_ENDPOINT_XFER_ISOC] = 1544,
+ 
+ 	/* Bulk should be 512, but some devices use 1024: we will warn below */
+ 	[USB_ENDPOINT_XFER_BULK] = 1024,
+@@ -198,7 +198,7 @@ static const unsigned short high_speed_maxpacket_maxes[4] = {
+ };
+ static const unsigned short super_speed_maxpacket_maxes[4] = {
+ 	[USB_ENDPOINT_XFER_CONTROL] = 512,
+-	[USB_ENDPOINT_XFER_ISOC] = 1024,
++	[USB_ENDPOINT_XFER_ISOC] = 1544,
+ 	[USB_ENDPOINT_XFER_BULK] = 1024,
+ 	[USB_ENDPOINT_XFER_INT] = 1024,
+ };
+diff --git a/sound/usb/pcm.c b/sound/usb/pcm.c
+index f4494d054917..bb1314ad42d3 100644
+--- a/sound/usb/pcm.c
++++ b/sound/usb/pcm.c
+@@ -978,9 +978,9 @@ static const struct snd_pcm_hardware snd_usb_hardware =
+ 				SNDRV_PCM_INFO_INTERLEAVED |
+ 				SNDRV_PCM_INFO_BLOCK_TRANSFER |
+ 				SNDRV_PCM_INFO_PAUSE,
+-	.buffer_bytes_max =	1024 * 1024,
++	.buffer_bytes_max =	4 * 1024 * 1024,
+ 	.period_bytes_min =	64,
+-	.period_bytes_max =	512 * 1024,
++	.period_bytes_max =	4 * 512 * 1024,
+ 	.periods_min =		2,
+ 	.periods_max =		1024,
+ };
+-- 
+2.25.1
+

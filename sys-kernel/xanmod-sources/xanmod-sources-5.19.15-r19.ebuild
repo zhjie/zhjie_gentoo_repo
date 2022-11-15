@@ -10,10 +10,12 @@ K_SECURITY_UNSUPPORTED="1"
 K_NOSETEXTRAVERSION="1"
 XANMOD_VERSION="1"
 XANMOD_URI="https://github.com/xanmod/linux/releases/download/"
+K_NODRYRUN="1"
 
 HOMEPAGE="https://xanmod.org"
 LICENSE+=" CDDL"
 KEYWORDS="~amd64"
+IUSE="naa"
 
 RDEPEND="
 	!sys-kernel/xanmod-rt-sources
@@ -35,6 +37,9 @@ UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
 
 src_unpack() {
 	UNIPATCH_LIST+="${DISTDIR}/patch-${OKV}-xanmod${XANMOD_VERSION}.xz "
+        if use naa; then
+                UNIPATCH_LIST+=" ${FILESDIR}/*.patch"
+        fi
 	kernel-2_src_unpack
 }
 

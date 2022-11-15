@@ -1,0 +1,53 @@
+From 4daf1182b82dbc60873761379eecbfb3c536bfc8 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Wed, 26 Feb 2020 02:45:29 +0200
+Subject: [PATCH] DWC3 driver improvements
+
+---
+ drivers/usb/dwc3/core.h   | 2 +-
+ drivers/usb/dwc3/gadget.c | 9 ++++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 79e1b82e5e05..ba6e0236c2b6 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -39,7 +39,7 @@
+ #define DWC3_EP0_SETUP_SIZE	512
+ #define DWC3_ENDPOINTS_NUM	32
+ #define DWC3_XHCI_RESOURCES_NUM	2
+-#define DWC3_ISOC_MAX_RETRIES	5
++#define DWC3_ISOC_MAX_RETRIES_MSECS 5
+ 
+ #define DWC3_SCRATCHBUF_SIZE	4096	/* each buffer is assumed to be 4KiB */
+ #define DWC3_EVENT_BUFFERS_SIZE	4096
+diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+index ead877e7c87f..804d655bb492 100644
+--- a/drivers/usb/dwc3/gadget.c
++++ b/drivers/usb/dwc3/gadget.c
+@@ -1548,6 +1548,7 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
+ 	struct dwc3 *dwc = dep->dwc;
+ 	int ret;
+ 	int i;
++	int retry_count;
+ 
+ 	if (list_empty(&dep->pending_list) &&
+ 	    list_empty(&dep->started_list)) {
+@@ -1583,7 +1584,13 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
+ 			dep->frame_number += BIT(14);
+ 	}
+ 
+-	for (i = 0; i < DWC3_ISOC_MAX_RETRIES; i++) {
++	if (dep->interval) {
++		retry_count = (DWC3_ISOC_MAX_RETRIES_MSECS * 8) / dep->interval;
++	} else {
++		retry_count = (DWC3_ISOC_MAX_RETRIES_MSECS * 8);
++	}
++
++	for (i = 0; i < retry_count; i++) {
+ 		dep->frame_number = DWC3_ALIGN_FRAME(dep, i + 1);
+ 
+ 		ret = __dwc3_gadget_kick_transfer(dep);
+-- 
+2.25.1
+
