@@ -1,7 +1,7 @@
-From 7c3b908a62aec69c128448e51164d5867bcc2ad4 Mon Sep 17 00:00:00 2001
+From 3aa1efe000a7e992897644d802281b607a28fff1 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Mon, 26 Oct 2020 20:56:58 +0200
-Subject: [PATCH 6/6] ALSA: usb-audio: Add Cayin VID to DSD detection whitelist
+Subject: [PATCH] ALSA: usb-audio: Add Cayin VID to DSD detection whitelist
 
 Cayin DACs have DSD auto-detection support.
 
@@ -11,10 +11,10 @@ Signed-off-by: Jussi Laako <jussi@sonarnerd.net>
  1 file changed, 1 insertion(+)
 
 diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
-index 715e49c3f6b8..82db295576c6 100644
+index 7be5b046b99a..300826791843 100644
 --- a/sound/usb/quirks.c
 +++ b/sound/usb/quirks.c
-@@ -1826,6 +1826,7 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
+@@ -1758,6 +1758,7 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
  	case 0x292b:  /* Gustard/Ess based devices */
  	case 0x2972:  /* FiiO devices */
  	case 0x2ab6:  /* T+A devices */
@@ -23,5 +23,5 @@ index 715e49c3f6b8..82db295576c6 100644
  	case 0x3842:  /* EVGA */
  	case 0xc502:  /* HiBy devices */
 -- 
-2.25.1
+2.34.1
 

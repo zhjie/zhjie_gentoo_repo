@@ -20,9 +20,10 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~arm"
 RESTRICT="mirror bindist"
 
-IUSE="systemd debug +rt"
+IUSE="systemd debug +rt system-mono"
 
-RDEPEND=">=media-libs/alsa-lib-1.0.27"
+RDEPEND=">=media-libs/alsa-lib-1.0.27
+         system-mono? ( dev-lang/mono )"
 
 DEPEND="${RDEPEND}"
 
@@ -35,12 +36,18 @@ QA_PREBUILT="*"
 src_prepare() {
   default
   if ! use debug; then
-    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridge       || die
-    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridgeHelper || die
-    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RAATServer       || die
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridge        || die
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RoonBridgeHelper  || die
+    sed -i 's/\-\-debug//g' "${S}"/RoonBridge/Bridge/RAATServer        || die
   fi
-  rm -rf "${S}"/RoonBridge/RoonMono/etc/mono/2.0 || die
-  rm -rf "${S}"/RoonBridge/RoonMono/lib/mono/2.0 || die
+  rm -rf "${S}"/RoonBridge/RoonMono/etc/mono/2.0                       || die
+  rm -rf "${S}"/RoonBridge/RoonMono/lib/mono/2.0                       || die
+  if use system-mono; then
+    # rm -rf "${S}"/RoonBridge/RoonMono/*                                || die
+    mv "${S}"/RoonBridge/RoonMono/  "${S}"/RoonBridge/RoonMono.bkp     || die
+    mkdir -p "${S}"/RoonBridge/RoonMono/bin                            || die
+    ln -sf /usr/bin/mono-sgen "${S}"/RoonBridge/RoonMono/bin/mono-sgen || die    
+  fi
 }
 
 src_install() {
