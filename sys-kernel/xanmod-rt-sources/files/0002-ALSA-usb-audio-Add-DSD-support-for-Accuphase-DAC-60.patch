@@ -1,0 +1,29 @@
+From 39e0f92cfd4ba92a83bd58e0ce6ec5d375d753fa Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Fri, 30 Sep 2022 15:03:52 +0300
+Subject: [PATCH 2/2] ALSA: usb-audio: Add DSD support for Accuphase DAC-60
+
+Accuphase DAC-60 option card supports native DSD up to DSD256,
+but doesn't have support for auto-detection. Explicitly enable
+DSD support for the correct altsetting.
+
+Signed-off-by: Jussi Laako <jussi@sonarnerd.net>
+---
+ sound/usb/quirks.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index 6570358decba..d538cf9755d0 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -1723,6 +1723,7 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
+ 		}
+ 		break;
+ 	case USB_ID(0x16d0, 0x0a23):
++	case USB_ID(0X21ed, 0Xd75a):  /* Accuphase DAC-60 option card */
+ 		if (fp->altsetting == 2)
+ 			return SNDRV_PCM_FMTBIT_DSD_U32_BE;
+ 		break;
+-- 
+2.34.1
+
