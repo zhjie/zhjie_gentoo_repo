@@ -1,0 +1,12 @@
+[Unit]  
+Description=AirUPnP bridge  
+After=network-online.target  
+Wants=network-online.target  
+
+[Service]  
+ExecStart=/usr/bin/airupnp -Z -x /var/lib/airupnp/airupnp.xml   
+Restart=on-failure  
+RestartSec=30  
+
+[Install]  
+WantedBy=multi-user.target  

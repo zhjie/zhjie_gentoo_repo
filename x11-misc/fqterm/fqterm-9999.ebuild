@@ -1,9 +1,9 @@
 # Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI="8"
 
-inherit cmake-utils git-r3
+inherit cmake git-r3
 
 DESCRIPTION="a modern terminal emulator for Linux with qt5"
 EGIT_REPO_URI="https://github.com/mytbk/fqterm.git"

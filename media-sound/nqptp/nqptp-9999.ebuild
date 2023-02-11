@@ -3,7 +3,7 @@
 
 EAPI=7
 
-inherit autotools eutils user git-r3
+inherit autotools eutils git-r3
 
 DESCRIPTION="nqptp is a companion application to Shairport Sync and provides timing information for AirPlay 2 operation."
 HOMEPAGE="https://github.com/mikebrady/nqptp"
