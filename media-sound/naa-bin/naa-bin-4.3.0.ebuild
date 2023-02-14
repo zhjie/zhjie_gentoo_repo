@@ -34,13 +34,6 @@ DEPEND="${RDEPEND}"
 S="${WORKDIR}"
 QA_PREBUILT="usr/sbin/networkaudiod"
 
-#pkg_setup() {
-#	if use !systemd; then
-#		enewgroup networkaudiod
-#		enewuser networkaudiod -1 -1 "/dev/null" "networkaudiod,audio"
-#	fi
-#}
-
 src_unpack() {
 	unpack_deb ${A}
 }
