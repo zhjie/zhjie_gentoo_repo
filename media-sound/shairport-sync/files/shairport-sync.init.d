@@ -1,7 +1,7 @@
 #!/sbin/openrc-run
 
 
-user="shairport-sync"
+user="root"
 
 description="emulates an AirPort Express to stream music from i-devices"
 start_stop_daemon_args="--user $user"
@@ -13,8 +13,7 @@ pidfile=/run/shairport-sync.pid
 
 depend() {
     need localmount
-    # avahi-daemon
-    after bootmisc net*
+    after bootmisc net* avahi-daemon
 }
 
 stop() {
