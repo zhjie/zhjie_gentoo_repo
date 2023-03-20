@@ -1,0 +1,48 @@
+commit e79d0f97cc6eb3354f41553f6ac024f1c3237bde
+Author: Takashi Iwai <tiwai@suse.de>
+Date:   Mon Jan 2 18:07:58 2023 +0100
+
+    ALSA: usb-audio: Relax hw constraints for implicit fb sync
+    
+    [ Upstream commit d463ac1acb454fafed58f695cb3067fbf489f3a0 ]
+    
+    The fix commit the commit e4ea77f8e53f ("ALSA: usb-audio: Always apply
+    the hw constraints for implicit fb sync") tried to address the bug
+    where an incorrect PCM parameter is chosen when two (implicit fb)
+    streams are set up at the same time.  This change had, however, some
+    side effect: once when the sync endpoint is chosen and set up, this
+    restriction is applied at the next hw params unless it's freed via hw
+    free explicitly.
+    
+    This patch is a workaround for the problem by relaxing the hw
+    constraints a bit for the implicit fb sync.  We still keep applying
+    the hw constraints for implicit fb sync, but only when the matching
+    sync EP is being used by other streams.
+    
+    Fixes: e4ea77f8e53f ("ALSA: usb-audio: Always apply the hw constraints for implicit fb sync")
+    Reported-by: Ruud van Asseldonk <ruud@veniogames.com>
+    Link: https://lore.kernel.org/r/4e509aea-e563-e592-e652-ba44af6733fe@veniogames.com
+    Link: https://lore.kernel.org/r/20230102170759.29610-3-tiwai@suse.de
+    Signed-off-by: Takashi Iwai <tiwai@suse.de>
+    Signed-off-by: Sasha Levin <sashal@kernel.org>
+
+diff --git a/sound/usb/pcm.c b/sound/usb/pcm.c
+index ef0c1baaefde..87a30be64324 100644
+--- a/sound/usb/pcm.c
++++ b/sound/usb/pcm.c
+@@ -909,8 +909,13 @@ get_sync_ep_from_substream(struct snd_usb_substream *subs)
+ 			continue;
+ 		/* for the implicit fb, check the sync ep as well */
+ 		ep = snd_usb_get_endpoint(chip, fp->sync_ep);
+-		if (ep && ep->cur_audiofmt)
+-			return ep;
++		if (ep && ep->cur_audiofmt) {
++			/* ditto, if the sync (data) ep is used by others,
++			 * this stream is restricted by the sync ep
++			 */
++			if (ep != subs->sync_endpoint || ep->opened > 1)
++				return ep;
++		}
+ 	}
+ 	return NULL;
+ }
