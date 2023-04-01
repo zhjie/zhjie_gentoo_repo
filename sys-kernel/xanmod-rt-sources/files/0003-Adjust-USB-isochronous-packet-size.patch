@@ -1,7 +1,7 @@
-From e915faad115b773d9a26fae10cd87c67f2de89f3 Mon Sep 17 00:00:00 2001
+From 48b71564ad7680cee749ba2d7f17b0fad8e4379f Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Wed, 16 Jan 2019 14:50:26 +0200
-Subject: [PATCH 3/4] Adjust USB isochronous packet size
+Subject: [PATCH 6/7] Adjust USB isochronous packet size
 
 ---
  drivers/usb/core/config.c | 4 ++--
@@ -30,5 +30,5 @@ index 00e28456e4cc..4bc8d05345ec 100644
  	[USB_ENDPOINT_XFER_INT] = 1024,
  };
 -- 
-2.25.1
+2.34.1
 

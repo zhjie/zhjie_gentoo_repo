@@ -1,7 +1,7 @@
-From 4f7912fa433827ce90ca49ca6084c199f0cb8b6d Mon Sep 17 00:00:00 2001
+From 56b06d79932a289e53a8a989cb03a89f37fbc184 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Wed, 9 Nov 2022 00:21:51 +0200
-Subject: [PATCH 1/2] Miscellaneous sample rate extensions
+Subject: [PATCH 2/7] Miscellaneous sample rate extensions
 
 ---
  sound/core/pcm_native.c     | 2 +-
@@ -10,10 +10,10 @@ Subject: [PATCH 1/2] Miscellaneous sample rate extensions
  3 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/sound/core/pcm_native.c b/sound/core/pcm_native.c
-index f38c2e5e9a29..3d6ca5d88a73 100644
+index 44e06ef4ff0b..56ea035d9596 100644
 --- a/sound/core/pcm_native.c
 +++ b/sound/core/pcm_native.c
-@@ -2429,7 +2429,7 @@ static int snd_pcm_hw_rule_sample_bits(struct snd_pcm_hw_params *params,
+@@ -2431,7 +2431,7 @@ static int snd_pcm_hw_rule_sample_bits(struct snd_pcm_hw_params *params,
  	return snd_interval_refine(hw_param_interval(params, rule->var), &t);
  }
  
@@ -36,7 +36,7 @@ index b8cfc250612c..f39f98bbc97f 100644
  			   SNDRV_PCM_FMTBIT_S24_LE |
  			   SNDRV_PCM_FMTBIT_S32_LE
 diff --git a/sound/soc/codecs/pcm512x.c b/sound/soc/codecs/pcm512x.c
-index 60dee41816dc..33ed3bbf0362 100644
+index 1c26577f08ee..c45819ccf9ea 100644
 --- a/sound/soc/codecs/pcm512x.c
 +++ b/sound/soc/codecs/pcm512x.c
 @@ -536,7 +536,7 @@ static unsigned long pcm512x_ncp_target(struct pcm512x_priv *pcm512x,

@@ -1,7 +1,7 @@
-From 91702c3696ae7ac0d8c40bf708f3c22f2250083b Mon Sep 17 00:00:00 2001
+From cfdbc941eccde98baf7ca461b69395e06f98b5a2 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Fri, 21 Sep 2018 10:37:01 +0300
-Subject: [PATCH 2/4] Add is_volatile USB mixer feature and fix mixer control
+Subject: [PATCH 5/7] Add is_volatile USB mixer feature and fix mixer control
  creation
 
 ---
@@ -95,5 +95,5 @@ index d12b87e52d22..4300a275e60e 100644
  	}
  	kctl->private_free = snd_usb_mixer_elem_free;
 -- 
-2.25.1
+2.34.1
 

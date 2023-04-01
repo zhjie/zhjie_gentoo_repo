@@ -1,7 +1,7 @@
-From 643a7cc10199bb648381c276b705a6de6bc69a67 Mon Sep 17 00:00:00 2001
+From 38b40ee6dc1fa6af5eb7b6aa85c547ca50c8a7a2 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Wed, 26 Feb 2020 02:45:29 +0200
-Subject: [PATCH] DWC3 driver improvements
+Subject: [PATCH 2/2] DWC3 driver improvements
 
 ---
  drivers/usb/dwc3/core.h   | 2 +-
@@ -9,7 +9,7 @@ Subject: [PATCH] DWC3 driver improvements
  2 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
-index fd5d42ec5350..a7b693bf2e2b 100644
+index 725653711411..04527d1dbcd3 100644
 --- a/drivers/usb/dwc3/core.h
 +++ b/drivers/usb/dwc3/core.h
 @@ -41,7 +41,7 @@
@@ -22,10 +22,10 @@ index fd5d42ec5350..a7b693bf2e2b 100644
  #define DWC3_SCRATCHBUF_SIZE	4096	/* each buffer is assumed to be 4KiB */
  #define DWC3_EVENT_BUFFERS_SIZE	4096
 diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index 00cf8ebcb338..5ed9309225c9 100644
+index a0100d26de8e..717dfe4d1f7e 100644
 --- a/drivers/usb/dwc3/gadget.c
 +++ b/drivers/usb/dwc3/gadget.c
-@@ -1771,6 +1771,7 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
+@@ -1760,6 +1760,7 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
  	struct dwc3 *dwc = dep->dwc;
  	int ret;
  	int i;
@@ -33,7 +33,7 @@ index 00cf8ebcb338..5ed9309225c9 100644
  
  	if (list_empty(&dep->pending_list) &&
  	    list_empty(&dep->started_list)) {
-@@ -1806,7 +1807,13 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
+@@ -1795,7 +1796,13 @@ static int __dwc3_gadget_start_isoc(struct dwc3_ep *dep)
  			dep->frame_number += BIT(14);
  	}
  
@@ -49,5 +49,5 @@ index 00cf8ebcb338..5ed9309225c9 100644
  
  		ret = __dwc3_gadget_kick_transfer(dep);
 -- 
-2.25.1
+2.34.1
 
