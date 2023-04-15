@@ -12,7 +12,7 @@ DESCRIPTION="libgmpris"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
 	amd64? ( https://www.sonarnerd.net/src/buster/${MY_PN}_${PV}-7_amd64.deb )
-	arm64?   ( https://www.sonarnerd.net/src/buster/${MY_PN}_${PV}-7_arm64.deb )
+	arm64? ( https://www.sonarnerd.net/src/buster/${MY_PN}_${PV}-7_arm64.deb )
 "
 
 LICENSE="Signalyst"
