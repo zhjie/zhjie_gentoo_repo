@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg system-dotnet web alsa rt"
+IUSE="systemd samba ffmpeg system-dotnet web alsa rt +taskset4"
 
 RDEPEND="dev-libs/icu
 	 alsa? ( media-libs/alsa-lib )
@@ -46,6 +46,17 @@ src_prepare() {
   if ! use alsa; then
     rm -vrf "${S}"/RoonServer/Appliance/check_alsa || die
     rm -vrf "${S}"/RoonServer/Appliance/libraatmanager.so || die
+  fi
+  if use taskset4; then
+    cp "${S}"/RoonServer/Appliance/RoonAppliance "${S}"/RoonServer/Appliance/RoonAppliance.orig
+    sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 1,2,3 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+      "${S}"/RoonServer/Appliance/RoonAppliance
+    cp "${S}"/RoonServer/Appliance/RAATServer "${S}"/RoonServer/Appliance/RAATServer.orig
+    sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+      "${S}"/RoonServer/Appliance/RAATServer
+    cp "${S}"/RoonServer/Server/RoonServer "${S}"/RoonServer/Server/RoonServer.orig
+    sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+      "${S}"/RoonServer/Server/RoonServer
   fi
 }
 
