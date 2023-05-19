@@ -34,6 +34,8 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	>=dev-util/patchelf-0.10
 	>=net-libs/libsoup-2.62.3
 	>=media-sound/wavpack-5.3.2-r1
+	!>net-libs/gssdp-1.6
+	!>net-libs/gupnp-1.6
 	x11-libs/cairo
 	dev-libs/libusb-compat
 	media-sound/mpg123
@@ -41,7 +43,6 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	>sys-devel/gcc-11.3.0"
 
 DEPEND="${RDEPEND}"
-
 
 S="${WORKDIR}"
 
