@@ -10,7 +10,7 @@ logfile="/var/log/airupnp.log"
 command="/usr/bin/airupnp"
 command_args=""
 pidfile="/run/airupnp.pid"
-start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user} -Z -x /var/lib/airupnp/airupnp.xml"
+start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user} -z -x /var/lib/airupnp/airupnp.xml"
 
 depend() {
     use alsasound
