@@ -1,22 +1,16 @@
 #!/sbin/openrc-run
 
-user="root:root"
-logfile="/tmp/roon.log"
+export SSD_NICELEVEL="-20"
 
 command="chrt"
 command_args="
-        -r 51 /opt/RoonBridge/start.sh -f $logfile
+	-r 51 /opt/RoonBridge/Bridge/RoonBridge
 "
 
 command_background=yes
 pidfile=/run/roon.pid
 
-#need net
 depend() {
     use alsasound
     after bootmisc
-}
-
-start_pre() {
-    checkpath --file --owner $user --mode 0644 $logfile
 }

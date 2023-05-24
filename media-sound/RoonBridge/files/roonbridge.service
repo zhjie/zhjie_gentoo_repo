@@ -8,7 +8,7 @@ Type=simple
 User=root
 Environment=ROON_DATAROOT=/var/roon
 Environment=ROON_ID_DIR=/var/roon
-ExecStart=/opt/RoonBridge/start.sh
+ExecStart=/opt/RoonBridge/Bridge/RoonBridge
 Restart=on-abort
 
 [Install]
