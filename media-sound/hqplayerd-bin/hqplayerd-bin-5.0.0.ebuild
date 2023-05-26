@@ -20,7 +20,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd cpu_flags_x86_avx2"
+IUSE="systemd upnp cpu_flags_x86_avx2"
 
 RDEPEND=">=dev-libs/glib-2.37.3
 	>=media-libs/libgmpris-2.2.1
@@ -40,7 +40,9 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	dev-libs/libusb-compat
 	media-sound/mpg123
 	media-sound/lame
-	>sys-devel/gcc-11.3.0"
+	>sys-devel/gcc-11.3.0
+	upnp? ( net-misc/rygel )
+"
 
 DEPEND="${RDEPEND}"
 

@@ -14,7 +14,7 @@ HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
     amd64? ( https://www.signalyst.eu/bins/naa/linux/bullseye/networkaudiod_${PV}-${VN}_amd64.deb )
     arm64? ( https://www.signalyst.eu/bins/naa/linux/bullseye/networkaudiod_${PV}-${VN}_arm64.deb )
-    arm? ( https://www.signalyst.eu/bins/naa/linux/bullseye/networkaudiod_${PV}-${VN}_arm64.deb )
+    arm? ( https://www.signalyst.eu/bins/naa/linux/bullseye/networkaudiod_${PV}-${VN}_armhf.deb )
 "
 
 LICENSE="Signalyst"
