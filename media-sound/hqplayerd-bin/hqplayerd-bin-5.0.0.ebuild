@@ -20,7 +20,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd upnp cpu_flags_x86_avx2"
+IUSE="systemd +upnp cpu_flags_x86_avx2"
 
 RDEPEND=">=dev-libs/glib-2.37.3
 	>=media-libs/libgmpris-2.2.1
@@ -41,7 +41,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	media-sound/mpg123
 	media-sound/lame
 	>sys-devel/gcc-11.3.0
-	upnp? ( net-misc/rygel )
+	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
 "
 
 DEPEND="${RDEPEND}"
@@ -50,14 +50,12 @@ S="${WORKDIR}"
 
 src_prepare() {
 	rm -rf usr/lib
-	rm -rf usr/share/doc/hqplayerd/changelog.Debian.gz
+	rm -rf usr/share/doc/hqplayerd/
 
 	default
 	 if use cpu_flags_x86_avx2 ; then
 		 patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
 	 fi
-	 #patchelf --replace-needed libgupnp-1.2.so.0 libgupnp-1.2.so.1 usr/bin/hqplayerd || die
- 	 #patchelf --replace-needed libgupnp-av-1.0.so.2 libgupnp-av-1.0.so.3 usr/bin/hqplayerd || die
 }
 
 src_install() {
