@@ -16,7 +16,7 @@ XANMOD_URI="https://github.com/xanmod/linux/releases/download/"
 HOMEPAGE="https://xanmod.org"
 LICENSE+=" CDDL"
 KEYWORDS="~amd64 ~arm64 ~arm"
-IUSE="naa"
+IUSE="+naa"
 
 inherit kernel-2
 detect_version

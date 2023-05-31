@@ -5,6 +5,7 @@
 
 description="HQPlayerEmbedded - upsampling multichannel audio player"
 
+export SSD_NICELEVEL="-10"
 user="root:root"
 logfile="/var/log/hqplayerd.log"
 command="/usr/bin/hqplayerd"
@@ -15,8 +16,7 @@ start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${l
 #need net
 depend() {
     use alsasound
-    #after bootmisc net*
-    after gpireteonline local
+    after bootmisc
 }
 
 start_pre() {
