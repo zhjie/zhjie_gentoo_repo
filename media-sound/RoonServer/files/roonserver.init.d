@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-export SSD_NICELEVEL="-20"
+export SSD_NICELEVEL="-18"
 export ROON_DATAROOT=/var/roon
 export ROON_ID_DIR=/var/roon
 
