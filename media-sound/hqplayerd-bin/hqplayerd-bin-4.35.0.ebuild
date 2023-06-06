@@ -28,13 +28,12 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	>=media-libs/flac-1.3.0
 	>=media-libs/libogg-1.3.3
 	>=sys-libs/libomp-7.1.0
-	>=net-libs/gupnp-1.0.4
+        net-libs/gupnp:0/1.2-0
+        net-libs/gssdp:0/1.2-0
 	>=net-libs/gupnp-av-0.12.11
 	>=dev-libs/libgee-0.20.2
 	>=net-libs/libsoup-2.62.3
 	>=media-sound/wavpack-5.3.2-r1
-	!>net-libs/gssdp-1.6
-	!>net-libs/gupnp-1.6
 	x11-libs/cairo
 	dev-libs/libusb-compat
 	media-sound/mpg123

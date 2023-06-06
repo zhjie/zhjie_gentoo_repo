@@ -27,7 +27,7 @@ RDEPEND="
 DEPEND="${RDEPEND}"
 
 S="${WORKDIR}"
-# QA_PREBUILT="usr/sbin/networkaudiod"
+QA_PREBUILT="*"
 
 src_unpack() {
 	unpack ${FILESDIR}/rygel-bin-2.6.tar.tbz
