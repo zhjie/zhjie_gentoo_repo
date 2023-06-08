@@ -15,7 +15,7 @@ URI="https://www.plex.tv/media-server-downloads"
 DESCRIPTION="Free media library that is intended for use with a plex client"
 HOMEPAGE="https://www.plex.tv/"
 SRC_URI="
-https://downloads.plex.tv/plex-media-server-new/1.32.2.7100-248a2daf0/debian/plexmediaserver_1.32.2.7100-248a2daf0_amd64.deb
+https://downloads.plex.tv/plex-media-server-new/1.32.3.7162-b0a36929b/debian/plexmediaserver_1.32.3.7162-b0a36929b_amd64.deb
 "
 S="${WORKDIR}"
 
@@ -60,6 +60,7 @@ src_install() {
 	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/LyricFind.bundle
 	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/OpenSubtitles.bundle
         rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/LastFM.bundle
+	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/PlexThemeMusic.bundle
 
 	# Copy main files over to image and preserve permissions so it is portable
 	cp -rp usr/ "${ED}" || die
