@@ -29,7 +29,7 @@ SRC_URI="
 src_unpack() {
 	UNIPATCH_LIST_DEFAULT=""
         UNIPATCH_LIST+=" ${DISTDIR}/patch-${OKV}-xanmod${XANMOD_VERSION}.xz"
-        UNIPATCH_LIST+=" ${FILESDIR}/000*.patch"
+        UNIPATCH_LIST+=" ${FILESDIR}/100*.patch"
 	UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
 	kernel-2_src_unpack
 }
