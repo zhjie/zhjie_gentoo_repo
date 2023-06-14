@@ -23,7 +23,9 @@ src_unpack() {
         if use naa; then
 	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
         fi
-        UNIPATCH_LIST+=" ${FILESDIR}/cachy/00*.patch"
+#        UNIPATCH_LIST+=" ${FILESDIR}/cachy/00*.patch"
+        UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
+	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/futex/00*.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/net/bbr2/00*.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/net/tcp/00*.patch"
