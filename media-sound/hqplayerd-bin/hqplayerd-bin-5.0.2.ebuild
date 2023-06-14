@@ -11,7 +11,7 @@ MY_PN=${PN/-bin/}
 DESCRIPTION="HQPlayer Embedded - upsampling multichannel audio player"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
-amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-1_amd64.deb ) )
+amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-2_amd64.deb ) )
 amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-2avx2_amd64.deb ) )
 "
 

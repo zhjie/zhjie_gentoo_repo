@@ -5,6 +5,7 @@ EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras experimental"
 K_GENPATCHES_VER="10"
+#K_NODRYRUN="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
@@ -23,7 +24,6 @@ src_unpack() {
         if use naa; then
 	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
         fi
-#        UNIPATCH_LIST+=" ${FILESDIR}/cachy/00*.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
 	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/futex/00*.patch"
