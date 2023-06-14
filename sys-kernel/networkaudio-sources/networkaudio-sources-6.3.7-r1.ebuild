@@ -3,14 +3,15 @@
 
 EAPI="8"
 ETYPE="sources"
-K_WANT_GENPATCHES="base extras experimental"
+K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="10"
-#K_NODRYRUN="1"
+K_EXP_GENPATCHES_NOUSE="1"
+K_NODRYRUN="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="+experimental naa"
+IUSE="naa rt"
 
 inherit kernel-2
 detect_version
@@ -24,11 +25,14 @@ src_unpack() {
         if use naa; then
 	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
         fi
+	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/futex/00*.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/net/bbr2/00*.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/net/tcp/00*.patch"
+        UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-lrng.patch"
+	if use rt; then
+		UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-rt.patch"
+	else
+		UNIPATCH_LIST+=" ${FILESDIR}/cachy/sched/0001-prjc-cachy.patch"
+	fi
 	kernel-2_src_unpack
 }
 
