@@ -13,7 +13,7 @@ SRC_URI="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2  -> ${P
 LICENSE="roonlabs"
 
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd samba ffmpeg system-dotnet web alsa rt +taskset4"
