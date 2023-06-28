@@ -1,4 +1,4 @@
-From 0008ed0e3bcab91a1e99d3477e756976198552ed Mon Sep 17 00:00:00 2001
+From 5050a9b4986b00b2b9e69609b5f1ad8387de8290 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Wed, 5 Oct 2022 03:46:34 +0000
 Subject: [PATCH 06/18] XANMOD: rcu: Change sched_setscheduler_nocheck() calls
@@ -15,10 +15,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  6 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 7016cb12dc4e..885328dc95e9 100644
+index 9e5bab29685f..e5d62d656c18 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4757,7 +4757,7 @@
+@@ -4799,7 +4799,7 @@
  			overwritten.
  
  	rcutree.kthread_prio= 	 [KNL,BOOT]
@@ -28,10 +28,10 @@ index 7016cb12dc4e..885328dc95e9 100644
  			the priority of the RCU boost threads (rcub/N)
  			and for the RCU grace-period kthreads (rcu_bh,
 diff --git a/kernel/rcu/Kconfig b/kernel/rcu/Kconfig
-index ab62074174c3..f1f909bdc30d 100644
+index 9071182b1284..1655b95bbf98 100644
 --- a/kernel/rcu/Kconfig
 +++ b/kernel/rcu/Kconfig
-@@ -280,9 +280,9 @@ config RCU_NOCB_CPU_CB_BOOST
+@@ -277,9 +277,9 @@ config RCU_NOCB_CPU_CB_BOOST
  	depends on RCU_NOCB_CPU && RCU_BOOST
  	default y if PREEMPT_RT
  	help
@@ -44,7 +44,7 @@ index ab62074174c3..f1f909bdc30d 100644
  	  of milliseconds or more.  Therefore, when enabling this option,
  	  it is your responsibility to ensure that latency-sensitive
 diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
-index 8e6c023212cb..d5c227c58419 100644
+index 147551c23baf..b1962a2b5abb 100644
 --- a/kernel/rcu/rcutorture.c
 +++ b/kernel/rcu/rcutorture.c
 @@ -2406,7 +2406,7 @@ static int rcutorture_booster_init(unsigned int cpu)
@@ -57,10 +57,10 @@ index 8e6c023212cb..d5c227c58419 100644
  
  	/* Don't allow time recalculation while creating a new task. */
 diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-index 7b95ee98a1a5..fff35d80456a 100644
+index f52ff7241041..56882d9fd5dd 100644
 --- a/kernel/rcu/tree.c
 +++ b/kernel/rcu/tree.c
-@@ -4553,8 +4553,8 @@ static void __init rcu_start_exp_gp_kworkers(void)
+@@ -4558,8 +4558,8 @@ static void __init rcu_start_exp_gp_kworkers(void)
  		return;
  	}
  
@@ -71,7 +71,7 @@ index 7b95ee98a1a5..fff35d80456a 100644
  				   &param);
  }
  
-@@ -4592,7 +4592,7 @@ static int __init rcu_spawn_gp_kthread(void)
+@@ -4597,7 +4597,7 @@ static int __init rcu_spawn_gp_kthread(void)
  		return 0;
  	if (kthread_prio) {
  		sp.sched_priority = kthread_prio;
@@ -81,10 +81,10 @@ index 7b95ee98a1a5..fff35d80456a 100644
  	rnp = rcu_get_root();
  	raw_spin_lock_irqsave_rcu_node(rnp, flags);
 diff --git a/kernel/rcu/tree_nocb.h b/kernel/rcu/tree_nocb.h
-index 9e1c8caec5ce..dd39c50ae099 100644
+index f2280616f9d5..d5edbe0504fc 100644
 --- a/kernel/rcu/tree_nocb.h
 +++ b/kernel/rcu/tree_nocb.h
-@@ -1465,7 +1465,7 @@ static void rcu_spawn_cpu_nocb_kthread(int cpu)
+@@ -1469,7 +1469,7 @@ static void rcu_spawn_cpu_nocb_kthread(int cpu)
  		}
  		WRITE_ONCE(rdp_gp->nocb_gp_kthread, t);
  		if (kthread_prio)
@@ -93,7 +93,7 @@ index 9e1c8caec5ce..dd39c50ae099 100644
  	}
  	mutex_unlock(&rdp_gp->nocb_gp_kthread_mutex);
  
-@@ -1476,7 +1476,7 @@ static void rcu_spawn_cpu_nocb_kthread(int cpu)
+@@ -1480,7 +1480,7 @@ static void rcu_spawn_cpu_nocb_kthread(int cpu)
  		goto end;
  
  	if (IS_ENABLED(CONFIG_RCU_NOCB_CPU_CB_BOOST) && kthread_prio)
@@ -125,5 +125,5 @@ index 7b0fe741a088..77ad9e033358 100644
  
   out:
 -- 
-2.39.1
+2.39.2
 

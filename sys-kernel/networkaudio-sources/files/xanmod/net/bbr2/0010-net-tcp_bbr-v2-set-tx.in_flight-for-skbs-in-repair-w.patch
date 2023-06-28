@@ -1,4 +1,4 @@
-From 9f54b09d6bdc20eb162693fa069d248cb3e97569 Mon Sep 17 00:00:00 2001
+From 1f90be19cc3fafc6219b0fcab06751cce824df77 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Tue, 7 May 2019 22:37:19 -0400
 Subject: [PATCH 10/20] net-tcp_bbr: v2: set tx.in_flight for skbs in repair
@@ -30,7 +30,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 1177f3d18c62..6c1afb8f8944 100644
+index 2cabc6fa1945..73aac3d0b022 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -2641,6 +2641,7 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
@@ -42,5 +42,5 @@ index 1177f3d18c62..6c1afb8f8944 100644
  		}
  
 -- 
-2.39.1
+2.39.2
 

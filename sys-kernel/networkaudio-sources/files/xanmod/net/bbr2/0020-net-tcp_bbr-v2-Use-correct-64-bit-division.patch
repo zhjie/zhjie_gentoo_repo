@@ -1,4 +1,4 @@
-From eec67da4f7c68f4d42ecdd144d9be4e2831b8bef Mon Sep 17 00:00:00 2001
+From 793bd3cae278857a8c2b6300a125c4ab15ded99b Mon Sep 17 00:00:00 2001
 From: Konstantin Demin <rockdrilla@gmail.com>
 Date: Tue, 17 May 2022 10:10:40 +0300
 Subject: [PATCH 20/20] net-tcp_bbr: v2: Use correct 64-bit division
@@ -46,5 +46,5 @@ index 037ebd2894a8..85f8052144d1 100644
  }
  
 -- 
-2.39.1
+2.39.2
 

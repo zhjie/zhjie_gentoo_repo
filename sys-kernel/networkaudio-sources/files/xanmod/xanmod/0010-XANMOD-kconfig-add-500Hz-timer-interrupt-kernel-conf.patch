@@ -1,4 +1,4 @@
-From 23dbf2d48d1659c6182e1bdb03747f2bbb13ebf8 Mon Sep 17 00:00:00 2001
+From fd75ff5d684335434dcf3180cbdab20f14c2de36 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <admfrade@gmail.com>
 Date: Mon, 29 Jan 2018 17:26:15 +0000
 Subject: [PATCH 10/18] XANMOD: kconfig: add 500Hz timer interrupt kernel
@@ -46,5 +46,5 @@ index 38ef6d06888e..b4a1995149d0 100644
  
  config SCHED_HRTICK
 -- 
-2.39.1
+2.39.2
 

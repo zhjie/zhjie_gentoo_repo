@@ -1,8 +1,8 @@
-From 5c644592c98154fa48fca64b8e4cf27af855ef89 Mon Sep 17 00:00:00 2001
+From 9020a0eba52ecfdaa877eee4846c54e78b5b57e3 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Sat, 25 Feb 2023 19:58:52 +0000
-Subject: [PATCH 2/2] XANMOD: Makefile: Move ARM and x86 instruction set selection
- to kernel-wide build
+Subject: [PATCH 2/2] XANMOD: Makefile: Move ARM and x86 instruction set
+ selection to kernel-wide build
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
 ---
@@ -13,10 +13,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  4 files changed, 155 insertions(+), 149 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 35a5ae1ede42..ec354040212d 100644
+index 01bd68d4c9a1..f0eb1d6fb2b2 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -831,6 +831,158 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-truncation)
+@@ -815,6 +815,158 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-truncation)
  KBUILD_CFLAGS	+= $(call cc-disable-warning, format-overflow)
  KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
  
@@ -176,7 +176,7 @@ index 35a5ae1ede42..ec354040212d 100644
  KBUILD_CFLAGS += -O2
  KBUILD_RUSTFLAGS += -Copt-level=2
 diff --git a/arch/arm/Makefile b/arch/arm/Makefile
-index 955b0362cdfb..3218004f95b7 100644
+index 547e5856eaa0..4a6b85a2564c 100644
 --- a/arch/arm/Makefile
 +++ b/arch/arm/Makefile
 @@ -59,56 +59,6 @@ endif
@@ -250,7 +250,7 @@ index 955b0362cdfb..3218004f95b7 100644
  CHECKFLAGS	+= -D__arm__
  
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index eb4a04be4403..4f130a8b2476 100644
+index ddcbba010fea..8bf206623693 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -149,61 +149,6 @@ else
@@ -365,5 +365,5 @@ index 94834c4b5e5e..81923b4afdf8 100644
 -cflags-y			+= $(call cc-option,-Wa$(comma)-mtune=generic32,)
 -endif
 -- 
-2.39.1
+2.39.2
 

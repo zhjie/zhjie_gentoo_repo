@@ -1,4 +1,4 @@
-From 6a967884f6c825fb35af430d21c8b84e9bb84f5e Mon Sep 17 00:00:00 2001
+From 4c82a1f297d149c9b598cde1432ec6b04712a566 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 21 Mar 2022 21:37:19 +0000
 Subject: [PATCH] i2c: busses: Add SMBus capability to work with OpenRGB driver
@@ -14,7 +14,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  create mode 100644 drivers/i2c/busses/i2c-nct6775.c
 
 diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index a7bfddf08fa7..c9a5fa597950 100644
+index 87600b4aacb3..9cf3bae52edf 100644
 --- a/drivers/i2c/busses/Kconfig
 +++ b/drivers/i2c/busses/Kconfig
 @@ -229,6 +229,15 @@ config I2C_CHT_WC
@@ -34,7 +34,7 @@ index a7bfddf08fa7..c9a5fa597950 100644
  	tristate "Nvidia nForce2, nForce3 and nForce4"
  	depends on PCI
 diff --git a/drivers/i2c/busses/Makefile b/drivers/i2c/busses/Makefile
-index e73cdb1d2b5a..052ccd05c13c 100644
+index af56fe2c75c0..76be74584719 100644
 --- a/drivers/i2c/busses/Makefile
 +++ b/drivers/i2c/busses/Makefile
 @@ -20,6 +20,7 @@ obj-$(CONFIG_I2C_CHT_WC)	+= i2c-cht-wc.o
@@ -717,5 +717,5 @@ index 809fbd014cd6..d54b35b147ee 100644
  	/* If the SMBus is still busy, we give up */
  	if (timeout == MAX_TIMEOUT) {
 -- 
-2.39.1
+2.39.2
 

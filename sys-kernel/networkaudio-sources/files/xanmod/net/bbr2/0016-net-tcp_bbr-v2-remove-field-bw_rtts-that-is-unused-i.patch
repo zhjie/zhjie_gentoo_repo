@@ -1,4 +1,4 @@
-From b13cc488b092d9d17e02ad508ab67e3380cabe97 Mon Sep 17 00:00:00 2001
+From d108b9b0e6bf0dc9bc52db3ec34d622f93b34d59 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Mon, 17 Aug 2020 19:08:41 -0400
 Subject: [PATCH 16/20] net-tcp_bbr: v2: remove field bw_rtts that is unused in
@@ -51,5 +51,5 @@ index 6286c8bef87d..bebdd6087941 100644
  	bbr->params.extra_acked_gain = min(0x7FF, bbr_extra_acked_gain);
  	bbr->params.extra_acked_win_rtts = min(0x1FU, bbr_extra_acked_win_rtts);
 -- 
-2.39.1
+2.39.2
 

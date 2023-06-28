@@ -1,4 +1,4 @@
-From e87134ae182d526e2f8c6d7cebf882e7eda38369 Mon Sep 17 00:00:00 2001
+From 2100531c8ed114346e85c13545efe4264dc4e111 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 24 Apr 2023 04:17:20 +0000
 Subject: [PATCH 02/18] XANMOD: fair: Remove all energy efficiency functions
@@ -9,7 +9,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 3 insertions(+), 254 deletions(-)
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 5f6587d94c1d..7902e0b71343 100644
+index 373ff5f55884..0cad5581ba4f 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -19,6 +19,9 @@
@@ -22,7 +22,7 @@ index 5f6587d94c1d..7902e0b71343 100644
   */
  #include <linux/energy_model.h>
  #include <linux/mmap_lock.h>
-@@ -7331,252 +7334,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
+@@ -7392,252 +7395,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
  	return min(max_util, eenv->cpu_cap);
  }
  
@@ -275,7 +275,7 @@ index 5f6587d94c1d..7902e0b71343 100644
  /*
   * select_task_rq_fair: Select target runqueue for the waking task in domains
   * that have the relevant SD flag set. In practice, this is SD_BALANCE_WAKE,
-@@ -7604,14 +7361,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
+@@ -7665,14 +7422,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
  	lockdep_assert_held(&p->pi_lock);
  	if (wake_flags & WF_TTWU) {
  		record_wakee(p);
@@ -291,5 +291,5 @@ index 5f6587d94c1d..7902e0b71343 100644
  	}
  
 -- 
-2.39.1
+2.39.2
 

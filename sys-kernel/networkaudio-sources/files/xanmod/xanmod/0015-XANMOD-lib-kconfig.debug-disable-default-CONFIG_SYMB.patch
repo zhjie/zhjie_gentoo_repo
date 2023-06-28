@@ -1,4 +1,4 @@
-From aa97bd51ba74c02d46db26ca577100c3d84921ae Mon Sep 17 00:00:00 2001
+From 437a38b75c8016621d1247c768db3b13b2039cbe Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <admfrade@gmail.com>
 Date: Thu, 25 Jun 2020 16:40:43 -0300
 Subject: [PATCH 15/18] XANMOD: lib/kconfig.debug: disable default
@@ -11,7 +11,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 39d1d93164bd..490ccf47c67d 100644
+index ce51d4dc6803..41f60e2e9a6a 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -190,7 +190,7 @@ config DYNAMIC_DEBUG_CORE
@@ -33,5 +33,5 @@ index 39d1d93164bd..490ccf47c67d 100644
  	  Say Y here to make BUG() panics output the file name and line number
  	  of the BUG call as well as the EIP and oops trace.  This aids
 -- 
-2.39.1
+2.39.2
 

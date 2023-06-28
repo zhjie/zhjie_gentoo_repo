@@ -1,4 +1,4 @@
-From 2c7e7a359ddda18ea51b9c729cdd8d96a16091c4 Mon Sep 17 00:00:00 2001
+From 2dd329857c86d60adc77478f49e2cdc669cf510c Mon Sep 17 00:00:00 2001
 From: Serge Hallyn <serge.hallyn@canonical.com>
 Date: Fri, 31 May 2013 19:12:12 +0100
 Subject: [PATCH] sysctl: add sysctl to disallow unprivileged CLONE_NEWUSER by
@@ -22,10 +22,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  3 files changed, 31 insertions(+)
 
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 9f7fe3541897..79a9118273f2 100644
+index 41c964104b58..36a488c9210e 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -108,6 +108,11 @@
+@@ -110,6 +110,11 @@
  
  #define CREATE_TRACE_POINTS
  #include <trace/events/task.h>
@@ -37,7 +37,7 @@ index 9f7fe3541897..79a9118273f2 100644
  
  /*
   * Minimum number of threads to boot the kernel
-@@ -2030,6 +2035,10 @@ static __latent_entropy struct task_struct *copy_process(
+@@ -2266,6 +2271,10 @@ __latent_entropy struct task_struct *copy_process(
  	if ((clone_flags & (CLONE_NEWUSER|CLONE_FS)) == (CLONE_NEWUSER|CLONE_FS))
  		return ERR_PTR(-EINVAL);
  
@@ -48,7 +48,7 @@ index 9f7fe3541897..79a9118273f2 100644
  	/*
  	 * Thread groups must share signals as well, and detached threads
  	 * can only be started up within the thread group.
-@@ -3180,6 +3189,12 @@ int ksys_unshare(unsigned long unshare_flags)
+@@ -3419,6 +3428,12 @@ int ksys_unshare(unsigned long unshare_flags)
  	if (unshare_flags & CLONE_NEWNS)
  		unshare_flags |= CLONE_FS;
  
@@ -62,10 +62,10 @@ index 9f7fe3541897..79a9118273f2 100644
  	if (err)
  		goto bad_unshare_out;
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 2bca30b77d8a..3fd5738f1114 100644
+index 3f7a88751464..3bfdb78a649e 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -137,6 +137,10 @@ static enum sysctl_writes_mode sysctl_writes_strict = SYSCTL_WRITES_STRICT;
+@@ -136,6 +136,10 @@ static enum sysctl_writes_mode sysctl_writes_strict = SYSCTL_WRITES_STRICT;
  int sysctl_legacy_va_layout;
  #endif
  
@@ -76,7 +76,7 @@ index 2bca30b77d8a..3fd5738f1114 100644
  #endif /* CONFIG_SYSCTL */
  
  /*
-@@ -1650,6 +1654,15 @@ static struct ctl_table kern_table[] = {
+@@ -1633,6 +1637,15 @@ static struct ctl_table kern_table[] = {
  		.extra1		= SYSCTL_ZERO,
  		.extra2		= SYSCTL_TWO,
  	},
@@ -93,7 +93,7 @@ index 2bca30b77d8a..3fd5738f1114 100644
  	{
  		.procname	= "tainted",
 diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
-index 54211dbd516c..43c4c079c554 100644
+index 1d8e47bed3f1..3102509f5e78 100644
 --- a/kernel/user_namespace.c
 +++ b/kernel/user_namespace.c
 @@ -22,6 +22,9 @@
@@ -107,5 +107,5 @@ index 54211dbd516c..43c4c079c554 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 -- 
-2.39.1
+2.39.2
 

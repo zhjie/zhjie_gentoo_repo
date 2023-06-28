@@ -1,4 +1,4 @@
-From 07f845bcc56e7cb2456a202f827c9487e396e246 Mon Sep 17 00:00:00 2001
+From 812a7ca9532d748996686c460c07c6b3d24d8c81 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Thu, 15 Sep 2022 02:45:40 +0000
 Subject: [PATCH 05/18] XANMOD: sched/core: Add yield_type sysctl to reduce or
@@ -13,10 +13,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  2 files changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 0d18c3969f90..c0e14d09c53a 100644
+index a68d1276bab0..5e69a9bcf550 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -139,6 +139,14 @@ __read_mostly int sysctl_resched_latency_warn_ms = 100;
+@@ -143,6 +143,14 @@ __read_mostly int sysctl_resched_latency_warn_ms = 100;
  __read_mostly int sysctl_resched_latency_warn_once = 1;
  #endif /* CONFIG_SCHED_DEBUG */
  
@@ -31,7 +31,7 @@ index 0d18c3969f90..c0e14d09c53a 100644
  /*
   * Number of tasks to iterate in a single balance run.
   * Limited because this is done with IRQs disabled.
-@@ -8439,10 +8447,15 @@ static void do_sched_yield(void)
+@@ -8483,10 +8491,15 @@ static void do_sched_yield(void)
  	struct rq_flags rf;
  	struct rq *rq;
  
@@ -49,10 +49,10 @@ index 0d18c3969f90..c0e14d09c53a 100644
  	preempt_disable();
  	rq_unlock_irq(rq, &rf);
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 1c240d2c99bc..aa34ca553890 100644
+index bfe53e835524..3f7a88751464 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -98,6 +98,7 @@ static const int six_hundred_forty_kb = 640 * 1024;
+@@ -97,6 +97,7 @@ static const int six_hundred_forty_kb = 640 * 1024;
  #endif
  
  
@@ -60,7 +60,7 @@ index 1c240d2c99bc..aa34ca553890 100644
  static const int ngroups_max = NGROUPS_MAX;
  static const int cap_last_cap = CAP_LAST_CAP;
  
-@@ -1645,6 +1646,15 @@ static struct ctl_table kern_table[] = {
+@@ -1623,6 +1624,15 @@ static struct ctl_table kern_table[] = {
  		.mode		= 0644,
  		.proc_handler	= proc_dointvec,
  	},
@@ -77,5 +77,5 @@ index 1c240d2c99bc..aa34ca553890 100644
  	{
  		.procname	= "tainted",
 -- 
-2.39.1
+2.39.2
 

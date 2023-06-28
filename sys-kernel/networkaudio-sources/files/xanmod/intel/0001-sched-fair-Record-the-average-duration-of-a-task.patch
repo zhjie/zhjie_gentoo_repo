@@ -1,7 +1,7 @@
-From e623ad77a62e35ad30508a2bf4d9e57a0332a19b Mon Sep 17 00:00:00 2001
+From b574dc4acc799a684f5de700fa7cb8877fbdc2e2 Mon Sep 17 00:00:00 2001
 From: Chen Yu <yu.c.chen@intel.com>
 Date: Sat, 29 Apr 2023 07:16:41 +0800
-Subject: [PATCH 01/21] sched/fair: Record the average duration of a task
+Subject: [PATCH 1/9] sched/fair: Record the average duration of a task
 
 Record the average duration of a task, as there is a requirement
 to leverage this information for better task placement.
@@ -54,10 +54,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  4 files changed, 19 insertions(+)
 
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index a4c1e3638cb1..f64e64faf31b 100644
+index eed5d65b8d1f..ab4bbb86ea6a 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -557,6 +557,9 @@ struct sched_entity {
+@@ -559,6 +559,9 @@ struct sched_entity {
  	u64				prev_sum_exec_runtime;
  
  	u64				nr_migrations;
@@ -68,10 +68,10 @@ index a4c1e3638cb1..f64e64faf31b 100644
  #ifdef CONFIG_FAIR_GROUP_SCHED
  	int				depth;
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 5dc6e316150b..8a43bace1202 100644
+index 5e69a9bcf550..5901b6352eba 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -4501,6 +4501,8 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
+@@ -4471,6 +4471,8 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
  	p->se.prev_sum_exec_runtime	= 0;
  	p->se.nr_migrations		= 0;
  	p->se.vruntime			= 0;
@@ -81,10 +81,10 @@ index 5dc6e316150b..8a43bace1202 100644
  
  #ifdef CONFIG_FAIR_GROUP_SCHED
 diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index 1637b65ba07a..8d64fba16cfe 100644
+index 0b2340a79b65..4164be2763aa 100644
 --- a/kernel/sched/debug.c
 +++ b/kernel/sched/debug.c
-@@ -1024,6 +1024,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
+@@ -1070,6 +1070,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
  	__PS("nr_involuntary_switches", p->nivcsw);
  
  	P(se.load.weight);
@@ -93,10 +93,10 @@ index 1637b65ba07a..8d64fba16cfe 100644
  	P(se.avg.load_sum);
  	P(se.avg.runnable_sum);
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 97c78058a7fa..71f8602e05f6 100644
+index b777d415128c..0973c728e588 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6179,6 +6179,18 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
+@@ -6379,6 +6379,18 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
  
  static void set_next_buddy(struct sched_entity *se);
  
@@ -115,7 +115,7 @@ index 97c78058a7fa..71f8602e05f6 100644
  /*
   * The dequeue_task method is called before nr_running is
   * decreased. We remove the task from the rbtree and
-@@ -6251,6 +6263,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
+@@ -6451,6 +6463,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
  
  dequeue_throttle:
  	util_est_update(&rq->cfs, p, task_sleep);
@@ -124,5 +124,5 @@ index 97c78058a7fa..71f8602e05f6 100644
  }
  
 -- 
-2.39.1
+2.39.2
 

@@ -1,4 +1,4 @@
-From 74b9f59718915b4d48dd22845a03c7a6117cc6da Mon Sep 17 00:00:00 2001
+From ad8bf2b17a2d01fc451d0d669bd2180725633c0e Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Tue, 7 Aug 2018 21:52:06 -0400
 Subject: [PATCH 06/20] net-tcp_bbr: v2: introduce ca_ops->skb_marked_lost() CC
@@ -29,10 +29,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  2 files changed, 8 insertions(+)
 
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index e35659147f63..31aeaf84e9ef 100644
+index 34c1e30fdb5a..b8f8957827e2 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
-@@ -1101,6 +1101,9 @@ struct tcp_congestion_ops {
+@@ -1102,6 +1102,9 @@ struct tcp_congestion_ops {
  	/* override sysctl_tcp_min_tso_segs */
  	u32 (*min_tso_segs)(struct sock *sk);
  
@@ -43,7 +43,7 @@ index e35659147f63..31aeaf84e9ef 100644
  	 * after all the ca_state processing. (optional)
  	 */
 diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index a1d5ea5c4167..dc7368f4fb7c 100644
+index d119def3e500..3faa2901b9ea 100644
 --- a/net/ipv4/tcp_input.c
 +++ b/net/ipv4/tcp_input.c
 @@ -1079,7 +1079,12 @@ static void tcp_verify_retransmit_hint(struct tcp_sock *tp, struct sk_buff *skb)
@@ -60,5 +60,5 @@ index a1d5ea5c4167..dc7368f4fb7c 100644
  
  void tcp_mark_skb_lost(struct sock *sk, struct sk_buff *skb)
 -- 
-2.39.1
+2.39.2
 

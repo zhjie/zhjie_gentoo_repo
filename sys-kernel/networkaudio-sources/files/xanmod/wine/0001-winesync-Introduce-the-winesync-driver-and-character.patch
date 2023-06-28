@@ -1,4 +1,4 @@
-From 8a8e5479b0a4da689dc153237d23560c21f76541 Mon Sep 17 00:00:00 2001
+From 6b4ddbf7d0045241c5b3c805dfd34fa5c558d9b8 Mon Sep 17 00:00:00 2001
 From: Zebediah Figura <zfigura@codeweavers.com>
 Date: Wed, 28 Sep 2022 03:48:52 +0000
 Subject: [PATCH] winesync: Introduce the winesync driver and character device
@@ -44,10 +44,10 @@ index 06c525e01ea5..21f07941d86c 100644
  
    11 char	Raw keyboard device	(Linux/SPARC only)
 diff --git a/Documentation/userspace-api/index.rst b/Documentation/userspace-api/index.rst
-index f16337bdb852..4f62a95d8ed9 100644
+index 72a65db0c498..ce5d0df572eb 100644
 --- a/Documentation/userspace-api/index.rst
 +++ b/Documentation/userspace-api/index.rst
-@@ -31,6 +31,7 @@ place where this information is gathered.
+@@ -32,6 +32,7 @@ place where this information is gathered.
     sysfs-platform_profile
     vduse
     futex2
@@ -56,10 +56,10 @@ index f16337bdb852..4f62a95d8ed9 100644
  .. only::  subproject and html
  
 diff --git a/Documentation/userspace-api/ioctl/ioctl-number.rst b/Documentation/userspace-api/ioctl/ioctl-number.rst
-index eb045fc495a4..5909a1abf11f 100644
+index 4f7b23faebb9..654a64f70f99 100644
 --- a/Documentation/userspace-api/ioctl/ioctl-number.rst
 +++ b/Documentation/userspace-api/ioctl/ioctl-number.rst
-@@ -375,6 +375,8 @@ Code  Seq#    Include File                                           Comments
+@@ -374,6 +374,8 @@ Code  Seq#    Include File                                           Comments
                                                                       <mailto:thomas@winischhofer.net>
  0xF6  all                                                            LTTng Linux Trace Toolkit Next Generation
                                                                       <mailto:mathieu.desnoyers@efficios.com>
@@ -519,10 +519,10 @@ index 000000000000..d7055bf41820
 +  ``objs`` and in ``alert`` If this is attempted, the function fails
 +  with ``EINVAL``.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index f77188f30210..b55e2c44dfa7 100644
+index 35e19594640d..9703273ae5ae 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -22474,6 +22474,15 @@ M:	David Härdeman <david@hardeman.nu>
+@@ -22744,6 +22744,15 @@ M:	David Härdeman <david@hardeman.nu>
  S:	Maintained
  F:	drivers/media/rc/winbond-cir.c
  
@@ -536,10 +536,10 @@ index f77188f30210..b55e2c44dfa7 100644
 +F:	tools/testing/selftests/drivers/winesync/
 +
  WINSYSTEMS EBC-C384 WATCHDOG DRIVER
- M:	William Breathitt Gray <william.gray@linaro.org>
  L:	linux-watchdog@vger.kernel.org
+ S:	Orphan
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 9947b7892bd5..92f81de604c4 100644
+index 433aa4197785..e177448f234b 100644
 --- a/drivers/misc/Kconfig
 +++ b/drivers/misc/Kconfig
 @@ -505,6 +505,17 @@ config OPEN_DICE
@@ -561,10 +561,10 @@ index 9947b7892bd5..92f81de604c4 100644
  	tristate "Guest vCPU stall detector"
  	depends on OF && HAS_IOMEM
 diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 87b54a4a4422..00e107e26160 100644
+index 56de43943cd5..9d6a29aed0db 100644
 --- a/drivers/misc/Makefile
 +++ b/drivers/misc/Makefile
-@@ -60,6 +60,7 @@ obj-$(CONFIG_HABANA_AI)		+= habanalabs/
+@@ -59,6 +59,7 @@ obj-$(CONFIG_PVPANIC)   	+= pvpanic/
  obj-$(CONFIG_UACCE)		+= uacce/
  obj-$(CONFIG_XILINX_SDFEC)	+= xilinx_sdfec.o
  obj-$(CONFIG_HISI_HIKEY_USB)	+= hisi_hikey_usb.o
@@ -1880,7 +1880,7 @@ index 000000000000..5b4e369f7469
 +
 +#endif
 diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index 41b649452560..b78b08d3fb2f 100644
+index 90a62cf75008..166f70c3f7d7 100644
 --- a/tools/testing/selftests/Makefile
 +++ b/tools/testing/selftests/Makefile
 @@ -15,6 +15,7 @@ TARGETS += drivers/dma-buf
@@ -3398,5 +3398,5 @@ index 000000000000..169e922484b0
 +
 +TEST_HARNESS_MAIN
 -- 
-2.39.1
+2.39.2
 

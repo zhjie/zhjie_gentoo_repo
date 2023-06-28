@@ -1,4 +1,4 @@
-From 33ee3e23d9d85477b0f269ffeb8454dccd6322eb Mon Sep 17 00:00:00 2001
+From c2ee37d87f50b94d7943101f25549173b4337896 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Thu, 21 Nov 2019 15:28:01 -0500
 Subject: [PATCH 15/20] net-tcp_bbr: v2: remove unnecessary rs.delivered_ce
@@ -47,5 +47,5 @@ index 114d794806ce..6286c8bef87d 100644
  	if (bbr2_is_inflight_too_high(sk, &rs)) {
  		rs.tx_in_flight = bbr2_inflight_hi_from_lost_skb(sk, &rs, skb);
 -- 
-2.39.1
+2.39.2
 

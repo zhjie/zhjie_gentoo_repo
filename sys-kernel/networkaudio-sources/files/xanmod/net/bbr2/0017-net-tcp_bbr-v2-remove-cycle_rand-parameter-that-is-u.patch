@@ -1,4 +1,4 @@
-From b4a06e4ed8e7ad277fddca6e95f190247bddfb2e Mon Sep 17 00:00:00 2001
+From f7731c025915156fa0fca2a2f27dee793f8bdc68 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Mon, 17 Aug 2020 19:10:21 -0400
 Subject: [PATCH 17/20] net-tcp_bbr: v2: remove cycle_rand parameter that is
@@ -32,5 +32,5 @@ index bebdd6087941..13cbe7c95dc1 100644
  module_param_named(probe_rtt_cwnd_gain,
  		   bbr_probe_rtt_cwnd_gain,		     uint,   0664);
 -- 
-2.39.1
+2.39.2
 

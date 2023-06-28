@@ -1,4 +1,4 @@
-From bf06c899ee90d33e5892f73dd8f25f9b4e885629 Mon Sep 17 00:00:00 2001
+From 5e16041e2ccd9075bccd80addf04f00e2e7b3bf0 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <admfrade@gmail.com>
 Date: Mon, 29 Jan 2018 17:31:25 +0000
 Subject: [PATCH 12/18] XANMOD: mm/vmscan: vm_swappiness = 30 decreases the
@@ -11,7 +11,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 9c1c5e8b24b8..0f85226781bd 100644
+index 5bf98d0a22c9..f039d1b3d9ca 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
 @@ -186,7 +186,7 @@ struct scan_control {
@@ -21,8 +21,8 @@ index 9c1c5e8b24b8..0f85226781bd 100644
 -int vm_swappiness = 60;
 +int vm_swappiness = 30;
  
- static void set_task_reclaim_state(struct task_struct *task,
- 				   struct reclaim_state *rs)
+ LIST_HEAD(shrinker_list);
+ DECLARE_RWSEM(shrinker_rwsem);
 -- 
-2.39.1
+2.39.2
 

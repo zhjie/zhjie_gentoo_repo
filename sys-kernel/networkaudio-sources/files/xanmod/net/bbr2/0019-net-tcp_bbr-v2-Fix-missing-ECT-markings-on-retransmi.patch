@@ -1,4 +1,4 @@
-From 491d4c2b391bb6dd18070d6514b58ac9479470d1 Mon Sep 17 00:00:00 2001
+From 04b9cb8a8c901c38d435f34efa5074f5c621dc62 Mon Sep 17 00:00:00 2001
 From: Adithya Abraham Philip <abrahamphilip@google.com>
 Date: Fri, 11 Jun 2021 21:56:10 +0000
 Subject: [PATCH 19/20] net-tcp_bbr: v2: Fix missing ECT markings on
@@ -22,7 +22,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  3 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 3a02bfc0371c..e1f05c2b4707 100644
+index a38ef380ee9a..b34661204315 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
 @@ -375,6 +375,7 @@ static inline void tcp_dec_quickack_mode(struct sock *sk,
@@ -48,7 +48,7 @@ index a3168bbefa39..037ebd2894a8 100644
  
  /* Core TCP stack informs us that the given skb was just marked lost. */
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index f39d5db61b18..5ffec885e66f 100644
+index de658abebbad..6166db9a8571 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -375,7 +375,8 @@ static void tcp_ecn_send(struct sock *sk, struct sk_buff *skb,
@@ -62,5 +62,5 @@ index f39d5db61b18..5ffec885e66f 100644
  			INET_ECN_dontxmit(sk);
  		}
 -- 
-2.39.1
+2.39.2
 

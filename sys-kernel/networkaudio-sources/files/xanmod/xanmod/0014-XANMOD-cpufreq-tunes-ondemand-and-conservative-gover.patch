@@ -1,4 +1,4 @@
-From ba9c64b5381e18949ec026dd829d1e959f2888c1 Mon Sep 17 00:00:00 2001
+From bf2f3c8f22c9d7a4365c76fd987a2d4b67f3e6de Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <admfrade@gmail.com>
 Date: Tue, 31 Mar 2020 13:32:08 -0300
 Subject: [PATCH 14/18] XANMOD: cpufreq: tunes ondemand and conservative
@@ -66,5 +66,5 @@ index c52d19d67557..ba5ea026789e 100644
   * proportional to load.
   */
 -- 
-2.39.1
+2.39.2
 

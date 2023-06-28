@@ -1,4 +1,4 @@
-From f67a9e43426d8b604d8f1966b1734f9ab07c6b05 Mon Sep 17 00:00:00 2001
+From a2f2e24053988b0f3ec0589122ae0067514aa920 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Mon, 28 Dec 2020 19:23:09 -0500
 Subject: [PATCH 18/20] net-tcp_bbr: v2: don't assume prior_cwnd was set
@@ -56,5 +56,5 @@ index 13cbe7c95dc1..a3168bbefa39 100644
  		bbr->try_fast_path = 0; /* bound cwnd using latest model */
  	}
 -- 
-2.39.1
+2.39.2
 

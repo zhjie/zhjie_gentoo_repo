@@ -1,4 +1,4 @@
-From c2e2d95e6c2f7daf5af3c08be2447fcc6d492d71 Mon Sep 17 00:00:00 2001
+From 04814c10b05cd37683818627a4ff00f9e1a06819 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Tue, 25 Apr 2023 01:40:24 +0000
 Subject: [PATCH 01/18] XANMOD: x86/build: Add more x86_64 optimizations
@@ -9,7 +9,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index b39975977c03..36083e9f3aa7 100644
+index fdc2e3abd615..445959d09d55 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -67,7 +67,8 @@ export BITS
@@ -23,5 +23,5 @@ index b39975977c03..36083e9f3aa7 100644
  
  ifeq ($(CONFIG_X86_KERNEL_IBT),y)
 -- 
-2.39.1
+2.39.2
 

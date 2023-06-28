@@ -1,4 +1,4 @@
-From abd4c1bd881bc0a34ea40128391e536ec9009782 Mon Sep 17 00:00:00 2001
+From d4a00f94b4e67233e67a56eb4d0c9c8290c6fa1c Mon Sep 17 00:00:00 2001
 From: Christian Brauner <christian@brauner.io>
 Date: Wed, 23 Jan 2019 21:54:23 +0100
 Subject: [PATCH 2/2] binder: give binder_alloc its own debug mask file
@@ -16,7 +16,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/android/binder_alloc.c b/drivers/android/binder_alloc.c
-index 55a3c3c2409f..01d437a305ee 100644
+index 662a2a2e2e84..2019dab43752 100644
 --- a/drivers/android/binder_alloc.c
 +++ b/drivers/android/binder_alloc.c
 @@ -38,8 +38,7 @@ enum {
@@ -30,5 +30,5 @@ index 55a3c3c2409f..01d437a305ee 100644
  #define binder_alloc_debug(mask, x...) \
  	do { \
 -- 
-2.39.1
+2.39.2
 

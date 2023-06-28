@@ -1,4 +1,4 @@
-From 5f603da15b9a07384dd6afd48864350ab0600bfd Mon Sep 17 00:00:00 2001
+From 50104b8d9985ad30040b8c1e434a629d87b4f000 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 27 Feb 2023 01:38:18 +0000
 Subject: [PATCH 1/2] netfilter: Add netfilter nf_tables fullcone support
@@ -179,10 +179,10 @@ index 000000000000..bfb4791421e9
 +
 +#endif /*_NF_NAT_FULLCONE_H_ */
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index 4d6737160857..94db896aa236 100644
+index 441d1f134110..57ccb50fa732 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
-@@ -568,6 +568,21 @@ config NFT_NAT
+@@ -571,6 +571,21 @@ config NFT_NAT
  	  This option adds the "nat" expression that you can use to perform
  	  typical Network Address Translation (NAT) packet transformations.
  
@@ -205,10 +205,10 @@ index 4d6737160857..94db896aa236 100644
  	tristate "Netfilter nf_tables tunnel module"
  	help
 diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
-index 5ffef1cd6143..6b66038e8a7d 100644
+index d4958e7e7631..bb69f63934e2 100644
 --- a/net/netfilter/Makefile
 +++ b/net/netfilter/Makefile
-@@ -234,3 +234,8 @@ obj-$(CONFIG_IP_VS) += ipvs/
+@@ -235,3 +235,8 @@ obj-$(CONFIG_IP_VS) += ipvs/
  
  # lwtunnel
  obj-$(CONFIG_LWTUNNEL) += nf_hooks_lwtunnel.o
@@ -2300,5 +2300,5 @@ index 000000000000..16249abfdf5a
 +MODULE_ALIAS_NFT_EXPR("fullcone");
 +MODULE_DESCRIPTION("Netfilter nftables fullcone expression support of RFC3489 full cone NAT");
 -- 
-2.39.1
+2.39.2
 

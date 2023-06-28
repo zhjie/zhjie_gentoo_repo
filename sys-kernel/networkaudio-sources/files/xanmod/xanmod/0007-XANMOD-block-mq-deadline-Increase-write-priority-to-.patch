@@ -1,4 +1,4 @@
-From 82ee21f34184c68a1b2d15472718ea2381155b79 Mon Sep 17 00:00:00 2001
+From e62c74613a52846b71546dd583c0c0d80312f64b Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Wed, 11 May 2022 18:56:51 +0000
 Subject: [PATCH 07/18] XANMOD: block/mq-deadline: Increase write priority to
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f10c2a0d18d4..1ee106800395 100644
+index 5839a027e0f0..021cfb30a6fc 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
 @@ -4,6 +4,9 @@
@@ -23,7 +23,7 @@ index f10c2a0d18d4..1ee106800395 100644
   */
  #include <linux/kernel.h>
  #include <linux/fs.h>
-@@ -30,13 +33,13 @@
+@@ -28,13 +31,13 @@
   * See Documentation/block/deadline-iosched.rst
   */
  static const int read_expire = HZ / 2;  /* max time before a read is submitted. */
@@ -40,5 +40,5 @@ index f10c2a0d18d4..1ee106800395 100644
  				     by the above parameters. For throughput. */
  
 -- 
-2.39.1
+2.39.2
 

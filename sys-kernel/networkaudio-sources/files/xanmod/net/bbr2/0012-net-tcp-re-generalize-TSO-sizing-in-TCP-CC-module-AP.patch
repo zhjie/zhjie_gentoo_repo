@@ -1,4 +1,4 @@
-From 35edd686e45e9376647d8527057f8c85cb9f1c56 Mon Sep 17 00:00:00 2001
+From abfcdbe1740320cd19f14090dcd928be845b16b5 Mon Sep 17 00:00:00 2001
 From: Neal Cardwell <ncardwell@google.com>
 Date: Fri, 27 Sep 2019 17:10:26 -0400
 Subject: [PATCH 12/20] net-tcp: re-generalize TSO sizing in TCP CC module API
@@ -26,10 +26,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  3 files changed, 33 insertions(+), 20 deletions(-)
 
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 356817c11bdc..3a02bfc0371c 100644
+index 2c9101a8d65c..a38ef380ee9a 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
-@@ -1102,8 +1102,8 @@ struct tcp_congestion_ops {
+@@ -1103,8 +1103,8 @@ struct tcp_congestion_ops {
  	/* hook for packet ack accounting (optional) */
  	void (*pkts_acked)(struct sock *sk, const struct ack_sample *sample);
  
@@ -106,7 +106,7 @@ index 146792cd26fe..ece20792083a 100644
  	.set_state	= bbr_set_state,
  };
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 6c1afb8f8944..f39d5db61b18 100644
+index 73aac3d0b022..de658abebbad 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -1999,13 +1999,12 @@ static u32 tcp_tso_autosize(const struct sock *sk, unsigned int mss_now,
@@ -129,5 +129,5 @@ index 6c1afb8f8944..f39d5db61b18 100644
  }
  
 -- 
-2.39.1
+2.39.2
 
