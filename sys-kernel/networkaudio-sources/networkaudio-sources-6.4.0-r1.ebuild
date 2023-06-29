@@ -25,14 +25,13 @@ src_unpack() {
         if use naa; then
 	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
         fi
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/6.4/all/0001-cachyos-base-all.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/cachy/6.3/misc/0001-high-hz.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/cachy/6.3/misc/0001-lrng.patch"
+	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
+        UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
 	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/net/tcp/000*.patch"
 	if use rt; then
-		UNIPATCH_LIST+=" ${FILESDIR}/cachy/6.4/misc/0001-rt.patch"
+		UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-rt.patch"
 	else
-		UNIPATCH_LIST+=" ${FILESDIR}/cachy/6.4/sched/0001-prjc-cachy.patch"
+		UNIPATCH_LIST+=" ${FILESDIR}/cachy/sched/0001-prjc-cachy.patch"
 	fi
 	kernel-2_src_unpack
 }
