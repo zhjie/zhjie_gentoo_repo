@@ -36,6 +36,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	dev-libs/libusb-compat
 	media-sound/mpg123
 	media-sound/lame
+	media-sound/wavpack
 	>sys-devel/gcc-11.3.0
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
 "
