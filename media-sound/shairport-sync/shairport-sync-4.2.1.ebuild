@@ -3,7 +3,7 @@
 
 EAPI=7
 
-inherit autotools eutils
+inherit autotools eutils systemd
 
 DESCRIPTION="Shairport Sync is an AirPlay audio player"
 HOMEPAGE="https://github.com/mikebrady/shairport-sync"
@@ -36,7 +36,7 @@ RDEPEND="${DEPEND}
 
 src_unpack() {
 	unpack ${P}.tar.gz
-        mv ${WORKDIR}/nqptp-1.2.2d0 ${WORKDIR}/nqptp-1.2.2
+        mv ${WORKDIR}/shairport-sync-4.2.1d0 ${WORKDIR}/${P}
 }
 
 src_configure() {
