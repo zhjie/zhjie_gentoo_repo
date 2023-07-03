@@ -8,9 +8,9 @@ description="AirConnect: Send audio to UPnP players using AirPlay"
 user="root:root"
 logfile="/var/log/airupnp.log"
 command="/usr/bin/airupnp"
-command_args=""
+command_args="-Z -x /var/lib/airupnp/airupnp.xml"
 pidfile="/run/airupnp.pid"
-start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user} -z -x /var/lib/airupnp/airupnp.xml"
+start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user}"
 
 depend() {
     use alsasound
