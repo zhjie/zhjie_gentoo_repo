@@ -7,7 +7,7 @@ inherit autotools eutils
 
 DESCRIPTION="Shairport Sync is an AirPlay audio player"
 HOMEPAGE="https://github.com/mikebrady/shairport-sync"
-SRC_URI="https://github.com/mikebrady/shairport-sync/archive/${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/mikebrady/shairport-sync/archive/4.2.1d0.tar.gz -> ${P}.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
@@ -33,6 +33,11 @@ DEPEND="dev-libs/libdaemon
 RDEPEND="${DEPEND}
         net-dns/avahi
 "
+
+src_unpack() {
+	unpack ${P}.tar.gz
+        mv ${WORKDIR}/nqptp-1.2.2d0 ${WORKDIR}/nqptp-1.2.2
+}
 
 src_configure() {
 	autoreconf -i -f
