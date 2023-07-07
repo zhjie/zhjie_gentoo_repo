@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="4"
 K_EXP_GENPATCHES_NOUSE="1"
 K_NODRYRUN="1"
 
@@ -27,6 +27,7 @@ src_unpack() {
         fi
 	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
+	UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-lrng.patch"
 	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/net/tcp/000*.patch"
 	if use rt; then
 		UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-rt.patch"
