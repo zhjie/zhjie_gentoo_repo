@@ -12,7 +12,7 @@ SRC_URI="https://github.com/mikebrady/shairport-sync/archive/4.2.1d0.tar.gz -> $
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 x86 arm arm64"
-IUSE="+alac +soxr convolution systemd ap2"
+IUSE="+alac +soxr convolution systemd ap2 avahi tinysvcmdns"
 
 DEPEND="dev-libs/libdaemon
         dev-libs/libconfig
@@ -31,7 +31,8 @@ DEPEND="dev-libs/libdaemon
 "
 
 RDEPEND="${DEPEND}
-        net-dns/avahi
+        avahi? ( net-dns/avahi )
+	tinysvcmdns? ( net-dns/tinysvcmdns )
 "
 
 src_unpack() {
@@ -41,7 +42,8 @@ src_unpack() {
 
 src_configure() {
 	autoreconf -i -f
-	econf --sysconfdir=/etc --with-libdaemon --with-ssl=openssl --with-avahi --with-alsa \
+	econf --sysconfdir=/etc --with-libdaemon --with-ssl=openssl --with-alsa --with-tinysvcmdns \
+		$(use_with avahi) \
 		$(use_with soxr) \
 		$(use_with alac apple-alac) \
 		$(use_with convolution) \
