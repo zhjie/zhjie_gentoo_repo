@@ -1,7 +1,7 @@
-From 7445b6718ae1b5157f2eb2183a55c5c28193c04f Mon Sep 17 00:00:00 2001
+From da924e0790a68d55b9e03f6892a1cd82c98b660b Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sat, 22 Apr 2023 11:46:46 +0200
-Subject: [PATCH 12/12] zstd: import 1.5.5
+Date: Tue, 11 Jul 2023 19:26:20 +0200
+Subject: [PATCH 7/7] zstd 1.5.5
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
