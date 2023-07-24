@@ -4,9 +4,11 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
 K_EXP_GENPATCHES_NOUSE="1"
-# K_NODRYRUN="1"
+K_GENPATCHES_VER="7"
+K_SECURITY_UNSUPPORTED="1"
+#K_NOSETEXTRAVERSION="1"
+K_NODRYRUN="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
@@ -15,9 +17,13 @@ IUSE="naa"
 
 inherit kernel-2
 detect_version
+EXTRAVERSION="-networkaudio-rt"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
+
+KV_FULL="${KV_FULL}-rt"
+S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
 	UNIPATCH_LIST_DEFAULT=""
@@ -31,8 +37,7 @@ src_unpack() {
 
 	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-lrng.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/sched/0001-prjc-cachy.patch"
+	UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-rt.patch"
 
 	kernel-2_src_unpack
 }
