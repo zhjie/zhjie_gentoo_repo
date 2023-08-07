@@ -27,7 +27,7 @@ src_unpack() {
         fi
 
         UNIPATCH_LIST+=" ${FILESDIR}/xanmod/net/tcp/000*.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
+#	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
 
 	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
         UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
