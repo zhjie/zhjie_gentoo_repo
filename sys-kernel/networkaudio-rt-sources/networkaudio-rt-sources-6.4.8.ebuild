@@ -4,11 +4,9 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_EXP_GENPATCHES_NOUSE="1"
 K_GENPATCHES_VER="10"
-K_SECURITY_UNSUPPORTED="1"
-#K_NOSETEXTRAVERSION="1"
-K_NODRYRUN="1"
+K_EXP_GENPATCHES_NOUSE="1"
+# K_NODRYRUN="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
@@ -32,15 +30,19 @@ src_unpack() {
 	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
         fi
 
-        UNIPATCH_LIST+=" ${FILESDIR}/xanmod/net/tcp/000*.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
-
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
-        UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-high-hz.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-lrng.patch"
-	UNIPATCH_LIST+=" ${FILESDIR}/cachy/misc/0001-rt.patch"
-
 	kernel-2_src_unpack
+}
+
+src_prepare() {
+        eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
+        eapply "${FILESDIR}/cachy/misc/0001-high-hz.patch"
+        eapply "${FILESDIR}/cachy/misc/0001-lrng.patch"
+        eapply "${FILESDIR}/cachy/misc/0001-rt.patch"
+        eapply "${FILESDIR}/xanmod/net/tcp/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+        eapply "${FILESDIR}/xanmod/net/tcp/0002-tcp-Add-a-sysctl-to-allow-TCP-window-shrinking-in-or.patch"
+        eapply "${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
+
+        eapply_user
 }
 
 pkg_postinst() {
