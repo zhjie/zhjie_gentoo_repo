@@ -1,140 +1,7 @@
-From 1e0f201b6f4802d4aae1a697347d5fdbc99468db Mon Sep 17 00:00:00 2001
+From 1e240ee0680e74ff712a7d838762f2685347d3d4 Mon Sep 17 00:00:00 2001
 From: Vasiliy Stelmachenok <ventureo@yandex.ru>
-Date: Fri, 21 Jul 2023 10:39:22 +0300
-Subject: [PATCH 1/7] Revert "posix-timers: Prevent RT livelock in
- itimer_delete()"
-
-This reverts commit c1968bb8a28625cc95d2ad3ca872ab98c9c36d59.
----
- kernel/time/posix-timers.c | 43 +++++++-------------------------------
- 1 file changed, 8 insertions(+), 35 deletions(-)
-
-diff --git a/kernel/time/posix-timers.c b/kernel/time/posix-timers.c
-index ed3c4a954398..808a247205a9 100644
---- a/kernel/time/posix-timers.c
-+++ b/kernel/time/posix-timers.c
-@@ -1037,52 +1037,27 @@ SYSCALL_DEFINE1(timer_delete, timer_t, timer_id)
- }
- 
- /*
-- * Delete a timer if it is armed, remove it from the hash and schedule it
-- * for RCU freeing.
-+ * return timer owned by the process, used by exit_itimers
-  */
- static void itimer_delete(struct k_itimer *timer)
- {
--	unsigned long flags;
--
--	/*
--	 * irqsave is required to make timer_wait_running() work.
--	 */
--	spin_lock_irqsave(&timer->it_lock, flags);
--
- retry_delete:
--	/*
--	 * Even if the timer is not longer accessible from other tasks
--	 * it still might be armed and queued in the underlying timer
--	 * mechanism. Worse, that timer mechanism might run the expiry
--	 * function concurrently.
--	 */
--	if (timer_delete_hook(timer) == TIMER_RETRY) {
--		/*
--		 * Timer is expired concurrently, prevent livelocks
--		 * and pointless spinning on RT.
--		 *
--		 * timer_wait_running() drops timer::it_lock, which opens
--		 * the possibility for another task to delete the timer.
--		 *
--		 * That's not possible here because this is invoked from
--		 * do_exit() only for the last thread of the thread group.
--		 * So no other task can access and delete that timer.
--		 */
--		if (WARN_ON_ONCE(timer_wait_running(timer, &flags) != timer))
--			return;
-+	spin_lock_irq(&timer->it_lock);
- 
-+	if (timer_delete_hook(timer) == TIMER_RETRY) {
-+		spin_unlock_irq(&timer->it_lock);
- 		goto retry_delete;
- 	}
- 	list_del(&timer->list);
- 
--	spin_unlock_irqrestore(&timer->it_lock, flags);
-+	spin_unlock_irq(&timer->it_lock);
- 	release_posix_timer(timer, IT_ID_SET);
- }
- 
- /*
-- * Invoked from do_exit() when the last thread of a thread group exits.
-- * At that point no other task can access the timers of the dying
-- * task anymore.
-+ * This is called by do_exit or de_thread, only when nobody else can
-+ * modify the signal->posix_timers list. Yet we need sighand->siglock
-+ * to prevent the race with /proc/pid/timers.
-  */
- void exit_itimers(struct task_struct *tsk)
- {
-@@ -1092,12 +1067,10 @@ void exit_itimers(struct task_struct *tsk)
- 	if (list_empty(&tsk->signal->posix_timers))
- 		return;
- 
--	/* Protect against concurrent read via /proc/$PID/timers */
- 	spin_lock_irq(&tsk->sighand->siglock);
- 	list_replace_init(&tsk->signal->posix_timers, &timers);
- 	spin_unlock_irq(&tsk->sighand->siglock);
- 
--	/* The timers are not longer accessible via tsk::signal */
- 	while (!list_empty(&timers)) {
- 		tmr = list_first_entry(&timers, struct k_itimer, list);
- 		itimer_delete(tmr);
--- 
-2.41.0
-
-
-From 232684cc38be5e3910eeed5f1a0e21add99391ca Mon Sep 17 00:00:00 2001
-From: Vasiliy Stelmachenok <ventureo@yandex.ru>
-Date: Fri, 21 Jul 2023 12:58:11 +0300
-Subject: [PATCH 4/7] Revert "serial: 8250: lock port for UART_IER access in
- omap8250_irq()"
-
-This reverts commit fc52289156d78e427052b22386c46070110535c2.
----
- drivers/tty/serial/8250/8250_omap.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/tty/serial/8250/8250_omap.c b/drivers/tty/serial/8250/8250_omap.c
-index b758e9b613c7..c07068c5866f 100644
---- a/drivers/tty/serial/8250/8250_omap.c
-+++ b/drivers/tty/serial/8250/8250_omap.c
-@@ -649,18 +649,17 @@ static irqreturn_t omap8250_irq(int irq, void *dev_id)
- 	if ((lsr & UART_LSR_OE) && up->overrun_backoff_time_ms > 0) {
- 		unsigned long delay;
- 
--		/* Synchronize UART_IER access against the console. */
--		spin_lock(&port->lock);
- 		up->ier = port->serial_in(port, UART_IER);
- 		if (up->ier & (UART_IER_RLSI | UART_IER_RDI)) {
-+			spin_lock(&port->lock);
- 			port->ops->stop_rx(port);
-+			spin_unlock(&port->lock);
- 		} else {
- 			/* Keep restarting the timer until
- 			 * the input overrun subsides.
- 			 */
- 			cancel_delayed_work(&up->overrun_backoff);
- 		}
--		spin_unlock(&port->lock);
- 
- 		delay = msecs_to_jiffies(up->overrun_backoff_time_ms);
- 		schedule_delayed_work(&up->overrun_backoff, delay);
--- 
-2.41.0
-
-
-From 7a631e80f66d55b59cc80e224adf22a0cc2acf80 Mon Sep 17 00:00:00 2001
-From: Vasiliy Stelmachenok <ventureo@yandex.ru>
-Date: Fri, 21 Jul 2023 13:03:32 +0300
-Subject: [PATCH 6/7] Add realtime patchset
+Date: Mon, 7 Aug 2023 15:11:27 +0300
+Subject: [PATCH 5/6] Add realtime patchset
 
 ---
  arch/arm/Kconfig                              |    5 +-
@@ -1971,6 +1838,126 @@ index fb1d5ec0940e..bf7ab55c8923 100644
  }
  
  static void mtk8250_set_flow_ctrl(struct uart_8250_port *up, int mode)
+diff --git a/drivers/tty/serial/8250/8250_omap.c b/drivers/tty/serial/8250/8250_omap.c
+index 43864e30c0e3..28d46f184cd5 100644
+--- a/drivers/tty/serial/8250/8250_omap.c
++++ b/drivers/tty/serial/8250/8250_omap.c
+@@ -334,8 +334,7 @@ static void omap8250_restore_regs(struct uart_8250_port *up)
+ 
+ 	/* drop TCR + TLR access, we setup XON/XOFF later */
+ 	serial8250_out_MCR(up, mcr);
+-
+-	serial_out(up, UART_IER, up->ier);
++	serial8250_set_IER(up, up->ier);
+ 
+ 	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+ 	serial_dl_write(up, priv->quot);
+@@ -523,16 +522,21 @@ static void omap_8250_pm(struct uart_port *port, unsigned int state,
+ 	u8 efr;
+ 
+ 	pm_runtime_get_sync(port->dev);
++
++	spin_lock_irq(&port->lock);
++
+ 	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+ 	efr = serial_in(up, UART_EFR);
+ 	serial_out(up, UART_EFR, efr | UART_EFR_ECB);
+ 	serial_out(up, UART_LCR, 0);
+ 
+-	serial_out(up, UART_IER, (state != 0) ? UART_IERX_SLEEP : 0);
++	serial8250_set_IER(up, (state != 0) ? UART_IERX_SLEEP : 0);
+ 	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+ 	serial_out(up, UART_EFR, efr);
+ 	serial_out(up, UART_LCR, 0);
+ 
++	spin_unlock_irq(&port->lock);
++
+ 	pm_runtime_mark_last_busy(port->dev);
+ 	pm_runtime_put_autosuspend(port->dev);
+ }
+@@ -707,8 +713,10 @@ static int omap_8250_startup(struct uart_port *port)
+ 	if (ret < 0)
+ 		goto err;
+ 
++	spin_lock_irq(&port->lock);
+ 	up->ier = UART_IER_RLSI | UART_IER_RDI;
+-	serial_out(up, UART_IER, up->ier);
++	serial8250_set_IER(up, up->ier);
++	spin_unlock_irq(&port->lock);
+ 
+ #ifdef CONFIG_PM
+ 	up->capabilities |= UART_CAP_RPM;
+@@ -748,8 +756,10 @@ static void omap_8250_shutdown(struct uart_port *port)
+ 	if (priv->habit & UART_HAS_EFR2)
+ 		serial_out(up, UART_OMAP_EFR2, 0x0);
+ 
++	spin_lock_irq(&port->lock);
+ 	up->ier = 0;
+-	serial_out(up, UART_IER, 0);
++	serial8250_set_IER(up, 0);
++	spin_unlock_irq(&port->lock);
+ 
+ 	if (up->dma)
+ 		serial8250_release_dma(up);
+@@ -797,7 +807,7 @@ static void omap_8250_unthrottle(struct uart_port *port)
+ 		up->dma->rx_dma(up);
+ 	up->ier |= UART_IER_RLSI | UART_IER_RDI;
+ 	port->read_status_mask |= UART_LSR_DR;
+-	serial_out(up, UART_IER, up->ier);
++	serial8250_set_IER(up, up->ier);
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ 
+ 	pm_runtime_mark_last_busy(port->dev);
+@@ -956,7 +966,7 @@ static void __dma_rx_complete(void *param)
+ 	__dma_rx_do_complete(p);
+ 	if (!priv->throttled) {
+ 		p->ier |= UART_IER_RLSI | UART_IER_RDI;
+-		serial_out(p, UART_IER, p->ier);
++		serial8250_set_IER(p, p->ier);
+ 		if (!(priv->habit & UART_HAS_EFR2))
+ 			omap_8250_rx_dma(p);
+ 	}
+@@ -1013,7 +1023,7 @@ static int omap_8250_rx_dma(struct uart_8250_port *p)
+ 			 * callback to run.
+ 			 */
+ 			p->ier &= ~(UART_IER_RLSI | UART_IER_RDI);
+-			serial_out(p, UART_IER, p->ier);
++			serial8250_set_IER(p, p->ier);
+ 		}
+ 		goto out;
+ 	}
+@@ -1226,12 +1236,12 @@ static void am654_8250_handle_rx_dma(struct uart_8250_port *up, u8 iir,
+ 		 * periodic timeouts, re-enable interrupts.
+ 		 */
+ 		up->ier &= ~(UART_IER_RLSI | UART_IER_RDI);
+-		serial_out(up, UART_IER, up->ier);
++		serial8250_set_IER(up, up->ier);
+ 		omap_8250_rx_dma_flush(up);
+ 		serial_in(up, UART_IIR);
+ 		serial_out(up, UART_OMAP_EFR2, 0x0);
+ 		up->ier |= UART_IER_RLSI | UART_IER_RDI;
+-		serial_out(up, UART_IER, up->ier);
++		serial8250_set_IER(up, up->ier);
+ 	}
+ }
+ 
+@@ -1729,12 +1739,16 @@ static int omap8250_runtime_resume(struct device *dev)
+ 
+ 	up = serial8250_get_port(priv->line);
+ 
++	spin_lock_irq(&up->port.lock);
++
+ 	if (omap8250_lost_context(up))
+ 		omap8250_restore_regs(up);
+ 
+ 	if (up->dma && up->dma->rxchan && !(priv->habit & UART_HAS_EFR2))
+ 		omap_8250_rx_dma(up);
+ 
++	spin_unlock_irq(&up->port.lock);
++
+ 	priv->latency = priv->calc_latency;
+ 	schedule_work(&priv->qos_work);
+ 	return 0;
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
 index 053d44412e42..64643714f532 100644
 --- a/drivers/tty/serial/8250/8250_port.c
@@ -2714,7 +2701,7 @@ index 82d35dbbfa6c..511cf17d8795 100644
  
  static int __init
 diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
-index c84be40fb8df..0dc7277b09db 100644
+index 429beccdfeb1..bc7a8aee8104 100644
 --- a/drivers/tty/tty_io.c
 +++ b/drivers/tty/tty_io.c
 @@ -3541,8 +3541,13 @@ static ssize_t show_cons_active(struct device *dev,
@@ -3534,7 +3521,7 @@ index c2f1fd95a821..260c08efeb48 100644
  	bool
  
 diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index f1c8733f76b8..370a2cda6d85 100644
+index 5524fcf6fb2a..937c2b4fc68e 100644
 --- a/kernel/bpf/syscall.c
 +++ b/kernel/bpf/syscall.c
 @@ -2781,28 +2781,31 @@ static void bpf_link_put_deferred(struct work_struct *work)
@@ -3680,7 +3667,7 @@ index aad7a3bfd846..fe654a9791a7 100644
  	NULL
  };
 diff --git a/kernel/locking/rtmutex.c b/kernel/locking/rtmutex.c
-index 728f434de2bb..479a9487edcc 100644
+index 21db0df0eb00..08a4555076f7 100644
 --- a/kernel/locking/rtmutex.c
 +++ b/kernel/locking/rtmutex.c
 @@ -218,6 +218,11 @@ static __always_inline bool rt_mutex_cmpxchg_acquire(struct rt_mutex_base *lock,
@@ -3720,7 +3707,7 @@ index 728f434de2bb..479a9487edcc 100644
  static __always_inline bool rt_mutex_cmpxchg_release(struct rt_mutex_base *lock,
  						     struct task_struct *old,
  						     struct task_struct *new)
-@@ -1555,7 +1578,7 @@ static int __sched rt_mutex_slowlock_block(struct rt_mutex_base *lock,
+@@ -1613,7 +1636,7 @@ static int __sched rt_mutex_slowlock_block(struct rt_mutex_base *lock,
  		raw_spin_unlock_irq(&lock->wait_lock);
  
  		if (!owner || !rtmutex_spin_on_owner(lock, waiter, owner))
@@ -3729,7 +3716,7 @@ index 728f434de2bb..479a9487edcc 100644
  
  		raw_spin_lock_irq(&lock->wait_lock);
  		set_current_state(state);
-@@ -1584,7 +1607,7 @@ static void __sched rt_mutex_handle_deadlock(int res, int detect_deadlock,
+@@ -1642,7 +1665,7 @@ static void __sched rt_mutex_handle_deadlock(int res, int detect_deadlock,
  	WARN(1, "rtmutex deadlock detected\n");
  	while (1) {
  		set_current_state(TASK_INTERRUPTIBLE);
@@ -3738,7 +3725,7 @@ index 728f434de2bb..479a9487edcc 100644
  	}
  }
  
-@@ -1679,6 +1702,12 @@ static int __sched rt_mutex_slowlock(struct rt_mutex_base *lock,
+@@ -1737,6 +1760,12 @@ static int __sched rt_mutex_slowlock(struct rt_mutex_base *lock,
  	unsigned long flags;
  	int ret;
  
@@ -3751,7 +3738,7 @@ index 728f434de2bb..479a9487edcc 100644
  	/*
  	 * Technically we could use raw_spin_[un]lock_irq() here, but this can
  	 * be called in early boot if the cmpxchg() fast path is disabled
-@@ -1691,13 +1720,16 @@ static int __sched rt_mutex_slowlock(struct rt_mutex_base *lock,
+@@ -1749,13 +1778,16 @@ static int __sched rt_mutex_slowlock(struct rt_mutex_base *lock,
  	ret = __rt_mutex_slowlock_locked(lock, ww_ctx, state);
  	raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
  
@@ -6898,7 +6885,7 @@ index b10b8349bb2a..804306204d0d 100644
  
  static void print_cpu_stall(unsigned long gps)
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 02e1a1a78bd0..0969e5f85bcc 100644
+index a68d1276bab0..c7c09f1db457 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1062,6 +1062,46 @@ void resched_curr(struct rq *rq)
@@ -7427,10 +7414,10 @@ index 02e1a1a78bd0..0969e5f85bcc 100644
  	 * The idle tasks have their own, simple scheduling class:
  	 */
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index a6205f9e6cb5..bcb4e26953f2 100644
+index f960941e5923..2213908db127 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -5034,7 +5034,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+@@ -5023,7 +5023,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
  
  	delta_exec = curr->sum_exec_runtime - curr->prev_sum_exec_runtime;
  	if (delta_exec > ideal_runtime) {
@@ -7439,7 +7426,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  		/*
  		 * The current task ran long enough, ensure it doesn't get
  		 * re-elected due to buddy favours.
-@@ -5058,7 +5058,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+@@ -5047,7 +5047,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
  		return;
  
  	if (delta > ideal_runtime)
@@ -7448,7 +7435,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  }
  
  static void
-@@ -5204,7 +5204,7 @@ entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)
+@@ -5193,7 +5193,7 @@ entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)
  	 * validating it and just reschedule.
  	 */
  	if (queued) {
@@ -7457,7 +7444,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  		return;
  	}
  	/*
-@@ -5353,7 +5353,7 @@ static void __account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
+@@ -5342,7 +5342,7 @@ static void __account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
  	 * hierarchy can be throttled
  	 */
  	if (!assign_cfs_rq_runtime(cfs_rq) && likely(cfs_rq->curr))
@@ -7466,7 +7453,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  }
  
  static __always_inline
-@@ -6270,7 +6270,7 @@ static void hrtick_start_fair(struct rq *rq, struct task_struct *p)
+@@ -6239,7 +6239,7 @@ static void hrtick_start_fair(struct rq *rq, struct task_struct *p)
  
  		if (delta < 0) {
  			if (task_current(rq, p))
@@ -7475,7 +7462,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  			return;
  		}
  		hrtick_start(rq, delta);
-@@ -8036,7 +8036,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
+@@ -7968,7 +7968,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
  	return;
  
  preempt:
@@ -7484,7 +7471,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  	/*
  	 * Only set the backward buddy when the current task is still
  	 * on the rq. This can happen when a wakeup gets interleaved
-@@ -12336,7 +12336,7 @@ static void task_fork_fair(struct task_struct *p)
+@@ -12145,7 +12145,7 @@ static void task_fork_fair(struct task_struct *p)
  		 * 'current' within the tree based on its new key value.
  		 */
  		swap(curr->vruntime, se->vruntime);
@@ -7493,7 +7480,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  	}
  
  	se->vruntime -= cfs_rq->min_vruntime;
-@@ -12363,7 +12363,7 @@ prio_changed_fair(struct rq *rq, struct task_struct *p, int oldprio)
+@@ -12172,7 +12172,7 @@ prio_changed_fair(struct rq *rq, struct task_struct *p, int oldprio)
  	 */
  	if (task_current(rq, p)) {
  		if (p->prio > oldprio)
@@ -7503,7 +7490,7 @@ index a6205f9e6cb5..bcb4e26953f2 100644
  		check_preempt_curr(rq, p, 0);
  }
 diff --git a/kernel/sched/features.h b/kernel/sched/features.h
-index 9e390eb82e38..c88dcb3017a7 100644
+index ee7f23c76bd3..e13090e33f3c 100644
 --- a/kernel/sched/features.h
 +++ b/kernel/sched/features.h
 @@ -48,6 +48,9 @@ SCHED_FEAT(NONTASK_CAPACITY, true)
@@ -7517,10 +7504,10 @@ index 9e390eb82e38..c88dcb3017a7 100644
  
  /*
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index a6e814eb84cd..e9865247970b 100644
+index 81ac605b9cd5..a07a78910073 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2409,6 +2409,15 @@ extern void reweight_task(struct task_struct *p, int prio);
+@@ -2396,6 +2396,15 @@ extern void reweight_task(struct task_struct *p, int prio);
  extern void resched_curr(struct rq *rq);
  extern void resched_cpu(int cpu);
  
@@ -7537,10 +7524,10 @@ index a6e814eb84cd..e9865247970b 100644
  extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime);
  extern bool sched_rt_bandwidth_account(struct rt_rq *rt_rq);
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 2547fa73bde5..9e07b3075c72 100644
+index 1b39cba7dfd3..6d7957487169 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
-@@ -2313,15 +2313,31 @@ static int ptrace_stop(int exit_code, int why, unsigned long message,
+@@ -2317,15 +2317,31 @@ static int ptrace_stop(int exit_code, int why, unsigned long message,
  		do_notify_parent_cldstop(current, false, why);
  
  	/*
@@ -7866,7 +7853,7 @@ index c80ff6f5b2cc..9fdba1c44194 100644
  
  void
 diff --git a/kernel/trace/trace_events.c b/kernel/trace/trace_events.c
-index 57e539d47989..cbff030cb4ba 100644
+index 32f39eabc071..e3326393f0dd 100644
 --- a/kernel/trace/trace_events.c
 +++ b/kernel/trace/trace_events.c
 @@ -210,6 +210,7 @@ static int trace_define_common_fields(void)
@@ -8066,10 +8053,10 @@ index 1b6a1d99869d..c69bd81e58e5 100644
 2.41.0
 
 
-From de0cd4db5dcc6d4507a74d25fdecf61c5562e069 Mon Sep 17 00:00:00 2001
+From 4ffaeed03b9bebf5bfe9a3bc953033350063df95 Mon Sep 17 00:00:00 2001
 From: Vasiliy Stelmachenok <ventureo@yandex.ru>
 Date: Wed, 28 Jun 2023 21:09:25 +0300
-Subject: [PATCH 7/7] Don't make realtime patchset dependent on CONFIG_EXPERT
+Subject: [PATCH 6/6] Don't make realtime patchset dependent on CONFIG_EXPERT
 
 It's just a headache to have a bunch of garbage in your config for the
 sake of enabling one option. It makes it much easier to keep our config
