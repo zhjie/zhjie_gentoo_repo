@@ -1,4 +1,4 @@
-From e0ce3d4ea8043da6311e031a9f88f21b85f04622 Mon Sep 17 00:00:00 2001
+From 1cca6b5b75d45ebd457dedb331719236cfc5b214 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
 Date: Thu, 3 Aug 2023 19:45:48 +0200
 Subject: [PATCH 2/8] bbr3
@@ -3336,10 +3336,10 @@ index a8f6d9d06f2e..8737f2134648 100644
  	rs->interval_us = max(snd_us, ack_us);
  
 diff --git a/net/ipv4/tcp_timer.c b/net/ipv4/tcp_timer.c
-index 39eb947fe392..61ab4ee55b22 100644
+index 366c3c25ebe2..0632e95780db 100644
 --- a/net/ipv4/tcp_timer.c
 +++ b/net/ipv4/tcp_timer.c
-@@ -615,6 +615,7 @@ void tcp_write_timer_handler(struct sock *sk)
+@@ -617,6 +617,7 @@ void tcp_write_timer_handler(struct sock *sk)
  		return;
  	}
  
@@ -3348,5 +3348,5 @@ index 39eb947fe392..61ab4ee55b22 100644
  	event = icsk->icsk_pending;
  
 -- 
-2.41.0
+2.42.0
 
