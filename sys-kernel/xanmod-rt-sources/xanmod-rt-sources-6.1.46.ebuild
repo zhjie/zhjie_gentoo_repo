@@ -34,7 +34,7 @@ src_unpack() {
         if use naa; then
                 UNIPATCH_LIST+=" ${FILESDIR}/000*.patch"
         fi
-        UNIPATCH_LIST+=" ${FILESDIR}/100*.patch"
+#        UNIPATCH_LIST+=" ${FILESDIR}/100*.patch"
 	UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 1*_linux-${KV_MAJOR}.${KV_MINOR}.*.patch"
 	kernel-2_src_unpack
 }
