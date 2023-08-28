@@ -24,7 +24,7 @@ EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}"
 
 KEYWORDS="amd64 arm arm64"
-IUSE="+naa rt"
+IUSE="+naa rt +cachy +xanmod"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
@@ -49,9 +49,11 @@ src_prepare() {
 	fi
 
 	# cachy patch
-        eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
-        eapply "${FILESDIR}/cachy/misc/0001-high-hz.patch"
-        eapply "${FILESDIR}/cachy/misc/0001-lrng.patch"
+	if use cachy; then
+	        eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
+		eapply "${FILESDIR}/cachy/misc/0001-high-hz.patch"
+	        eapply "${FILESDIR}/cachy/misc/0001-lrng.patch"
+	fi
 
 	# rt/bmq patch
 	if use rt; then
@@ -61,9 +63,11 @@ src_prepare() {
 	fi
 
 	# xanmod patch
-        eapply "${FILESDIR}/xanmod/net/tcp/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
-        eapply "${FILESDIR}/xanmod/net/tcp/0002-tcp-Add-a-sysctl-to-allow-TCP-window-shrinking-in-or.patch"
-        eapply "${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
+	if use xanmod; then
+	        eapply "${FILESDIR}/xanmod/net/tcp/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+	        eapply "${FILESDIR}/xanmod/net/tcp/0002-tcp-Add-a-sysctl-to-allow-TCP-window-shrinking-in-or.patch"
+	        eapply "${FILESDIR}/xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
+	fi
 
         eapply_user
 }
