@@ -1,0 +1,30 @@
+From dc328d75a6f37f4ff11a81ae16b1ec88c3197640 Mon Sep 17 00:00:00 2001
+From: Mike Pagano <mpagano@gentoo.org>
+Date: Mon, 23 Mar 2020 08:20:06 -0400
+Subject: [PATCH 1/1] This driver requires REGMAP_I2C to build.  Select it by
+ default in Kconfig. Reported at gentoo bugzilla:
+ https://bugs.gentoo.org/710790
+Cc: mpagano@gentoo.org
+
+Reported-by: Phil Stracchino <phils@caerllewys.net>
+
+Signed-off-by: Mike Pagano <mpagano@gentoo.org>
+---
+ drivers/hwmon/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
+index 47ac20aee06f..530b4f29ba85 100644
+--- a/drivers/hwmon/Kconfig
++++ b/drivers/hwmon/Kconfig
+@@ -1769,6 +1769,7 @@ config SENSORS_TMP421
+ config SENSORS_TMP513
+ 	tristate "Texas Instruments TMP513 and compatibles"
+ 	depends on I2C
++	select REGMAP_I2C
+ 	help
+ 	  If you say yes here you get support for Texas Instruments TMP512,
+ 	  and TMP513 temperature and power supply sensor chips.
+-- 
+2.24.1
+
