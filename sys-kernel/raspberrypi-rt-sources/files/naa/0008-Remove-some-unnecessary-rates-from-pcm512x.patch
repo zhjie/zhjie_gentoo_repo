@@ -1,0 +1,26 @@
+From 9a5c53765f79c5e79523cc8c29ab2361f893ff0c Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Tue, 6 Dec 2022 19:51:20 +0200
+Subject: [PATCH 3/9] Remove some unnecessary rates from pcm512x
+
+---
+ sound/soc/codecs/pcm512x.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/sound/soc/codecs/pcm512x.c b/sound/soc/codecs/pcm512x.c
+index 33ed3bbf0362..f6ec4e78b8d2 100644
+--- a/sound/soc/codecs/pcm512x.c
++++ b/sound/soc/codecs/pcm512x.c
+@@ -535,8 +535,7 @@ static unsigned long pcm512x_ncp_target(struct pcm512x_priv *pcm512x,
+ }
+ 
+ static const u32 pcm512x_dai_rates[] = {
+-	8000, 11025, 16000, 22050, 32000, 44100, 48000, 64000,
+-	88200, 96000, 176400, 192000, 352800, 384000,
++	44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000,
+ };
+ 
+ static const struct snd_pcm_hw_constraint_list constraints_slave = {
+-- 
+2.34.1
+

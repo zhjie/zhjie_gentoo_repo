@@ -15,6 +15,7 @@ K_EXP_GENPATCHES_NOUSE="1"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
+
 inherit kernel-2 git-r3
 detect_version
 
@@ -30,9 +31,14 @@ RDEPEND=""
 DEPEND="${RDEPEND}
 	>=sys-devel/patch-2.7.6-r4"
 
+EXTRAVERSION="-raspberrypi-rt"
+S="${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
+
 src_unpack() {
 	git-r3_src_unpack
-	mv "${WORKDIR}/${PF}" "${WORKDIR}/linux-${K_BASE_VER}-raspberrypi"
+	mv "${WORKDIR}/${PF}" "${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
+
+	echo ${S}
 
 	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
         unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
@@ -55,8 +61,8 @@ src_prepare() {
 	        eapply "${FILESDIR}/cachy/misc/0001-lrng.patch"
 	fi
 
-	# bmq patch
-	eapply "${FILESDIR}/cachy/sched/0001-prjc.patch"
+	# rt patch
+        eapply "${FILESDIR}/cachy/misc/0001-rt.patch"
 
 	# xanmod patch
 	if use xanmod; then

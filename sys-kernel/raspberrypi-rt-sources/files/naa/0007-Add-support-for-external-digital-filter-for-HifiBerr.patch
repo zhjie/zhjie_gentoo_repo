@@ -1,0 +1,56 @@
+From a342a9961a38f1adf76b40b0fa821bd8cbcb8404 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Wed, 30 Nov 2022 02:43:03 +0200
+Subject: [PATCH 2/9] Add support for external digital filter for HifiBerry
+ DAC2 HD
+
+---
+ sound/soc/bcm/hifiberry_dacplushd.c | 2 +-
+ sound/soc/codecs/pcm179x.c          | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/bcm/hifiberry_dacplushd.c b/sound/soc/bcm/hifiberry_dacplushd.c
+index 7e7e514a3019..61ccabec624e 100644
+--- a/sound/soc/bcm/hifiberry_dacplushd.c
++++ b/sound/soc/bcm/hifiberry_dacplushd.c
+@@ -43,7 +43,7 @@ struct brd_drv_data {
+ static struct brd_drv_data drvdata;
+ static struct gpio_desc *reset_gpio;
+ static const unsigned int hb_dacplushd_rates[] = {
+-	192000, 96000, 48000, 176400, 88200, 44100,
++	384000, 352800, 192000, 96000, 48000, 176400, 88200, 44100,
+ };
+ 
+ static struct snd_pcm_hw_constraint_list hb_dacplushd_constraints = {
+diff --git a/sound/soc/codecs/pcm179x.c b/sound/soc/codecs/pcm179x.c
+index ee60373d7d25..82297c9664f8 100644
+--- a/sound/soc/codecs/pcm179x.c
++++ b/sound/soc/codecs/pcm179x.c
+@@ -26,6 +26,7 @@
+ #define PCM179X_DAC_VOL_RIGHT	0x11
+ #define PCM179X_FMT_CONTROL	0x12
+ #define PCM179X_MODE_CONTROL	0x13
++#define PCM179X_MODE_CONTROL2	0x14
+ #define PCM179X_SOFT_MUTE	PCM179X_FMT_CONTROL
+ 
+ #define PCM179X_FMT_MASK	0x70
+@@ -157,6 +158,7 @@ static const struct snd_kcontrol_new pcm179x_controls[] = {
+ 			 pcm179x_dac_tlv),
+ 	SOC_SINGLE("DAC Invert Output Switch", PCM179X_MODE_CONTROL, 7, 1, 0),
+ 	SOC_SINGLE("DAC Rolloff Filter Switch", PCM179X_MODE_CONTROL, 1, 1, 0),
++	SOC_SINGLE("DAC External Filter Switch", PCM179X_MODE_CONTROL2, 4, 1, 0),
+ };
+ 
+ static const struct snd_soc_dapm_widget pcm179x_dapm_widgets[] = {
+@@ -181,7 +183,7 @@ static struct snd_soc_dai_driver pcm179x_dai = {
+ 		.channels_max = 2,
+ 		.rates = SNDRV_PCM_RATE_CONTINUOUS,
+ 		.rate_min = 10000,
+-		.rate_max = 200000,
++		.rate_max = 400000,
+ 		.formats = PCM1792A_FORMATS, },
+ 	.ops = &pcm179x_dai_ops,
+ };
+-- 
+2.34.1
+
