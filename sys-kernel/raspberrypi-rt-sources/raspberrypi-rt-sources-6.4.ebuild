@@ -36,7 +36,7 @@ S="${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
 
 src_unpack() {
 	git-r3_src_unpack
-	mv "${WORKDIR}/${PF}" "${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
+	mv "${WORKDIR}/${PF}" "${S}"
 
 	echo ${S}
 

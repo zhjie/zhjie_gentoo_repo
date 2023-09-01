@@ -32,7 +32,7 @@ DEPEND="${RDEPEND}
 
 src_unpack() {
 	git-r3_src_unpack
-	mv "${WORKDIR}/${PF}" "${WORKDIR}/linux-${K_BASE_VER}-raspberrypi"
+	mv "${WORKDIR}/${PF}" "${S}"
 
 	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
         unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
