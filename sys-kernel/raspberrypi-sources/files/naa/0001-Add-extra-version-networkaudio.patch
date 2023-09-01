@@ -4,8 +4,8 @@ index f4e38dc60903..881f357f9be7 100644
 +++ b/Makefile
 @@ -2,7 +2,7 @@
  VERSION = 6
- PATCHLEVEL = 4
- SUBLEVEL = 11
+ PATCHLEVEL = 5
+ SUBLEVEL = 0
 -EXTRAVERSION =
 +EXTRAVERSION = -networkaudio
  NAME = Hurr durr I'ma ninja sloth

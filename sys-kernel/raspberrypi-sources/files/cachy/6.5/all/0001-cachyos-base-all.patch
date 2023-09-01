@@ -12777,15 +12777,6 @@ index 2a57328eca20..05e80cfd0ed8 100644
 +	  See Documentation/leds/ledtrig-blkdev.rst.
 +
  endif # LEDS_TRIGGERS
-diff --git a/drivers/leds/trigger/Makefile b/drivers/leds/trigger/Makefile
-index 25c4db97cdd4..d53bab5d93f1 100644
---- a/drivers/leds/trigger/Makefile
-+++ b/drivers/leds/trigger/Makefile
-@@ -16,3 +16,4 @@ obj-$(CONFIG_LEDS_TRIGGER_NETDEV)	+= ledtrig-netdev.o
- obj-$(CONFIG_LEDS_TRIGGER_PATTERN)	+= ledtrig-pattern.o
- obj-$(CONFIG_LEDS_TRIGGER_AUDIO)	+= ledtrig-audio.o
- obj-$(CONFIG_LEDS_TRIGGER_TTY)		+= ledtrig-tty.o
-+obj-$(CONFIG_LEDS_TRIGGER_BLKDEV)	+= ledtrig-blkdev.o
 diff --git a/drivers/leds/trigger/ledtrig-blkdev.c b/drivers/leds/trigger/ledtrig-blkdev.c
 new file mode 100644
 index 000000000000..9e0c4b66ea27
