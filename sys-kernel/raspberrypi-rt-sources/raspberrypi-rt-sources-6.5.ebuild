@@ -65,6 +65,7 @@ src_prepare() {
 
 	# rt patch
         eapply "${FILESDIR}/cachy/6.5/misc/0001-rt.patch"
+	eapply "${FILESDIR}/rt-arm-6.5.patch"
 
 	# xanmod patch
 	if use xanmod; then
