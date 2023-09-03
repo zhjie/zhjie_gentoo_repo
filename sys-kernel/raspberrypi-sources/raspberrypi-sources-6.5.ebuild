@@ -9,7 +9,7 @@ CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
@@ -53,7 +53,7 @@ src_prepare() {
 	if use cachy; then
 	        eapply "${FILESDIR}/cachy/6.5/all/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/cachy/6.5/misc/0001-high-hz.patch"
-	        eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
+#	        eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
 	fi
 
 	# bmq patch
@@ -61,8 +61,18 @@ src_prepare() {
 
 	# xanmod patch
 	if use xanmod; then
-	        eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
-	        eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/futex/0001-futex-Add-entry-point-for-FUTEX_WAIT_MULTIPLE-opcode.patch"
+	        eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/intel/0006-locking-rwsem-spin-faster.patch"
+
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0007-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
+	        eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0009-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0010-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0012-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+	        eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+		eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/xanmod/0017-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
 	fi
 
         eapply_user
