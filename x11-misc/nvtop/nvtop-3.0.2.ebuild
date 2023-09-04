@@ -41,6 +41,7 @@ src_configure() {
 		-DINTEL_SUPPORT=$(usex video_cards_intel)
 		-DNVIDIA_SUPPORT=$(usex video_cards_nvidia)
 		-DAMDGPU_SUPPORT=$(usex video_cards_amdgpu)
+		-DMSM_SUPPORT=$(usex video_cards_amdgpu)
 	)
 
 	cmake_src_configure
