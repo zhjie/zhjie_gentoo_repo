@@ -13,6 +13,9 @@ K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
+RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
+RT_VERSION="6"
+
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
 
@@ -22,7 +25,9 @@ detect_version
 DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
-SRC_URI="${GENPATCHES_URI}"
+SRC_URI="${GENPATCHES_URI}
+	${RT_URI}/${K_BASE_VER}/patch-${K_BASE_VER}-rt${RT_VERSION}.patch.xz
+"
 
 KEYWORDS="amd64 arm arm64"
 IUSE="+naa +cachy +xanmod"
@@ -40,10 +45,11 @@ src_unpack() {
 
 	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
         unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
+	unpack patch-${K_BASE_VER}-rt${RT_VERSION}.patch.xz
 
 	rm -rfv "${WORKDIR}"/10*.patch
 	rm -rfv "${S}/.git"
-
+	mv patch-${K_BASE_VER}-rt${RT_VERSION}.patch patch-${K_BASE_VER}-rt${RT_VERSION}
 }
 
 src_prepare() {
@@ -55,16 +61,16 @@ src_prepare() {
 		eapply "${FILESDIR}"/naa/*.patch
 	fi
 
-	# cachy patch
+	# cachy patch and rt patch
 	if use cachy; then
 	        eapply "${FILESDIR}/cachy/6.5/all/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/cachy/6.5/misc/0001-high-hz.patch"
 #	        eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
+		eapply "${FILESDIR}/cachy/6.5/misc/0001-rt.patch"
+	        eapply "${FILESDIR}/rt-arm-arm64-${K_BASE_VER}.patch"
+	else
+		eapply "${WORKDIR}/patch-${K_BASE_VER}-rt${RT_VERSION}"
 	fi
-
-	# rt patch
-        eapply "${FILESDIR}/cachy/6.5/misc/0001-rt.patch"
-	eapply "${FILESDIR}/rt-arm-arm64-6.5.patch"
 
 	# xanmod patch
 	if use xanmod; then

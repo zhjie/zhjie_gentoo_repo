@@ -5,7 +5,7 @@ EAPI=8
 
 inherit check-reqs toolchain-funcs unpacker
 
-DRIVER_PV="535.54.03"
+DRIVER_PV="535.104.05"
 
 DESCRIPTION="NVIDIA CUDA Toolkit (compiler and friends)"
 HOMEPAGE="https://developer.nvidia.com/cuda-zone"
@@ -21,6 +21,7 @@ RESTRICT="bindist mirror"
 # since CUDA 11, the bundled toolkit driver (== ${DRIVER_PV}) and the
 # actual required minimum driver version are different.
 RDEPEND="
+	sys-devel/gcc[cxx]
 	>=x11-drivers/nvidia-drivers-525.60.13
 	examples? (
 		media-libs/freeglut
@@ -256,8 +257,8 @@ src_install() {
 	fi
 
 	# Add include and lib symlinks
-	dosym targets/x86_64-linux/include ${ecudadir}/include
-	dosym targets/x86_64-linux/lib ${ecudadir}/lib64
+	dosym targets/x86_64-linux/include ${cudadir}/include
+	dosym targets/x86_64-linux/lib ${cudadir}/lib64
 
 	# Remove bad symlinks
 	rm "${ED}"/${cudadir}/targets/x86_64-linux/include/include || die
