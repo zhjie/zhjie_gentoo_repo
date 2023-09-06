@@ -14,11 +14,12 @@ HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
 amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
 amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}avx2_amd64.deb ) )
+arm64? ( https://www.signalyst.eu/bins/hqplayerd/bullseye/${MY_PN}_${PV}-${HQV}_arm64.deb )
 "
 
 LICENSE="Signalyst"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="amd64 arm64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd +upnp cpu_flags_x86_avx2"
