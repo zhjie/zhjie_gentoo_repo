@@ -7,12 +7,13 @@ EAPI=7
 inherit systemd unpacker
 
 MY_PN=${PN/-bin/}
+HQV=5
 
 DESCRIPTION="HQPlayer Embedded - upsampling multichannel audio player"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
-amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-158_amd64.deb ) )
-amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-159avx2_amd64.deb ) )
+amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
+amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}avx2_amd64.deb ) )
 "
 
 LICENSE="Signalyst"
@@ -36,9 +37,8 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	dev-libs/libusb-compat
 	media-sound/mpg123
 	media-sound/lame
-	media-sound/wavpack
 	>sys-devel/gcc-11.3.0
-        sys-libs/libomp
+	sys-libs/libomp
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
 "
 
