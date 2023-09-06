@@ -22,6 +22,7 @@ IUSE=""
 
 RDEPEND="
 	x11-libs/gdk-pixbuf
+	dev-libs/libunistring
 "
 
 DEPEND="${RDEPEND}"
@@ -30,7 +31,7 @@ S="${WORKDIR}"
 QA_PREBUILT="*"
 
 src_unpack() {
-	unpack ${FILESDIR}/rygel-bin-2.6.tar.tbz
+	unpack ${FILESDIR}/rygel-bin-${ARCH}-2.6.tar.tbz
 }
 
 src_install() {
