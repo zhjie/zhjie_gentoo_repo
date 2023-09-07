@@ -55,14 +55,23 @@ src_prepare() {
 	rm -rf usr/share/doc/hqplayerd/
 
 	default
-	 if use cpu_flags_x86_avx2 ; then
-		 patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
-	 fi
+
+	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
+
+	if use arm64; then
+		patchelf --replace-needed libgupnp-1.2.so.0 libgupnp-1.2.so.1 usr/bin/hqplayerd || die
+		patchelf --replace-needed libgupnp-av-1.0.so.2 libgupnp-av-1.0.so.3 usr/bin/hqplayerd || die
+	fi
 }
 
 src_install() {
 	mv etc usr var "${D}" || die
-	dolib.so opt/hqplayerd/lib/libsgllnx64-2.29.02.so
+	if use amd64; then
+		dolib.so opt/hqplayerd/lib/libsgllnx64-2.29.02.so
+	fi
+	if use arm64; then
+		dolib.so opt/hqplayerd/lib/libsglarm64-2.31.0.0.so
+	fi
 	if use systemd; then
 		systemd_dounit "${FILESDIR}/${MY_PN}.service"
 	else
