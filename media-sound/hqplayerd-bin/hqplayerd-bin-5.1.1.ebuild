@@ -31,7 +31,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	>=media-libs/libogg-1.3.3
 	net-libs/gupnp:0/1.2-0
 	net-libs/gssdp:0/1.2-0
-	>=net-libs/gupnp-av-0.12.11
+	net-libs/gupnp-av
 	>=dev-libs/libgee-0.20.2
 	>=net-libs/libsoup-2.62.3
 	x11-libs/cairo

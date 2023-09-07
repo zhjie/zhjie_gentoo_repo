@@ -15,7 +15,7 @@ SRC_URI=""
 
 LICENSE="Signalyst"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="~amd64 ~arm64"
 RESTRICT="mirror bindist"
 
 IUSE=""
