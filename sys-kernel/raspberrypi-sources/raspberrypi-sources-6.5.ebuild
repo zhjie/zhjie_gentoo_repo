@@ -41,6 +41,8 @@ src_unpack() {
 }
 
 src_prepare() {
+	cp -v "${FILESDIR}/${K_BASE_VER}-networkaudio" ${K_BASE_VER}-networkaudio
+
 	# genpatch
 	eapply "${WORKDIR}"/*.patch
 
