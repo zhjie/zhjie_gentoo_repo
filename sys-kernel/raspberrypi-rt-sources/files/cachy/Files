@@ -537,12 +537,16 @@
 │   │   └── 0001-cachyos-base-all.patch
 │   ├── misc
 │   │   ├── 0001-Add-extra-version-CachyOS.patch
+│   │   ├── 0001-aufs-6.5-merge-v20230904.patch
 │   │   ├── 0001-bcachefs.patch
 │   │   ├── 0001-bore-tuning-sysctl.patch
 │   │   ├── 0001-high-hz.patch
 │   │   ├── 0001-lrng.patch
 │   │   ├── 0001-rt.patch
-│   │   └── 0001-spadfs-6.5-merge-v1.0.17.patch
+│   │   ├── 0001-spadfs-6.5-merge-v1.0.17.patch
+│   │   └── gcc-lto
+│   │       ├── 0001-gcc-lto.patch
+│   │       └── 0002-gcc-lto-no-pie.patch
 │   └── sched
 │       ├── 0001-bore-cachy.patch
 │       ├── 0001-bore-eevdf.patch
@@ -556,4 +560,4 @@
 ├── Files
 └── README.md
 
-54 directories, 503 files
+55 directories, 506 files
