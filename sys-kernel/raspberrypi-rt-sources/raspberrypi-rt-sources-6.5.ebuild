@@ -67,7 +67,7 @@ src_prepare() {
 	if use cachy; then
 	        eapply "${FILESDIR}/cachy/6.5/all/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/cachy/6.5/misc/0001-high-hz.patch"
-#	        eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
+	        eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
 		eapply "${FILESDIR}/cachy/6.5/misc/0001-rt.patch"
 	        eapply "${FILESDIR}/rt-arm-arm64-${K_BASE_VER}.patch"
 	else
