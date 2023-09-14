@@ -2,12 +2,12 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-PYTHON_COMPAT=( python3_{9..11} )
+PYTHON_COMPAT=( python3_{10..11} )
 
 QA_PKGCONFIG_VERSION=$(ver_cut 1)
 
 inherit bash-completion-r1 flag-o-matic linux-info meson-multilib python-any-r1
-inherit toolchain-funcs udev usr-ldscript
+inherit secureboot toolchain-funcs udev usr-ldscript
 
 DESCRIPTION="Utilities split out from systemd for OpenRC users"
 HOMEPAGE="https://systemd.io/"
@@ -22,7 +22,7 @@ else
 	SRC_URI="https://github.com/systemd/systemd/archive/refs/tags/v${PV}.tar.gz -> ${MY_P}.tar.gz"
 fi
 
-MUSL_PATCHSET="systemd-musl-patches-252.4"
+MUSL_PATCHSET="systemd-musl-patches-253.3"
 SRC_URI+=" elibc_musl? ( https://dev.gentoo.org/~floppym/dist/${MUSL_PATCHSET}.tar.gz )"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
@@ -113,6 +113,7 @@ pkg_setup() {
 	if [[ ${MERGE_TYPE} != buildonly ]] && use udev; then
 		linux-info_pkg_setup
 	fi
+	use boot && secureboot_pkg_setup
 }
 
 src_prepare() {
@@ -120,7 +121,11 @@ src_prepare() {
 	)
 
 	if use elibc_musl; then
-		PATCHES+=( "${WORKDIR}/${MUSL_PATCHSET}" )
+		# Applied upstream
+		rm "${WORKDIR}/${MUSL_PATCHSET}/0015-test-sizeof.c-Disable-tests-for-missing-typedefs-in-.patch" || die
+		PATCHES+=(
+			"${WORKDIR}/${MUSL_PATCHSET}"
+		)
 	fi
 	default
 
@@ -272,6 +277,7 @@ multilib_src_compile() {
 				kernel-install
 				man/bootctl.1
 				man/kernel-install.8
+				90-loaderentry.install
 				src/boot/efi/linux$(efi_arch).{efi,elf}.stub
 				src/boot/efi/systemd-boot$(efi_arch).efi
 			)
@@ -375,7 +381,6 @@ multilib_src_test() {
 				test-fido-id-desc
 				test-udev-builtin
 				test-udev-event
-				test-udev-netlink
 				test-udev-node
 				test-udev-util
 			)
@@ -409,6 +414,9 @@ multilib_src_install() {
 			into /usr
 			dobin bootctl kernel-install
 			doman man/{bootctl.1,kernel-install.8}
+			# 90-loaderentry.install is generated from 90-loaderentry.install.in
+			exeinto usr/lib/kernel/install.d
+			doexe src/kernel-install/*.install
 			insinto usr/lib/systemd/boot/efi
 			doins src/boot/efi/{linux$(efi_arch).{efi,elf}.stub,systemd-boot$(efi_arch).efi}
 		fi
@@ -499,6 +507,8 @@ multilib_src_install_all() {
 		insinto /usr/share/zsh/site-functions
 		doins shell-completion/zsh/_udevadm
 	fi
+
+	use boot && secureboot_auto_sign
 }
 
 add_service() {

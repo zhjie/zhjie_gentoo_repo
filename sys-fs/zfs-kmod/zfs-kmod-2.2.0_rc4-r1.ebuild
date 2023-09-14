@@ -8,7 +8,7 @@ inherit autotools dist-kernel-utils flag-o-matic linux-mod-r1 multiprocessing
 DESCRIPTION="Linux ZFS kernel module for sys-fs/zfs"
 HOMEPAGE="https://github.com/openzfs/zfs"
 
-MODULES_KERNEL_MAX=6.4
+MODULES_KERNEL_MAX=6.5
 MODULES_KERNEL_MIN=3.10
 
 if [[ ${PV} == 9999 ]] ; then
@@ -22,16 +22,14 @@ else
 	MY_PV=${PV/_rc/-rc}
 	SRC_URI="https://github.com/openzfs/zfs/releases/download/zfs-${MY_PV}/zfs-${MY_PV}.tar.gz"
 	SRC_URI+=" verify-sig? ( https://github.com/openzfs/zfs/releases/download/zfs-${MY_PV}/zfs-${MY_PV}.tar.gz.asc )"
-	S="${WORKDIR}/zfs-${PV%_rc?}"
+	S="${WORKDIR}/zfs-${MY_PV}"
 
 	ZFS_KERNEL_COMPAT="${MODULES_KERNEL_MAX}"
 	# Increments minor eg 5.14 -> 5.15, and still supports override.
 	ZFS_KERNEL_DEP="${ZFS_KERNEL_COMPAT_OVERRIDE:-${ZFS_KERNEL_COMPAT}}"
 	ZFS_KERNEL_DEP="${ZFS_KERNEL_DEP%%.*}.$(( ${ZFS_KERNEL_DEP##*.} + 1))"
 
-	if [[ ${PV} != *_rc* ]] ; then
-		KEYWORDS="amd64 arm64 ppc64 ~riscv ~sparc"
-	fi
+		KEYWORDS="~amd64 ~arm64 ~ppc64 ~riscv ~sparc"
 fi
 
 LICENSE="CDDL MIT debug? ( GPL-2+ )"
@@ -40,8 +38,8 @@ IUSE="custom-cflags debug +rootfs"
 RESTRICT="test"
 
 BDEPEND="
-	dev-lang/perl
 	app-alternatives/awk
+	dev-lang/perl
 "
 
 if [[ ${PV} != 9999 ]] ; then
@@ -60,7 +58,8 @@ PDEPEND="dist-kernel? ( ~sys-fs/zfs-${PV}[dist-kernel] )"
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.1.11-gentoo.patch
-	"${FILESDIR}"/kernel-6.5.patch
+	"${FILESDIR}"/kernel-6.5-1.patch
+	"${FILESDIR}"/kernel-6.5-2.patch
 )
 
 pkg_pretend() {
@@ -150,7 +149,47 @@ src_install() {
 	dodoc AUTHORS COPYRIGHT META README.md
 }
 
+_old_layout_cleanup() {
+	# new files are just extra/{spl,zfs}.ko with no subdirs.
+	local olddir=(
+		avl/zavl
+		icp/icp
+		lua/zlua
+		nvpair/znvpair
+		spl/spl
+		unicode/zunicode
+		zcommon/zcommon
+		zfs/zfs
+		zstd/zzstd
+	)
+
+	# kernel/module/Kconfig contains possible compressed extentions.
+	local kext kextfiles
+		for kext in .ko{,.{gz,xz,zst}}; do
+		kextfiles+=( "${olddir[@]/%/${kext}}" )
+	done
+
+	local oldfile oldpath
+	for oldfile in "${kextfiles[@]}"; do
+		oldpath="${EROOT}/lib/modules/${KV_FULL}/extra/${oldfile}"
+		if [[ -f "${oldpath}" ]]; then
+			ewarn "Found obsolete zfs module ${oldfile} for current kernel ${KV_FULL}, removing."
+			rm -rv "${oldpath}" || die
+			# we do not remove non-empty directories just for safety in case there's something else.
+			# also it may fail if there are both compressed and uncompressed modules installed.
+			rmdir -v --ignore-fail-on-non-empty "${oldpath%/*.*}" || die
+		fi
+	done
+}
+
 pkg_postinst() {
+	# Check for old module layout before doing anything else.
+	# only attempt layout cleanup if new .ko location is used.
+	local newko=( "${EROOT}/lib/modules/${KV_FULL}/extra"/{zfs,spl}.ko* )
+	# We check first array member, if glob above did not exand, it will be "zfs.ko*" and -f will return false.
+	# if glob expanded -f will do correct file precense check.
+	[[ -f ${newko[0]} ]] && _old_layout_cleanup
+
 	linux-mod-r1_pkg_postinst
 
 	if [[ -z ${ROOT} ]] && use dist-kernel ; then

@@ -8,9 +8,10 @@ ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
 
-K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_WANT_GENPATCHES="base extras experimental"
+K_GENPATCHES_VER="4"
 K_EXP_GENPATCHES_NOUSE="1"
+
 # K_NODRYRUN="1"
 
 # only use this if it's not an _rc/_pre release
@@ -36,7 +37,9 @@ src_unpack() {
 
 	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
         unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
+        unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.experimental.tar.xz
 	rm -rfv "${WORKDIR}"/10*.patch
+	rm -rfv "${WORKDIR}"/5010_enable-cpu-optimizations-universal.patch
 	rm -rfv "${S}/.git"
 }
 
@@ -59,7 +62,7 @@ src_prepare() {
 	fi
 
 	# bmq patch
-	eapply "${FILESDIR}/cachy/6.5/sched/0001-prjc.patch"
+#	eapply "${FILESDIR}/cachy/6.5/sched/0001-prjc.patch"
 
 	# xanmod patch
 	if use xanmod; then

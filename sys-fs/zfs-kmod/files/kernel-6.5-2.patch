@@ -1,0 +1,421 @@
+diff -ruN zfs-2.2.0-rc4/config/kernel-blkdev.m4 zfs-2.2.0-rc4-b/config/kernel-blkdev.m4
+--- zfs-2.2.0-rc4/config/kernel-blkdev.m4	2023-09-08 07:10:27.000000000 +0800
++++ zfs-2.2.0-rc4-b/config/kernel-blkdev.m4	2023-09-09 22:35:52.426061626 +0800
+@@ -16,12 +16,63 @@
+ 	])
+ ])
+ 
++dnl #
++dnl # 6.5.x API change,
++dnl # blkdev_get_by_path() takes 4 args
++dnl #
++AC_DEFUN([ZFS_AC_KERNEL_SRC_BLKDEV_GET_BY_PATH_4ARG], [
++	ZFS_LINUX_TEST_SRC([blkdev_get_by_path_4arg], [
++		#include <linux/fs.h>
++		#include <linux/blkdev.h>
++	], [
++		struct block_device *bdev __attribute__ ((unused)) = NULL;
++		const char *path = "path";
++		fmode_t mode = 0;
++		void *holder = NULL;
++		struct blk_holder_ops h;
++
++		bdev = blkdev_get_by_path(path, mode, holder, &h);
++	])
++])
++
+ AC_DEFUN([ZFS_AC_KERNEL_BLKDEV_GET_BY_PATH], [
+-	AC_MSG_CHECKING([whether blkdev_get_by_path() exists])
++	AC_MSG_CHECKING([whether blkdev_get_by_path() exists and takes 3 args])
+ 	ZFS_LINUX_TEST_RESULT([blkdev_get_by_path], [
+ 		AC_MSG_RESULT(yes)
+ 	], [
+-		ZFS_LINUX_TEST_ERROR([blkdev_get_by_path()])
++		AC_MSG_RESULT(no)
++		AC_MSG_CHECKING([whether blkdev_get_by_path() exists and takes 4 args])
++		ZFS_LINUX_TEST_RESULT([blkdev_get_by_path_4arg], [
++			AC_DEFINE(HAVE_BLKDEV_GET_BY_PATH_4ARG, 1,
++				[blkdev_get_by_path() exists and takes 4 args])
++			AC_MSG_RESULT(yes)
++		], [
++			ZFS_LINUX_TEST_ERROR([blkdev_get_by_path()])
++		])
++	])
++])
++
++dnl #
++dnl # 6.5.x API change
++dnl # blk_mode_t was added as a type to supercede some places where fmode_t
++dnl # is used
++dnl #
++AC_DEFUN([ZFS_AC_KERNEL_SRC_BLKDEV_BLK_MODE_T], [
++	ZFS_LINUX_TEST_SRC([blk_mode_t], [
++		#include <linux/fs.h>
++		#include <linux/blkdev.h>
++	], [
++		blk_mode_t m __attribute((unused)) = (blk_mode_t)0;
++	])
++])
++
++AC_DEFUN([ZFS_AC_KERNEL_BLKDEV_BLK_MODE_T], [
++	AC_MSG_CHECKING([whether blk_mode_t is defined])
++	ZFS_LINUX_TEST_RESULT([blk_mode_t], [
++		AC_MSG_RESULT(yes)
++		AC_DEFINE(HAVE_BLK_MODE_T, 1, [blk_mode_t is defined])
++	], [
++		AC_MSG_RESULT(no)
+ 	])
+ ])
+ 
+@@ -41,12 +92,35 @@
+ 	])
+ ])
+ 
++dnl #
++dnl # 6.5.x API change.
++dnl # blkdev_put() takes (void* holder) as arg 2
++dnl #
++AC_DEFUN([ZFS_AC_KERNEL_SRC_BLKDEV_PUT_HOLDER], [
++	ZFS_LINUX_TEST_SRC([blkdev_put_holder], [
++		#include <linux/fs.h>
++		#include <linux/blkdev.h>
++	], [
++		struct block_device *bdev = NULL;
++		void *holder = NULL;
++
++		blkdev_put(bdev, holder);
++	])
++])
++
+ AC_DEFUN([ZFS_AC_KERNEL_BLKDEV_PUT], [
+ 	AC_MSG_CHECKING([whether blkdev_put() exists])
+ 	ZFS_LINUX_TEST_RESULT([blkdev_put], [
+ 		AC_MSG_RESULT(yes)
+ 	], [
+-		ZFS_LINUX_TEST_ERROR([blkdev_put()])
++		AC_MSG_CHECKING([whether blkdev_put() accepts void* as arg 2])
++		ZFS_LINUX_TEST_RESULT([blkdev_put_holder], [
++			AC_MSG_RESULT(yes)
++			AC_DEFINE(HAVE_BLKDEV_PUT_HOLDER, 1,
++				[blkdev_put() accepts void* as arg 2])
++		], [
++			ZFS_LINUX_TEST_ERROR([blkdev_put()])
++		])
+ 	])
+ ])
+ 
+@@ -495,7 +569,9 @@
+ 
+ AC_DEFUN([ZFS_AC_KERNEL_SRC_BLKDEV], [
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_GET_BY_PATH
++	ZFS_AC_KERNEL_SRC_BLKDEV_GET_BY_PATH_4ARG
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_PUT
++	ZFS_AC_KERNEL_SRC_BLKDEV_PUT_HOLDER
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_REREAD_PART
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_INVALIDATE_BDEV
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_LOOKUP_BDEV
+@@ -510,6 +586,7 @@
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_PART_TO_DEV
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_DISK_CHECK_MEDIA_CHANGE
+ 	ZFS_AC_KERNEL_SRC_BLKDEV_BLK_STS_RESV_CONFLICT
++	ZFS_AC_KERNEL_SRC_BLKDEV_BLK_MODE_T
+ ])
+ 
+ AC_DEFUN([ZFS_AC_KERNEL_BLKDEV], [
+@@ -530,4 +607,5 @@
+ 	ZFS_AC_KERNEL_BLKDEV_PART_TO_DEV
+ 	ZFS_AC_KERNEL_BLKDEV_DISK_CHECK_MEDIA_CHANGE
+ 	ZFS_AC_KERNEL_BLKDEV_BLK_STS_RESV_CONFLICT
++	ZFS_AC_KERNEL_BLKDEV_BLK_MODE_T
+ ])
+diff -ruN zfs-2.2.0-rc4/config/kernel-block-device-operations.m4 zfs-2.2.0-rc4-b/config/kernel-block-device-operations.m4
+--- zfs-2.2.0-rc4/config/kernel-block-device-operations.m4	2023-09-08 07:10:27.000000000 +0800
++++ zfs-2.2.0-rc4-b/config/kernel-block-device-operations.m4	2023-09-09 22:37:19.785706358 +0800
+@@ -49,12 +49,42 @@
+ 	], [], [])
+ ])
+ 
++dnl #
++dnl # 5.9.x API change
++dnl #
++AC_DEFUN([ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS_RELEASE_1ARG], [
++	ZFS_LINUX_TEST_SRC([block_device_operations_release_void_1arg], [
++		#include <linux/blkdev.h>
++
++		void blk_release(struct gendisk *g) {
++			(void) g;
++			return;
++		}
++
++		static const struct block_device_operations
++		    bops __attribute__ ((unused)) = {
++			.open		= NULL,
++			.release	= blk_release,
++			.ioctl		= NULL,
++			.compat_ioctl	= NULL,
++		};
++	], [], [])
++])
++
+ AC_DEFUN([ZFS_AC_KERNEL_BLOCK_DEVICE_OPERATIONS_RELEASE_VOID], [
+-	AC_MSG_CHECKING([whether bops->release() is void])
++	AC_MSG_CHECKING([whether bops->release() is void and takes 2 args])
+ 	ZFS_LINUX_TEST_RESULT([block_device_operations_release_void], [
+ 		AC_MSG_RESULT(yes)
+ 	],[
+-		ZFS_LINUX_TEST_ERROR([bops->release()])
++		AC_MSG_RESULT(no)
++		AC_MSG_CHECKING([whether bops->release() is void and takes 1 arg])
++		ZFS_LINUX_TEST_RESULT([block_device_operations_release_void_1arg], [
++			AC_MSG_RESULT(yes)
++			AC_DEFINE([HAVE_BLOCK_DEVICE_OPERATIONS_RELEASE_1ARG], [1],
++				[Define if release() in block_device_operations takes 1 arg])
++		],[
++			ZFS_LINUX_TEST_ERROR([bops->release()])
++		])
+ 	])
+ ])
+ 
+@@ -92,6 +122,7 @@
+ AC_DEFUN([ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS], [
+ 	ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS_CHECK_EVENTS
+ 	ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS_RELEASE_VOID
++	ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS_RELEASE_1ARG
+ 	ZFS_AC_KERNEL_SRC_BLOCK_DEVICE_OPERATIONS_REVALIDATE_DISK
+ ])
+ 
+diff -ruN zfs-2.2.0-rc4/include/os/linux/kernel/linux/blkdev_compat.h zfs-2.2.0-rc4-b/include/os/linux/kernel/linux/blkdev_compat.h
+--- zfs-2.2.0-rc4/include/os/linux/kernel/linux/blkdev_compat.h	2023-09-08 07:10:27.000000000 +0800
++++ zfs-2.2.0-rc4-b/include/os/linux/kernel/linux/blkdev_compat.h	2023-09-09 22:37:42.346627065 +0800
+@@ -397,6 +397,12 @@
+ #endif
+ }
+ 
++#if defined(HAVE_BLK_MODE_T)
++#define	blk_mode_is_open_write(flag)	((flag) & BLK_OPEN_WRITE)
++#else
++#define	blk_mode_is_open_write(flag)	((flag) & FMODE_WRITE)
++#endif
++
+ /*
+  * Kernels without bio_set_op_attrs use bi_rw for the bio flags.
+  */
+diff -ruN zfs-2.2.0-rc4/module/os/linux/zfs/vdev_disk.c zfs-2.2.0-rc4-b/module/os/linux/zfs/vdev_disk.c
+--- zfs-2.2.0-rc4/module/os/linux/zfs/vdev_disk.c	2023-09-08 07:14:37.000000000 +0800
++++ zfs-2.2.0-rc4-b/module/os/linux/zfs/vdev_disk.c	2023-09-09 22:43:17.697535193 +0800
+@@ -80,9 +80,22 @@
+ 
+ static unsigned int zfs_vdev_failfast_mask = 1;
+ 
++#ifdef HAVE_BLK_MODE_T
++static blk_mode_t
++#else
+ static fmode_t
++#endif
+ vdev_bdev_mode(spa_mode_t spa_mode)
+ {
++#ifdef HAVE_BLK_MODE_T
++	blk_mode_t mode = 0;
++
++	if (spa_mode & SPA_MODE_READ)
++		mode |= BLK_OPEN_READ;
++
++	if (spa_mode & SPA_MODE_WRITE)
++		mode |= BLK_OPEN_WRITE;
++#else
+ 	fmode_t mode = 0;
+ 
+ 	if (spa_mode & SPA_MODE_READ)
+@@ -90,6 +103,7 @@
+ 
+ 	if (spa_mode & SPA_MODE_WRITE)
+ 		mode |= FMODE_WRITE;
++#endif
+ 
+ 	return (mode);
+ }
+@@ -197,12 +211,47 @@
+ 	}
+ }
+ 
++#if !defined(HAVE_BLKDEV_GET_BY_PATH_4ARG)
++/*
++ * Define a dummy struct blk_holder_ops for kernel versions
++ * prior to 6.5.
++ */
++struct blk_holder_ops {};
++#endif
++
++static struct block_device *
++vdev_blkdev_get_by_path(const char *path, spa_mode_t mode, void *holder,
++    const struct blk_holder_ops *hops)
++{
++#ifdef HAVE_BLKDEV_GET_BY_PATH_4ARG
++	return (blkdev_get_by_path(path,
++	    vdev_bdev_mode(mode) | BLK_OPEN_EXCL, holder, hops));
++#else
++	return (blkdev_get_by_path(path,
++	    vdev_bdev_mode(mode) | FMODE_EXCL, holder));
++#endif
++}
++
++static void
++vdev_blkdev_put(struct block_device *bdev, spa_mode_t mode, void *holder)
++{
++#ifdef HAVE_BLKDEV_PUT_HOLDER
++	return (blkdev_put(bdev, holder));
++#else
++	return (blkdev_put(bdev, vdev_bdev_mode(mode) | FMODE_EXCL));
++#endif
++}
++
+ static int
+ vdev_disk_open(vdev_t *v, uint64_t *psize, uint64_t *max_psize,
+     uint64_t *logical_ashift, uint64_t *physical_ashift)
+ {
+ 	struct block_device *bdev;
++#ifdef HAVE_BLK_MODE_T
++	blk_mode_t mode = vdev_bdev_mode(spa_mode(v->vdev_spa));
++#else
+ 	fmode_t mode = vdev_bdev_mode(spa_mode(v->vdev_spa));
++#endif
+ 	hrtime_t timeout = MSEC2NSEC(zfs_vdev_open_timeout_ms);
+ 	vdev_disk_t *vd;
+ 
+@@ -252,15 +301,14 @@
+ 					reread_part = B_TRUE;
+ 			}
+ 
+-			blkdev_put(bdev, mode | FMODE_EXCL);
++			vdev_blkdev_put(bdev, mode, zfs_vdev_holder);
+ 		}
+ 
+ 		if (reread_part) {
+-			bdev = blkdev_get_by_path(disk_name, mode | FMODE_EXCL,
+-			    zfs_vdev_holder);
++			bdev = vdev_blkdev_get_by_path(disk_name, mode, zfs_vdev_holder, NULL);
+ 			if (!IS_ERR(bdev)) {
+ 				int error = vdev_bdev_reread_part(bdev);
+-				blkdev_put(bdev, mode | FMODE_EXCL);
++				vdev_blkdev_put(bdev, mode, zfs_vdev_holder);
+ 				if (error == 0) {
+ 					timeout = MSEC2NSEC(
+ 					    zfs_vdev_open_timeout_ms * 2);
+@@ -305,8 +353,7 @@
+ 	hrtime_t start = gethrtime();
+ 	bdev = ERR_PTR(-ENXIO);
+ 	while (IS_ERR(bdev) && ((gethrtime() - start) < timeout)) {
+-		bdev = blkdev_get_by_path(v->vdev_path, mode | FMODE_EXCL,
+-		    zfs_vdev_holder);
++		bdev = vdev_blkdev_get_by_path(v->vdev_path, mode, zfs_vdev_holder, NULL);
+ 		if (unlikely(PTR_ERR(bdev) == -ENOENT)) {
+ 			/*
+ 			 * There is no point of waiting since device is removed
+@@ -382,8 +429,7 @@
+ 		return;
+ 
+ 	if (vd->vd_bdev != NULL) {
+-		blkdev_put(vd->vd_bdev,
+-		    vdev_bdev_mode(spa_mode(v->vdev_spa)) | FMODE_EXCL);
++		vdev_blkdev_put(vd->vd_bdev, spa_mode(v->vdev_spa), zfs_vdev_holder);
+ 	}
+ 
+ 	rw_destroy(&vd->vd_lock);
+diff -ruN zfs-2.2.0-rc4/module/os/linux/zfs/zfs_vnops_os.c zfs-2.2.0-rc4-b/module/os/linux/zfs/zfs_vnops_os.c
+--- zfs-2.2.0-rc4/module/os/linux/zfs/zfs_vnops_os.c	2023-09-08 07:14:37.000000000 +0800
++++ zfs-2.2.0-rc4-b/module/os/linux/zfs/zfs_vnops_os.c	2023-09-09 22:44:35.805449803 +0800
+@@ -186,7 +186,7 @@
+ 		return (error);
+ 
+ 	/* Honor ZFS_APPENDONLY file attribute */
+-	if ((mode & FMODE_WRITE) && (zp->z_pflags & ZFS_APPENDONLY) &&
++	if (blk_mode_is_open_write(mode) && (zp->z_pflags & ZFS_APPENDONLY) &&
+ 	    ((flag & O_APPEND) == 0)) {
+ 		zfs_exit(zfsvfs, FTAG);
+ 		return (SET_ERROR(EPERM));
+diff -ruN zfs-2.2.0-rc4/module/os/linux/zfs/zpl_ctldir.c zfs-2.2.0-rc4-b/module/os/linux/zfs/zpl_ctldir.c
+--- zfs-2.2.0-rc4/module/os/linux/zfs/zpl_ctldir.c	2023-09-08 07:14:37.000000000 +0800
++++ zfs-2.2.0-rc4-b/module/os/linux/zfs/zpl_ctldir.c	2023-09-09 22:45:01.119561510 +0800
+@@ -42,7 +42,7 @@
+ static int
+ zpl_common_open(struct inode *ip, struct file *filp)
+ {
+-	if (filp->f_mode & FMODE_WRITE)
++	if (blk_mode_is_open_write(filp->f_mode))
+ 		return (-EACCES);
+ 
+ 	return (generic_file_open(ip, filp));
+diff -ruN zfs-2.2.0-rc4/module/os/linux/zfs/zvol_os.c zfs-2.2.0-rc4-b/module/os/linux/zfs/zvol_os.c
+--- zfs-2.2.0-rc4/module/os/linux/zfs/zvol_os.c	2023-09-08 07:14:37.000000000 +0800
++++ zfs-2.2.0-rc4-b/module/os/linux/zfs/zvol_os.c	2023-09-09 22:47:45.957494220 +0800
+@@ -671,6 +671,9 @@
+ }
+ 
+ static int
++#ifdef HAVE_BLK_MODE_T
++zvol_open(struct gendisk *disk, blk_mode_t flag)
++#else
+ zvol_open(struct block_device *bdev, fmode_t flag)
+ {
+ 	zvol_state_t *zv;
+@@ -686,10 +689,14 @@
+ 	/*
+ 	 * Obtain a copy of private_data under the zvol_state_lock to make
+ 	 * sure that either the result of zvol free code path setting
+-	 * bdev->bd_disk->private_data to NULL is observed, or zvol_os_free()
++	 * disk->private_data to NULL is observed, or zvol_os_free()
+ 	 * is not called on this zv because of the positive zv_open_count.
+ 	 */
++#ifdef HAVE_BLK_MODE_T
++	zv = disk->private_data;
++#else
+ 	zv = bdev->bd_disk->private_data;
++#endif
+ 	if (zv == NULL) {
+ 		rw_exit(&zvol_state_lock);
+ 		return (SET_ERROR(-ENXIO));
+@@ -769,14 +776,15 @@
+ 			}
+ 		}
+ 
+-		error = -zvol_first_open(zv, !(flag & FMODE_WRITE));
++		error = -zvol_first_open(zv, !(blk_mode_is_open_write(flag)));
+ 
+ 		if (drop_namespace)
+ 			mutex_exit(&spa_namespace_lock);
+ 	}
+ 
+ 	if (error == 0) {
+-		if ((flag & FMODE_WRITE) && (zv->zv_flags & ZVOL_RDONLY)) {
++		if ((blk_mode_is_open_write(flag)) &&
++		    (zv->zv_flags & ZVOL_RDONLY)) {
+ 			if (zv->zv_open_count == 0)
+ 				zvol_last_close(zv);
+ 
+@@ -791,14 +799,25 @@
+ 		rw_exit(&zv->zv_suspend_lock);
+ 
+ 	if (error == 0)
++#ifdef HAVE_BLK_MODE_T
++		disk_check_media_change(disk);
++#else
+ 		zfs_check_media_change(bdev);
++#endif
+ 
+ 	return (error);
+ }
+ 
+ static void
+-zvol_release(struct gendisk *disk, fmode_t mode)
++#ifdef HAVE_BLOCK_DEVICE_OPERATIONS_RELEASE_1ARG
++zvol_release(struct gendisk *disk)
++#else
++zvol_release(struct gendisk *disk, fmode_t unused)
++#endif
+ {
++#if !defined(HAVE_BLOCK_DEVICE_OPERATIONS_RELEASE_1ARG)
++	(void) unused;
++#endif
+ 	zvol_state_t *zv;
+ 	boolean_t drop_suspend = B_TRUE;
+ 
