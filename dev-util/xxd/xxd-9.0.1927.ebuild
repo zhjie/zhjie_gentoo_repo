@@ -11,7 +11,7 @@ SRC_URI="https://github.com/vim/vim/archive/refs/tags/v${PV}.tar.gz -> vim-${PV}
 
 LICENSE="GPL-2 MIT"
 SLOT="0"
-KEYWORDS="amd64 x86 arm64"
+KEYWORDS="amd64 x86 arm64 arm"
 
 RESTRICT="mirror"
 
