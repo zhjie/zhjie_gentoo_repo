@@ -12,8 +12,7 @@ command_background=yes
 pidfile=/run/shairport-sync.pid
 
 depend() {
-    need localmount 
-	# avahi-daemon nqptp
+    need localmount avahi-daemon nqptp
     after bootmisc net*
 }
 
