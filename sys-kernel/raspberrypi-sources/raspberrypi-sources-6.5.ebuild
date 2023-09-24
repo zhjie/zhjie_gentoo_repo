@@ -9,7 +9,7 @@ CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
 
 K_WANT_GENPATCHES="base extras experimental"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="7"
 K_EXP_GENPATCHES_NOUSE="1"
 
 # K_NODRYRUN="1"
