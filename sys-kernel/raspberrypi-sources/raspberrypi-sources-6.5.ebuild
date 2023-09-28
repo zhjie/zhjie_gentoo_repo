@@ -7,6 +7,7 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
+EGIT_COMMIT="98070c2aec4b2f66dc8652ee89c767c334b2f756"
 
 K_WANT_GENPATCHES="base extras experimental"
 K_GENPATCHES_VER="7"
