@@ -10,11 +10,11 @@ HOMEPAGE="https://dotnet.microsoft.com/"
 LICENSE="MIT"
 
 SRC_URI="
-https://download.visualstudio.microsoft.com/download/pr/45395f1b-8928-41c5-9585-f01d949b2afb/0911c4025fffc0f51c3ab535695c6ca6/dotnet-runtime-6.0.16-linux-x64.tar.gz
+https://download.visualstudio.microsoft.com/download/pr/f812da49-53de-4f59-93d2-742a61229149/35ff2eb90bf2583d21ad25146c291fe4/dotnet-runtime-6.0.22-linux-x64.tar.gz
 "
 
 SLOT="6.0"
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE="+dotnet-symlink"
 REQUIRED_USE="elibc_glibc"
 QA_PREBUILT="*"

@@ -45,7 +45,7 @@ src_prepare() {
   fi
   if ! use alsa; then
     rm -vrf "${S}"/RoonServer/Appliance/check_alsa || die
-    rm -vrf "${S}"/RoonServer/Appliance/libraatmanager.so || die
+    # rm -vrf "${S}"/RoonServer/Appliance/libraatmanager.so || die
   fi
   if use taskset4; then
     cp "${S}"/RoonServer/Appliance/RoonAppliance "${S}"/RoonServer/Appliance/RoonAppliance.orig

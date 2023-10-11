@@ -7,7 +7,7 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="98070c2aec4b2f66dc8652ee89c767c334b2f756"
+EGIT_COMMIT="e952db2429405106362e5ecdc41047c528b291cb"
 
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="6"
@@ -87,7 +87,7 @@ locking-rtmutex-Acquire-the-hb-lock-via-trylock-afte.patch
 0001-signal-Add-proper-comment-about-the-preempt-disable-.patch
 0002-signal-Don-t-disable-preemption-in-ptrace_stop-on-PR.patch
 
-seqlock-Do-the-lockdep-annotation-before-locking-in-.patch
+#seqlock-Do-the-lockdep-annotation-before-locking-in-.patch
 mm-page_alloc-Use-write_seqlock_irqsave-instead-writ.patch
 
 #tick-rcu-fix-false-positive-softirq-work-is-pending-.patch
@@ -208,7 +208,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-Add_localversion_for_-RT_release.patch
+#Add_localversion_for_-RT_release.patch
         )
 	for p in "${rt_patches[@]}"; do
 		eapply "${WORKDIR}/rtpatch/${p}"
