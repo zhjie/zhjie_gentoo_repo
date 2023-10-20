@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras experimental"
-K_GENPATCHES_VER="9"
+K_GENPATCHES_VER="10"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 

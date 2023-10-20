@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="e952db2429405106362e5ecdc41047c528b291cb"
+EGIT_COMMIT="fc9670ea2c8788ab21c25a8456cd38d729176fa3"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="10"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
@@ -67,10 +67,10 @@ src_prepare() {
 ###########################################################################
 # Posted and applied
 ###########################################################################
-#0001-kernel-fork-beware-of-__put_task_struct-calling-cont.patch
+# 0001-kernel-fork-beware-of-__put_task_struct-calling-cont.patch
 0002-sched-avoid-false-lockdep-splat-in-put_task_struct.patch
 
-# signal_x86__Delay_calling_signals_in_atomic.patch
+#signal_x86__Delay_calling_signals_in_atomic.patch
 
 ###########################################################################
 # Posted
@@ -194,13 +194,13 @@ ARM64__Allow_to_enable_RT.patch
 ###########################################################################
 # POWERPC
 ###########################################################################
-powerpc__traps__Use_PREEMPT_RT.patch
-powerpc_pseries_iommu__Use_a_locallock_instead_local_irq_save.patch
-powerpc-imc-pmu-Use-the-correct-spinlock-initializer.patch
-powerpc-pseries-Select-the-generic-memory-allocator.patch
-powerpc_kvm__Disable_in-kernel_MPIC_emulation_for_PREEMPT_RT.patch
-powerpc_stackprotector__work_around_stack-guard_init_from_atomic.patch
-POWERPC__Allow_to_enable_RT.patch
+#powerpc__traps__Use_PREEMPT_RT.patch
+#powerpc_pseries_iommu__Use_a_locallock_instead_local_irq_save.patch
+#powerpc-imc-pmu-Use-the-correct-spinlock-initializer.patch
+#powerpc-pseries-Select-the-generic-memory-allocator.patch
+#powerpc_kvm__Disable_in-kernel_MPIC_emulation_for_PREEMPT_RT.patch
+#powerpc_stackprotector__work_around_stack-guard_init_from_atomic.patch
+#POWERPC__Allow_to_enable_RT.patch
 
 # Sysfs file vs uname() -v
 sysfs__Add__sys_kernel_realtime_entry.patch
