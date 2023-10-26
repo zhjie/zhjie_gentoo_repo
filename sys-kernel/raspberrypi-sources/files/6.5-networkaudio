@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 6.5.6-networkaudio Kernel Configuration
+# Linux/arm64 6.5.7-networkaudio Kernel Configuration
 #
 CONFIG_CC_VERSION_TEXT="Debian clang version 16.0.6 (15)"
 CONFIG_GCC_VERSION=0
@@ -369,6 +369,7 @@ CONFIG_ARM64_ERRATUM_2067961=y
 CONFIG_ARM64_ERRATUM_2441009=y
 CONFIG_ARM64_ERRATUM_2457168=y
 CONFIG_ARM64_ERRATUM_2645198=y
+CONFIG_ARM64_ERRATUM_2966298=y
 # CONFIG_CAVIUM_ERRATUM_22375 is not set
 # CONFIG_CAVIUM_ERRATUM_23154 is not set
 # CONFIG_CAVIUM_ERRATUM_27456 is not set
