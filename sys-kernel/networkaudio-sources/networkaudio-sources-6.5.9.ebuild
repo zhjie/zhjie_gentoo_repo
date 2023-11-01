@@ -56,8 +56,3 @@ src_prepare() {
 	eapply_user
 }
 
-pkg_postinst() {
-	elog "The XanMod team strongly suggests the use of updated CPU microcodes with its"
-	elog "kernels. For details, see https://wiki.gentoo.org/wiki/Microcode ."
-	kernel-2_pkg_postinst
-}
