@@ -143,6 +143,8 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${WORKDIR}/rtpatch/${p}"
         done
 
+	eapply "${FILESDIR}/automagic-arm64.patch"
+
 	# genpatch
 	eapply "${WORKDIR}"/genpatch/*.patch
 
