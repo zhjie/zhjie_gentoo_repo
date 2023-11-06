@@ -15,8 +15,7 @@ K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="10"
-RC_VERSION="6"
+RT_VERSION="12"
 MINOR_VERSION="0"
 
 # only use this if it's not an _rc/_pre release
@@ -29,7 +28,7 @@ DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/patches-${K_BASE_VER}-rc${RC_VERSION}-rt${RT_VERSION}.tar.xz
+	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 "
 
 KEYWORDS="amd64 arm arm64"
@@ -56,7 +55,7 @@ src_unpack() {
 	mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
 
 #	unpack patches-${K_BASE_VER}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
-	unpack patches-${K_BASE_VER}-rc${RC_VERSION}-rt${RT_VERSION}.tar.xz
+	unpack patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 }
@@ -65,14 +64,6 @@ src_prepare() {
 	cp -vf "${FILESDIR}/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
 
 	local p rt_patches=(
-# Applied upstream
-
-###########################################################################
-# Posted and applied
-###########################################################################
-
-# signal_x86__Delay_calling_signals_in_atomic.patch
-
 ###########################################################################
 # Posted
 ###########################################################################
@@ -87,9 +78,6 @@ src_prepare() {
 # Hacks to get ptrace to work.
 0001-signal-Add-proper-comment-about-the-preempt-disable-.patch
 0002-signal-Don-t-disable-preemption-in-ptrace_stop-on-PR.patch
-
-# printk related
-srcu-Use-try-lock-lockdep-annotation-for-NMI-safe-ac.patch
 
 ###########################################################################
 # Post
