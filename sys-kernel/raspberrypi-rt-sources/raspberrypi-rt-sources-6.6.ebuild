@@ -15,7 +15,7 @@ K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="12"
+RT_VERSION="13"
 MINOR_VERSION="0"
 
 # only use this if it's not an _rc/_pre release
