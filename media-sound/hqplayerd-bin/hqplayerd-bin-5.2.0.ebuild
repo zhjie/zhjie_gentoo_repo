@@ -22,7 +22,7 @@ SLOT="0"
 KEYWORDS="amd64 arm64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd +upnp cpu_flags_x86_avx2"
+IUSE="systemd +upnp cuda cpu_flags_x86_avx2"
 
 RDEPEND=">=dev-libs/glib-2.37.3
 	>=media-libs/libgmpris-2.2.1
@@ -33,7 +33,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	net-libs/gssdp:0/1.2-0
 	net-libs/gupnp-av
 	>=dev-libs/libgee-0.20.2
-	>=net-libs/libsoup-2.62.3
+	net-libs/libsoup:2.4
 	x11-libs/cairo
 	dev-libs/libusb-compat
 	media-sound/mpg123
@@ -41,6 +41,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	>sys-devel/gcc-11.3.0
 	sys-libs/libomp
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
+	cuda? ( dev-util/nvidia-cuda-toolkit )
 "
 
 DEPEND="${RDEPEND}

@@ -21,9 +21,12 @@ RESTRICT="mirror bindist"
 IUSE=""
 
 RDEPEND="
+	dev-libs/libgee
+	net-libs/gssdp:0/1.2-0
+	net-libs/gupnp:0/1.2-0
 	x11-libs/gdk-pixbuf
-	dev-libs/libunistring
 "
+#	dev-libs/libunistring
 
 DEPEND="${RDEPEND}"
 
