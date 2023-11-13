@@ -7,7 +7,7 @@ description="HQPlayerEmbedded - upsampling multichannel audio player"
 
 export SSD_NICELEVEL="-10"
 user="root:root"
-logfile="/var/log/hqplayerd.log"
+logfile="/tmp/hqplayerd.log"
 command="/usr/bin/hqplayerd"
 command_args=""
 pidfile="/run/hqplayerd.pid"
