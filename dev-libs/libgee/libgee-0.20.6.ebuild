@@ -23,7 +23,7 @@ BDEPEND="virtual/pkgconfig"
 
 src_configure() {
         if use clang; then
-		CFLAGS="-march=native -O3 -pipe -fomit-frame-pointer -Wno-incompatible-function-pointer-types"
+		CFLAGS="${CFLAGS} -Wno-incompatible-function-pointer-types"
         fi
 
 	gnome2_src_configure \
