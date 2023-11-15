@@ -9,7 +9,7 @@ K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="13"
+RT_VERSION="14"
 MINOR_VERSION="0"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
