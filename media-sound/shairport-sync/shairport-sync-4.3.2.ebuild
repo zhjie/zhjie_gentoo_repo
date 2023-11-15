@@ -7,7 +7,7 @@ inherit autotools systemd
 
 DESCRIPTION="Shairport Sync is an AirPlay audio player"
 HOMEPAGE="https://github.com/mikebrady/shairport-sync"
-SRC_URI="https://github.com/mikebrady/shairport-sync/archive/refs/tags/4.3.3-dev.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/mikebrady/shairport-sync/archive/refs/tags/4.3.2.tar.gz -> ${P}.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
@@ -35,7 +35,6 @@ RDEPEND="${DEPEND}"
 
 src_unpack() {
 	unpack ${P}.tar.gz
-        mv ${WORKDIR}/shairport-sync-4.3.3-dev ${WORKDIR}/${P}
 }
 
 src_configure() {
