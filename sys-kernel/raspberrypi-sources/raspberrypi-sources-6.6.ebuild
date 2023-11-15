@@ -7,7 +7,7 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="1e1bed81c5bce9a834a5921d37f8c51169846546"
+EGIT_COMMIT="2020404c98525d7462578c8af7a2c204d3daf50a"
 
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="1"
@@ -39,6 +39,7 @@ src_unpack() {
 	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
         unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
 #        unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.experimental.tar.xz
+
 	rm -rfv "${WORKDIR}"/10*.patch
 #	rm -rfv "${WORKDIR}"/5010_enable-cpu-optimizations-universal.patch
 	rm -rfv "${S}/.git"

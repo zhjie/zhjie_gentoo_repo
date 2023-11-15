@@ -15,7 +15,7 @@ URI="https://www.plex.tv/media-server-downloads"
 DESCRIPTION="Free media library that is intended for use with a plex client"
 HOMEPAGE="https://www.plex.tv/"
 SRC_URI="
-https://downloads.plex.tv/plex-media-server-new/1.32.6.7557-1cf77d501/debian/plexmediaserver_1.32.6.7557-1cf77d501_amd64.deb
+https://downloads.plex.tv/plex-media-server-new/1.32.7.7621-871adbd44/debian/plexmediaserver_1.32.7.7621-871adbd44_amd64.deb
 "
 S="${WORKDIR}"
 

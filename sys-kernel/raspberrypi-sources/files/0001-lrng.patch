@@ -130,11 +130,11 @@ index c5f532e..571e3fe 100644
  obj-y				+= misc.o
  obj-$(CONFIG_ATARI_DSP56K)	+= dsp56k.o
 @@ -44,3 +45,5 @@ obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
+ obj-$(CONFIG_POWERNV_OP_PANEL)	+= powernv-op-panel.o
  obj-$(CONFIG_ADI)		+= adi.o
- obj-$(CONFIG_BRCM_CHAR_DRIVERS) += broadcom/
- obj-$(CONFIG_RASPBERRYPI_GPIOMEM) += raspberrypi-gpiomem.o
 +
 +obj-$(CONFIG_LRNG)		+= lrng/
+ obj-$(CONFIG_BRCM_CHAR_DRIVERS) += broadcom/
 diff --git a/drivers/char/lrng/Kconfig b/drivers/char/lrng/Kconfig
 new file mode 100644
 index 0000000..a8bbefa
