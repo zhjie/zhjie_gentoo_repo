@@ -4,12 +4,12 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="14"
+RT_VERSION="15"
 MINOR_VERSION="0"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
@@ -23,7 +23,7 @@ EXTRAVERSION="-networkaudio-rt"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
-        https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+        https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
 "
 
 KV_FULL="${KV_FULL}-rt"
@@ -241,6 +241,8 @@ preempt-Put-preempt_enable-within-an-instrumentation.patch
 0121-printk-Add-kthread-for-all-legacy-consoles.patch
 0122-serial-8250-revert-drop-lockdep-annotation-from-seri.patch
 
+printk-ringbuffer-Extend-the-sequence-number-properl.patch
+
 ###########################################################################
 # DRM:
 ###########################################################################
@@ -261,8 +263,35 @@ Revert-drm-i915-Depend-on-PREEMPT_RT.patch
 ###########################################################################
 PREEMPT_AUTO.patch
 
+###########################################################################
+# ARM/ARM64
+###########################################################################
+0001-arm-Disable-jump-label-on-PREEMPT_RT.patch
+ARM__enable_irq_in_translation_section_permission_fault_handlers.patch
+# arm64-signal-Use-ARCH_RT_DELAYS_SIGNAL_SEND.patch
+tty_serial_omap__Make_the_locking_RT_aware.patch
+tty_serial_pl011__Make_the_locking_work_on_RT.patch
+0001-ARM-vfp-Provide-vfp_lock-for-VFP-locking.patch
+0002-ARM-vfp-Use-vfp_lock-in-vfp_sync_hwstate.patch
+0003-ARM-vfp-Use-vfp_lock-in-vfp_support_entry.patch
+0004-ARM-vfp-Move-sending-signals-outside-of-vfp_lock-ed-.patch
+ARM__Allow_to_enable_RT.patch
+ARM64__Allow_to_enable_RT.patch
+
+###########################################################################
+# RISC-V
+###########################################################################
+RISC-V-Probe-misaligned-access-speed-in-parallel.patch
+riscv-add-PREEMPT_AUTO-support.patch
+riscv-allow-to-enable-RT.patch
+
 # Sysfs file vs uname() -v
 sysfs__Add__sys_kernel_realtime_entry.patch
+
+###########################################################################
+# RT release version
+###########################################################################
+# Add_localversion_for_-RT_release.patch
 	)
 
 	for p in "${rt_patches[@]}"; do
@@ -277,7 +306,9 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
         eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
 	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
 	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
 	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"

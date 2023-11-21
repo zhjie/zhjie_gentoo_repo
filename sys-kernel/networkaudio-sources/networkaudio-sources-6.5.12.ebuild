@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras experimental"
-K_GENPATCHES_VER="13"
+K_GENPATCHES_VER="14"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
@@ -34,9 +34,6 @@ src_prepare() {
         eapply "${FILESDIR}/cachy/6.5/all/0001-cachyos-base-all.patch"
         eapply "${FILESDIR}/cachy/6.5/misc/0001-high-hz.patch"
         eapply "${FILESDIR}/cachy/6.5/misc/0001-lrng.patch"
-
-	# rt patch
-#        eapply "${FILESDIR}/cachy/6.5/sched/0001-prjc.patch"
 
 	# xanmod patch
 	eapply "${FILESDIR}/xanmod/linux-6.5.y-xanmod/intel/0003-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"

@@ -7,7 +7,7 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="e689f463e921a3b08606cc27133c23f38ec191c5"
+EGIT_COMMIT="2c90749cb1fc331fb7bbaee0fd4addfbf9650712"
 
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="2"
@@ -164,7 +164,6 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
 	fi
 
         eapply_user
