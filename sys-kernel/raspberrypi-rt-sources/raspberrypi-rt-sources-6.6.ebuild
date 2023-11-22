@@ -7,15 +7,15 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="2c90749cb1fc331fb7bbaee0fd4addfbf9650712"
+EGIT_COMMIT="5fc7604ee4fc6753c337fe8c6f992983bf1c91b2"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="14"
+RT_VERSION="15"
 MINOR_VERSION="0"
 
 # only use this if it's not an _rc/_pre release
@@ -28,7 +28,7 @@ DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
+	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 "
 
 KEYWORDS="amd64 arm arm64"
@@ -62,8 +62,17 @@ src_unpack() {
 
 src_prepare() {
 	cp -vf "${FILESDIR}/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
+	eapply "${FILESDIR}/Add-extra-version-networkaudio-rt.patch"
 
 	local p rt_patches=(
+# Applied upstream
+
+###########################################################################
+# Posted and applied
+###########################################################################
+
+# signal_x86__Delay_calling_signals_in_atomic.patch
+
 ###########################################################################
 # Posted
 ###########################################################################
@@ -155,7 +164,9 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
+                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"

@@ -11,7 +11,7 @@ K_EXP_GENPATCHES_NOUSE="1"
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa"
+IUSE="naa bmq"
 
 inherit kernel-2
 detect_version
@@ -35,6 +35,11 @@ src_prepare() {
 	eapply "${FILESDIR}/cachy/6.6/misc/0001-lrng.patch"
 
 	eapply "${FILESDIR}/0001-high-hz.patch"
+
+	# naa patch
+	if use bmq; then
+		eapply "${FILESDIR}/bmq-6.6.patch"
+	fi
 
 	# xanmod patch
 	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"

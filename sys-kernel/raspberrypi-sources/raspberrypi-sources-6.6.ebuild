@@ -7,12 +7,11 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="2c90749cb1fc331fb7bbaee0fd4addfbf9650712"
+EGIT_COMMIT="5fc7604ee4fc6753c337fe8c6f992983bf1c91b2"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
-
 # K_NODRYRUN="1"
 
 # only use this if it's not an _rc/_pre release
@@ -47,6 +46,7 @@ src_unpack() {
 
 src_prepare() {
 	cp -v "${FILESDIR}/${K_BASE_VER}-networkaudio" ${K_BASE_VER}-networkaudio
+	eapply "${FILESDIR}/Add-extra-version-networkaudio.patch"
 
 	# genpatch
 	eapply "${WORKDIR}"/*.patch
@@ -73,7 +73,9 @@ src_prepare() {
 
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
+		# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+		# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+		# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
 		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
