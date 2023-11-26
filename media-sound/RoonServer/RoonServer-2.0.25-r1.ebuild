@@ -16,16 +16,19 @@ SLOT="0"
 KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg system-dotnet web alsa rt +taskset4"
+IUSE="systemd samba ffmpeg system-dotnet web alsa rt +taskset4 trace"
 
 RDEPEND="dev-libs/icu
 	 alsa? ( media-libs/alsa-lib )
          samba? ( net-fs/cifs-utils )
 	 ffmpeg? ( media-video/ffmpeg )
          system-dotnet? ( || ( dev-dotnet/dotnet-sdk-bin:6.0 dev-dotnet/dotnet-runtime:6.0 ) )
+	 trace? ( dev-util/lttng-ust )
 "
 
-DEPEND="${RDEPEND}"
+DEPEND="${RDEPEND}
+	 !alsa? ( dev-util/patchelf )
+"
 
 S="${WORKDIR}"
 
@@ -45,8 +48,10 @@ src_prepare() {
   fi
   if ! use alsa; then
     rm -vrf "${S}"/RoonServer/Appliance/check_alsa || die
+    patchelf --remove-needed libasound.so.2 "${S}"/RoonServer/Appliance/libraatmanager.so || die
     # rm -vrf "${S}"/RoonServer/Appliance/libraatmanager.so || die
   fi
+
   if use taskset4; then
     cp "${S}"/RoonServer/Appliance/RoonAppliance "${S}"/RoonServer/Appliance/RoonAppliance.orig
     sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 1,2,3 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
@@ -57,6 +62,10 @@ src_prepare() {
     cp "${S}"/RoonServer/Server/RoonServer "${S}"/RoonServer/Server/RoonServer.orig
     sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
       "${S}"/RoonServer/Server/RoonServer
+  fi
+
+  if ! use trace; then
+    rm -vrf "${S}"/RoonServer/RoonDotnet/shared/Microsoft.NETCore.App/*/libcoreclrtraceptprovider.so || die
   fi
 }
 

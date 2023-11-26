@@ -21,11 +21,11 @@ S="${WORKDIR}"
 
 LICENSE="Plex"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="~amd64"
 RESTRICT="mirror bindist"
+IUSE="+bundle"
 
-DEPEND="
-	acct-group/plex
+DEPEND="acct-group/plex
 	acct-user/plex"
 RDEPEND="${DEPEND}"
 
@@ -46,9 +46,10 @@ BINS_TO_PAX_MARK=(
 )
 
 src_install() {
+	if ! use bundle; then
 	rm -r "usr/share" || die
 
-	# Remove tuner and useless plugins
+	# Remove plugins
 	rm -r usr/lib/plexmediaserver/CrashUploader
 	rm -r usr/lib/plexmediaserver/Plex\ Tuner\ Service
 	rm -r usr/lib/plexmediaserver/Plex\ DLNA\ Server
@@ -61,6 +62,7 @@ src_install() {
 	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/OpenSubtitles.bundle
         rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/LastFM.bundle
 	rm -r usr/lib/plexmediaserver/Resources/Plug-ins-*/PlexThemeMusic.bundle
+	fi
 
 	# Copy main files over to image and preserve permissions so it is portable
 	cp -rp usr/ "${ED}" || die
