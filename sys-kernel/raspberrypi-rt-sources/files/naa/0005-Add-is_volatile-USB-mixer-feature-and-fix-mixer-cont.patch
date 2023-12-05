@@ -1,7 +1,7 @@
-From cfdbc941eccde98baf7ca461b69395e06f98b5a2 Mon Sep 17 00:00:00 2001
+From 4e9fe40ffb30b1eb131765696c2bd2c3ced8cec1 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Fri, 21 Sep 2018 10:37:01 +0300
-Subject: [PATCH 5/7] Add is_volatile USB mixer feature and fix mixer control
+Subject: [PATCH 5/8] Add is_volatile USB mixer feature and fix mixer control
  creation
 
 ---

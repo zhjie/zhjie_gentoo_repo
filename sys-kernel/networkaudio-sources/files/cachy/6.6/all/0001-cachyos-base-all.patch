@@ -1,6 +1,6 @@
-From af60f9afa522f5f337d9b4e24eef1fdcd0ab6c05 Mon Sep 17 00:00:00 2001
+From 414938db7a335d0ba6579abf402cfaafdc98bae7 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 11 Sep 2023 14:31:43 +0200
+Date: Wed, 29 Nov 2023 19:55:12 +0100
 Subject: [PATCH 1/7] amd-hdr
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -27,7 +27,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  19 files changed, 1441 insertions(+), 90 deletions(-)
 
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
-index 32fe05c810c6..84bf501b02f4 100644
+index 32fe05c810c6f..84bf501b02f4c 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
 @@ -343,6 +343,77 @@ struct amdgpu_mode_info {
@@ -109,10 +109,10 @@ index 32fe05c810c6..84bf501b02f4 100644
  
  #define AMDGPU_MAX_BL_LEVEL 0xFF
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index 34f011cedd06..fb3400eff0b6 100644
+index deedcd9978459..572c71a54df42 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -4021,6 +4021,11 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
+@@ -4022,6 +4022,11 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
  		return r;
  	}
  
@@ -124,7 +124,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  	r = amdgpu_dm_audio_init(adev);
  	if (r) {
  		dc_release_state(state->context);
-@@ -5093,7 +5098,9 @@ static int fill_dc_plane_attributes(struct amdgpu_device *adev,
+@@ -5094,7 +5099,9 @@ static int fill_dc_plane_attributes(struct amdgpu_device *adev,
  	 * Always set input transfer function, since plane state is refreshed
  	 * every time.
  	 */
@@ -135,7 +135,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  	if (ret)
  		return ret;
  
-@@ -8113,6 +8120,10 @@ static void amdgpu_dm_commit_planes(struct drm_atomic_state *state,
+@@ -8117,6 +8124,10 @@ static void amdgpu_dm_commit_planes(struct drm_atomic_state *state,
  			bundle->surface_updates[planes_count].gamma = dc_plane->gamma_correction;
  			bundle->surface_updates[planes_count].in_transfer_func = dc_plane->in_transfer_func;
  			bundle->surface_updates[planes_count].gamut_remap_matrix = &dc_plane->gamut_remap_matrix;
@@ -146,7 +146,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  		}
  
  		amdgpu_dm_plane_fill_dc_scaling_info(dm->adev, new_plane_state,
-@@ -8324,6 +8335,10 @@ static void amdgpu_dm_commit_planes(struct drm_atomic_state *state,
+@@ -8328,6 +8339,10 @@ static void amdgpu_dm_commit_planes(struct drm_atomic_state *state,
  				&acrtc_state->stream->csc_color_matrix;
  			bundle->stream_update.out_transfer_func =
  				acrtc_state->stream->out_transfer_func;
@@ -157,7 +157,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  		}
  
  		acrtc_state->stream->abm_level = acrtc_state->abm_level;
-@@ -9512,6 +9527,7 @@ static int dm_update_crtc_state(struct amdgpu_display_manager *dm,
+@@ -9516,6 +9531,7 @@ static int dm_update_crtc_state(struct amdgpu_display_manager *dm,
  	 * when a modeset is needed, to ensure it gets reprogrammed.
  	 */
  	if (dm_new_crtc_state->base.color_mgmt_changed ||
@@ -165,7 +165,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  	    drm_atomic_crtc_needs_modeset(new_crtc_state)) {
  		ret = amdgpu_dm_update_crtc_color_mgmt(dm_new_crtc_state);
  		if (ret)
-@@ -9579,6 +9595,10 @@ static bool should_reset_plane(struct drm_atomic_state *state,
+@@ -9583,6 +9599,10 @@ static bool should_reset_plane(struct drm_atomic_state *state,
  	 */
  	for_each_oldnew_plane_in_state(state, other, old_other_state, new_other_state, i) {
  		struct amdgpu_framebuffer *old_afb, *new_afb;
@@ -176,7 +176,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  
  		if (other->type == DRM_PLANE_TYPE_CURSOR)
  			continue;
-@@ -9615,6 +9635,18 @@ static bool should_reset_plane(struct drm_atomic_state *state,
+@@ -9619,6 +9639,18 @@ static bool should_reset_plane(struct drm_atomic_state *state,
  		    old_other_state->color_encoding != new_other_state->color_encoding)
  			return true;
  
@@ -196,7 +196,7 @@ index 34f011cedd06..fb3400eff0b6 100644
  		if (!old_other_state->fb || !new_other_state->fb)
  			continue;
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
-index 9e4cc5eeda76..24c87f425afb 100644
+index 9e4cc5eeda767..24c87f425afbb 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
 @@ -33,6 +33,8 @@
@@ -339,7 +339,7 @@ index 9e4cc5eeda76..24c87f425afb 100644
  
  void amdgpu_dm_update_connector_after_detect(
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
-index a4cb23d059bd..0442eeaa9763 100644
+index a4cb23d059bd6..0442eeaa97637 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 @@ -72,6 +72,7 @@
@@ -1285,7 +1285,7 @@ index a4cb23d059bd..0442eeaa9763 100644
 +						    dc_plane_state, color_caps);
 +}
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-index 97b7a0b8a1c2..a05c210754d4 100644
+index 97b7a0b8a1c26..a05c210754d44 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 @@ -260,6 +260,7 @@ static struct drm_crtc_state *dm_crtc_duplicate_state(struct drm_crtc *crtc)
@@ -1389,7 +1389,7 @@ index 97b7a0b8a1c2..a05c210754d4 100644
  
  fail:
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
-index cc74dd69acf2..17719e15cbe5 100644
+index cc74dd69acf2b..17719e15cbe58 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
 @@ -1333,8 +1333,14 @@ static void dm_drm_plane_reset(struct drm_plane *plane)
@@ -1658,7 +1658,7 @@ index cc74dd69acf2..17719e15cbe5 100644
  	if (plane->funcs->reset)
  		plane->funcs->reset(plane);
 diff --git a/drivers/gpu/drm/amd/display/dc/dcn10/dcn10_cm_common.c b/drivers/gpu/drm/amd/display/dc/dcn10/dcn10_cm_common.c
-index 3538973bd0c6..04b2e04b68f3 100644
+index 3538973bd0c6c..04b2e04b68f33 100644
 --- a/drivers/gpu/drm/amd/display/dc/dcn10/dcn10_cm_common.c
 +++ b/drivers/gpu/drm/amd/display/dc/dcn10/dcn10_cm_common.c
 @@ -349,20 +349,37 @@ bool cm_helper_translate_curve_to_hw_format(struct dc_context *ctx,
@@ -1776,7 +1776,7 @@ index 3538973bd0c6..04b2e04b68f3 100644
  		}
  	}
 diff --git a/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.c b/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.c
-index 255713ec29bb..fce9b33c0f88 100644
+index 255713ec29bb0..fce9b33c0f881 100644
 --- a/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.c
 +++ b/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.c
 @@ -186,6 +186,43 @@ bool dcn30_set_input_transfer_func(struct dc *dc,
@@ -1824,7 +1824,7 @@ index 255713ec29bb..fce9b33c0f88 100644
  				struct pipe_ctx *pipe_ctx,
  				const struct dc_stream_state *stream)
 diff --git a/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.h b/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.h
-index ce19c54097f8..e557e2b98618 100644
+index ce19c54097f8b..e557e2b986187 100644
 --- a/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.h
 +++ b/drivers/gpu/drm/amd/display/dc/dcn30/dcn30_hwseq.h
 @@ -58,6 +58,9 @@ bool dcn30_set_blend_lut(struct pipe_ctx *pipe_ctx,
@@ -1838,7 +1838,7 @@ index ce19c54097f8..e557e2b98618 100644
  				struct pipe_ctx *pipe_ctx,
  				const struct dc_stream_state *stream);
 diff --git a/drivers/gpu/drm/amd/display/dc/dcn301/dcn301_init.c b/drivers/gpu/drm/amd/display/dc/dcn301/dcn301_init.c
-index 61205cdbe2d5..fdbe3d42cd7b 100644
+index 61205cdbe2d5a..fdbe3d42cd7b6 100644
 --- a/drivers/gpu/drm/amd/display/dc/dcn301/dcn301_init.c
 +++ b/drivers/gpu/drm/amd/display/dc/dcn301/dcn301_init.c
 @@ -33,7 +33,7 @@
@@ -1851,7 +1851,7 @@ index 61205cdbe2d5..fdbe3d42cd7b 100644
  	.power_down_on_boot = dcn10_power_down_on_boot,
  	.apply_ctx_to_hw = dce110_apply_ctx_to_hw,
 diff --git a/drivers/gpu/drm/amd/display/include/fixed31_32.h b/drivers/gpu/drm/amd/display/include/fixed31_32.h
-index d4cf7ead1d87..84da1dd34efd 100644
+index d4cf7ead1d877..84da1dd34efd1 100644
 --- a/drivers/gpu/drm/amd/display/include/fixed31_32.h
 +++ b/drivers/gpu/drm/amd/display/include/fixed31_32.h
 @@ -69,6 +69,18 @@ static const struct fixed31_32 dc_fixpt_epsilon = { 1LL };
@@ -1874,7 +1874,7 @@ index d4cf7ead1d87..84da1dd34efd 100644
   * @brief
   * Initialization routines
 diff --git a/drivers/gpu/drm/arm/malidp_crtc.c b/drivers/gpu/drm/arm/malidp_crtc.c
-index dc01c43f6193..d72c22dcf685 100644
+index dc01c43f61930..d72c22dcf6855 100644
 --- a/drivers/gpu/drm/arm/malidp_crtc.c
 +++ b/drivers/gpu/drm/arm/malidp_crtc.c
 @@ -221,7 +221,7 @@ static int malidp_crtc_atomic_check_ctm(struct drm_crtc *crtc,
@@ -1887,7 +1887,7 @@ index dc01c43f6193..d72c22dcf685 100644
  	ctm = (struct drm_color_ctm *)state->ctm->data;
  	for (i = 0; i < ARRAY_SIZE(ctm->matrix); ++i) {
 diff --git a/drivers/gpu/drm/drm_atomic.c b/drivers/gpu/drm/drm_atomic.c
-index c277b198fa3f..c3df45f90145 100644
+index c277b198fa3fa..c3df45f901456 100644
 --- a/drivers/gpu/drm/drm_atomic.c
 +++ b/drivers/gpu/drm/drm_atomic.c
 @@ -733,6 +733,7 @@ static void drm_atomic_plane_print_state(struct drm_printer *p,
@@ -1899,7 +1899,7 @@ index c277b198fa3f..c3df45f90145 100644
  	if (plane->funcs->atomic_print_state)
  		plane->funcs->atomic_print_state(p, state);
 diff --git a/drivers/gpu/drm/drm_atomic_state_helper.c b/drivers/gpu/drm/drm_atomic_state_helper.c
-index 784e63d70a42..25bb0859fda7 100644
+index 784e63d70a421..25bb0859fda74 100644
 --- a/drivers/gpu/drm/drm_atomic_state_helper.c
 +++ b/drivers/gpu/drm/drm_atomic_state_helper.c
 @@ -338,6 +338,7 @@ void __drm_atomic_helper_plane_duplicate_state(struct drm_plane *plane,
@@ -1911,7 +1911,7 @@ index 784e63d70a42..25bb0859fda7 100644
  EXPORT_SYMBOL(__drm_atomic_helper_plane_duplicate_state);
  
 diff --git a/drivers/gpu/drm/drm_property.c b/drivers/gpu/drm/drm_property.c
-index dfec479830e4..f72ef6493340 100644
+index dfec479830e49..f72ef6493340a 100644
 --- a/drivers/gpu/drm/drm_property.c
 +++ b/drivers/gpu/drm/drm_property.c
 @@ -751,6 +751,55 @@ bool drm_property_replace_blob(struct drm_property_blob **blob,
@@ -1971,7 +1971,7 @@ index dfec479830e4..f72ef6493340 100644
  			   void *data, struct drm_file *file_priv)
  {
 diff --git a/include/drm/drm_mode_object.h b/include/drm/drm_mode_object.h
-index 912f1e415685..08d7a7f0188f 100644
+index 912f1e4156853..08d7a7f0188fe 100644
 --- a/include/drm/drm_mode_object.h
 +++ b/include/drm/drm_mode_object.h
 @@ -60,7 +60,7 @@ struct drm_mode_object {
@@ -1984,7 +1984,7 @@ index 912f1e415685..08d7a7f0188f 100644
   * struct drm_object_properties - property tracking for &drm_mode_object
   */
 diff --git a/include/drm/drm_plane.h b/include/drm/drm_plane.h
-index 79d62856defb..4f87803b3ea1 100644
+index 79d62856defbf..4f87803b3ea12 100644
 --- a/include/drm/drm_plane.h
 +++ b/include/drm/drm_plane.h
 @@ -237,6 +237,13 @@ struct drm_plane_state {
@@ -2002,7 +2002,7 @@ index 79d62856defb..4f87803b3ea1 100644
  
  static inline struct drm_rect
 diff --git a/include/drm/drm_property.h b/include/drm/drm_property.h
-index 65bc9710a470..082f29156b3e 100644
+index 65bc9710a4702..082f29156b3e3 100644
 --- a/include/drm/drm_property.h
 +++ b/include/drm/drm_property.h
 @@ -279,6 +279,12 @@ struct drm_property_blob *drm_property_create_blob(struct drm_device *dev,
@@ -2019,7 +2019,7 @@ index 65bc9710a470..082f29156b3e 100644
  				     struct drm_property_blob **replace,
  				     size_t length,
 diff --git a/include/uapi/drm/drm_mode.h b/include/uapi/drm/drm_mode.h
-index ea1b639bcb28..cea5653e4020 100644
+index ea1b639bcb288..cea5653e4020b 100644
 --- a/include/uapi/drm/drm_mode.h
 +++ b/include/uapi/drm/drm_mode.h
 @@ -846,6 +846,14 @@ struct drm_color_ctm {
@@ -2038,11 +2038,11 @@ index ea1b639bcb28..cea5653e4020 100644
  	/*
  	 * Values are mapped linearly to 0.0 - 1.0 range, with 0x0 == 0.0 and
 -- 
-2.43.0.rc2
+2.43.0
 
-From 621bde11c31a6c1e79d4885845a6e62aad22f01b Mon Sep 17 00:00:00 2001
+From 99d6833f222ce2893fd1d0a7765972db4a74f58d Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 9 Nov 2023 00:01:25 +0100
+Date: Sun, 3 Dec 2023 18:57:29 +0100
 Subject: [PATCH 2/7] amd-pref-core
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -2060,7 +2060,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  10 files changed, 288 insertions(+), 20 deletions(-)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 0a1731a0f0ef..e35b795aa8aa 100644
+index 41644336e3587..6e121fdb68f92 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
 @@ -363,6 +363,11 @@
@@ -2076,7 +2076,7 @@ index 0a1731a0f0ef..e35b795aa8aa 100644
  			Map of devices attached to JOY0DAT and JOY1DAT
  			Format: <a>,<b>
 diff --git a/Documentation/admin-guide/pm/amd-pstate.rst b/Documentation/admin-guide/pm/amd-pstate.rst
-index 1cf40f69278c..0b832ff529db 100644
+index 1cf40f69278cd..0b832ff529db3 100644
 --- a/Documentation/admin-guide/pm/amd-pstate.rst
 +++ b/Documentation/admin-guide/pm/amd-pstate.rst
 @@ -300,8 +300,8 @@ platforms. The AMD P-States mechanism is the more performance and energy
@@ -2160,7 +2160,7 @@ index 1cf40f69278c..0b832ff529db 100644
  ===============================================
  
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 66bfabae8814..a2e163acf623 100644
+index 66bfabae88149..a2e163acf6239 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1054,8 +1054,9 @@ config SCHED_MC
@@ -2176,7 +2176,7 @@ index 66bfabae8814..a2e163acf623 100644
  	default y
  	help
 diff --git a/drivers/acpi/cppc_acpi.c b/drivers/acpi/cppc_acpi.c
-index 7ff269a78c20..ad388a0e8484 100644
+index 7ff269a78c208..ad388a0e84842 100644
 --- a/drivers/acpi/cppc_acpi.c
 +++ b/drivers/acpi/cppc_acpi.c
 @@ -1154,6 +1154,19 @@ int cppc_get_nominal_perf(int cpunum, u64 *nominal_perf)
@@ -2200,7 +2200,7 @@ index 7ff269a78c20..ad388a0e8484 100644
   * cppc_get_epp_perf - Get the epp register value.
   * @cpunum: CPU from which to get epp preference value.
 diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-index 4bd16b3f0781..29b2fb68a35d 100644
+index 4bd16b3f07814..29b2fb68a35db 100644
 --- a/drivers/acpi/processor_driver.c
 +++ b/drivers/acpi/processor_driver.c
 @@ -27,6 +27,7 @@
@@ -2224,7 +2224,7 @@ index 4bd16b3f0781..29b2fb68a35d 100644
  		acpi_handle_debug(handle, "Unsupported event [0x%x]\n", event);
  		break;
 diff --git a/drivers/cpufreq/amd-pstate.c b/drivers/cpufreq/amd-pstate.c
-index 9a1e194d5cf8..1be33f926678 100644
+index 9a1e194d5cf88..88df6510dcc01 100644
 --- a/drivers/cpufreq/amd-pstate.c
 +++ b/drivers/cpufreq/amd-pstate.c
 @@ -37,6 +37,7 @@
@@ -2457,7 +2457,7 @@ index 9a1e194d5cf8..1be33f926678 100644
 +
 +	hw_prefcore = READ_ONCE(cpudata->hw_prefcore);
 +
-+	return sysfs_emit(buf, "%s\n", hw_prefcore ? "supported" : "unsupported");
++	return sysfs_emit(buf, "%s\n", str_enabled_disabled(hw_prefcore));
 +}
 +
  static ssize_t show_energy_performance_available_preferences(
@@ -2470,7 +2470,7 @@ index 9a1e194d5cf8..1be33f926678 100644
 +static ssize_t prefcore_show(struct device *dev,
 +			     struct device_attribute *attr, char *buf)
 +{
-+	return sysfs_emit(buf, "%s\n", amd_pstate_prefcore ? "enabled" : "disabled");
++	return sysfs_emit(buf, "%s\n", str_enabled_disabled(amd_pstate_prefcore));
 +}
 +
  cpufreq_freq_attr_ro(amd_pstate_max_freq);
@@ -2554,7 +2554,7 @@ index 9a1e194d5cf8..1be33f926678 100644
  MODULE_AUTHOR("Huang Rui <ray.huang@amd.com>");
  MODULE_DESCRIPTION("AMD Processor P-state Frequency Driver");
 diff --git a/drivers/cpufreq/cpufreq.c b/drivers/cpufreq/cpufreq.c
-index 60ed89000e82..4ada787ff105 100644
+index 60ed89000e82d..4ada787ff105f 100644
 --- a/drivers/cpufreq/cpufreq.c
 +++ b/drivers/cpufreq/cpufreq.c
 @@ -2718,6 +2718,19 @@ void cpufreq_update_limits(unsigned int cpu)
@@ -2578,7 +2578,7 @@ index 60ed89000e82..4ada787ff105 100644
   *               BOOST						     *
   *********************************************************************/
 diff --git a/include/acpi/cppc_acpi.h b/include/acpi/cppc_acpi.h
-index 6126c977ece0..c0b69ffe7bdb 100644
+index 6126c977ece04..c0b69ffe7bdb4 100644
 --- a/include/acpi/cppc_acpi.h
 +++ b/include/acpi/cppc_acpi.h
 @@ -139,6 +139,7 @@ struct cppc_cpudata {
@@ -2601,7 +2601,7 @@ index 6126c977ece0..c0b69ffe7bdb 100644
  {
  	return -ENOTSUPP;
 diff --git a/include/linux/amd-pstate.h b/include/linux/amd-pstate.h
-index 446394f84606..426822612373 100644
+index 446394f846064..4268226123735 100644
 --- a/include/linux/amd-pstate.h
 +++ b/include/linux/amd-pstate.h
 @@ -39,11 +39,16 @@ struct amd_aperf_mperf {
@@ -2648,7 +2648,7 @@ index 446394f84606..426822612373 100644
  	/* EPP feature related attributes*/
  	s16	epp_policy;
 diff --git a/include/linux/cpufreq.h b/include/linux/cpufreq.h
-index 71d186d6933a..1cc1241fb698 100644
+index 71d186d6933a5..1cc1241fb6980 100644
 --- a/include/linux/cpufreq.h
 +++ b/include/linux/cpufreq.h
 @@ -235,6 +235,7 @@ int cpufreq_get_policy(struct cpufreq_policy *policy, unsigned int cpu);
@@ -2678,11 +2678,11 @@ index 71d186d6933a..1cc1241fb698 100644
  	int		(*bios_limit)(int cpu, unsigned int *limit);
  
 -- 
-2.43.0.rc2
+2.43.0
 
-From 7a79e53da03f5ab41535f1453a7c54aed0ea50d1 Mon Sep 17 00:00:00 2001
+From 5bf1e911e02662a6045670151acaf7ed60be0a3d Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 11 Sep 2023 14:32:14 +0200
+Date: Wed, 29 Nov 2023 19:55:38 +0100
 Subject: [PATCH 3/7] bbr3
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -2705,7 +2705,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  15 files changed, 1934 insertions(+), 551 deletions(-)
 
 diff --git a/include/linux/tcp.h b/include/linux/tcp.h
-index 3c5efeeb024f..a0d4afd221d8 100644
+index 3c5efeeb024f6..a0d4afd221d8b 100644
 --- a/include/linux/tcp.h
 +++ b/include/linux/tcp.h
 @@ -257,7 +257,9 @@ struct tcp_sock {
@@ -2720,7 +2720,7 @@ index 3c5efeeb024f..a0d4afd221d8 100644
  	u32	chrono_stat[3];	/* Time in jiffies for chrono_stat stats */
  	u8	chrono_type:2,	/* current chronograph type */
 diff --git a/include/net/inet_connection_sock.h b/include/net/inet_connection_sock.h
-index 5d2fcc137b88..3f7d429f73e5 100644
+index 5d2fcc137b881..3f7d429f73e5a 100644
 --- a/include/net/inet_connection_sock.h
 +++ b/include/net/inet_connection_sock.h
 @@ -135,8 +135,8 @@ struct inet_connection_sock {
@@ -2735,7 +2735,7 @@ index 5d2fcc137b88..3f7d429f73e5 100644
  
  #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 0239e815edf7..877fc1079435 100644
+index 0239e815edf71..877fc10794357 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
 @@ -372,6 +372,8 @@ static inline void tcp_dec_quickack_mode(struct sock *sk)
@@ -2907,7 +2907,7 @@ index 0239e815edf7..877fc1079435 100644
  static inline void tcp_plb_init(const struct sock *sk,
  				struct tcp_plb_state *plb)
 diff --git a/include/uapi/linux/inet_diag.h b/include/uapi/linux/inet_diag.h
-index 50655de04c9b..82f8bd8f0d16 100644
+index 50655de04c9b6..82f8bd8f0d161 100644
 --- a/include/uapi/linux/inet_diag.h
 +++ b/include/uapi/linux/inet_diag.h
 @@ -229,6 +229,29 @@ struct tcp_bbr_info {
@@ -2941,7 +2941,7 @@ index 50655de04c9b..82f8bd8f0d16 100644
  
  union tcp_cc_info {
 diff --git a/include/uapi/linux/rtnetlink.h b/include/uapi/linux/rtnetlink.h
-index 51c13cf9c5ae..de8dcba26bec 100644
+index 51c13cf9c5aee..de8dcba26becc 100644
 --- a/include/uapi/linux/rtnetlink.h
 +++ b/include/uapi/linux/rtnetlink.h
 @@ -506,9 +506,11 @@ enum {
@@ -2958,7 +2958,7 @@ index 51c13cf9c5ae..de8dcba26bec 100644
  struct rta_session {
  	__u8	proto;
 diff --git a/include/uapi/linux/tcp.h b/include/uapi/linux/tcp.h
-index 879eeb0a084b..77270053a5e3 100644
+index 879eeb0a084b4..77270053a5e39 100644
 --- a/include/uapi/linux/tcp.h
 +++ b/include/uapi/linux/tcp.h
 @@ -170,6 +170,7 @@ enum tcp_fastopen_client_fail {
@@ -2970,7 +2970,7 @@ index 879eeb0a084b..77270053a5e3 100644
  /*
   * Sender's congestion state indicating normal or abnormal situations
 diff --git a/net/ipv4/Kconfig b/net/ipv4/Kconfig
-index 2dfb12230f08..2e14db3bee70 100644
+index 2dfb12230f089..2e14db3bee704 100644
 --- a/net/ipv4/Kconfig
 +++ b/net/ipv4/Kconfig
 @@ -668,15 +668,18 @@ config TCP_CONG_BBR
@@ -3002,7 +3002,7 @@ index 2dfb12230f08..2e14db3bee70 100644
  choice
  	prompt "Default TCP congestion control"
 diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-index 3d3a24f79573..f9c1ca064b50 100644
+index 3d3a24f795734..f9c1ca064b500 100644
 --- a/net/ipv4/tcp.c
 +++ b/net/ipv4/tcp.c
 @@ -3079,6 +3079,7 @@ int tcp_disconnect(struct sock *sk, int flags)
@@ -3023,7 +3023,7 @@ index 3d3a24f79573..f9c1ca064b50 100644
  		info->tcpi_options |= TCPI_OPT_SYN_DATA;
  
 diff --git a/net/ipv4/tcp_bbr.c b/net/ipv4/tcp_bbr.c
-index 146792cd26fe..f4f477a69917 100644
+index 146792cd26fed..f4f477a69917d 100644
 --- a/net/ipv4/tcp_bbr.c
 +++ b/net/ipv4/tcp_bbr.c
 @@ -1,18 +1,19 @@
@@ -5668,7 +5668,7 @@ index 146792cd26fe..f4f477a69917 100644
  MODULE_DESCRIPTION("TCP BBR (Bottleneck Bandwidth and RTT)");
 +MODULE_VERSION(__stringify(BBR_VERSION));
 diff --git a/net/ipv4/tcp_cong.c b/net/ipv4/tcp_cong.c
-index 1b34050a7538..66d40449b3f4 100644
+index 1b34050a7538b..66d40449b3f4f 100644
 --- a/net/ipv4/tcp_cong.c
 +++ b/net/ipv4/tcp_cong.c
 @@ -241,6 +241,7 @@ void tcp_init_congestion_control(struct sock *sk)
@@ -5680,7 +5680,7 @@ index 1b34050a7538..66d40449b3f4 100644
  		icsk->icsk_ca_ops->init(sk);
  	if (tcp_ca_needs_ecn(sk))
 diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index 1f9d1d445fb3..d64d0672b8c4 100644
+index 1f9d1d445fb3b..d64d0672b8c4d 100644
 --- a/net/ipv4/tcp_input.c
 +++ b/net/ipv4/tcp_input.c
 @@ -371,7 +371,7 @@ static void __tcp_ecn_check_ce(struct sock *sk, const struct sk_buff *skb)
@@ -5814,7 +5814,7 @@ index 1f9d1d445fb3..d64d0672b8c4 100644
  	    tcp_in_quickack_mode(sk) ||
  	    /* Protocol state mandates a one-time immediate ACK */
 diff --git a/net/ipv4/tcp_minisocks.c b/net/ipv4/tcp_minisocks.c
-index b98d476f1594..ca5c89cc7dc8 100644
+index b98d476f1594b..ca5c89cc7dc81 100644
 --- a/net/ipv4/tcp_minisocks.c
 +++ b/net/ipv4/tcp_minisocks.c
 @@ -439,6 +439,8 @@ void tcp_ca_openreq_child(struct sock *sk, const struct dst_entry *dst)
@@ -5827,7 +5827,7 @@ index b98d476f1594..ca5c89cc7dc8 100644
  		const struct tcp_congestion_ops *ca;
  
 diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index f0723460753c..5f8e18e9a3ee 100644
+index 9ccfdc825004d..680a7eb6fccc6 100644
 --- a/net/ipv4/tcp_output.c
 +++ b/net/ipv4/tcp_output.c
 @@ -332,10 +332,9 @@ static void tcp_ecn_send_syn(struct sock *sk, struct sk_buff *skb)
@@ -5938,7 +5938,7 @@ index f0723460753c..5f8e18e9a3ee 100644
  		goto rearm_timer;
  
 diff --git a/net/ipv4/tcp_rate.c b/net/ipv4/tcp_rate.c
-index a8f6d9d06f2e..8737f2134648 100644
+index a8f6d9d06f2eb..8737f21346481 100644
 --- a/net/ipv4/tcp_rate.c
 +++ b/net/ipv4/tcp_rate.c
 @@ -34,6 +34,24 @@
@@ -6018,7 +6018,7 @@ index a8f6d9d06f2e..8737f2134648 100644
  	rs->interval_us = max(snd_us, ack_us);
  
 diff --git a/net/ipv4/tcp_timer.c b/net/ipv4/tcp_timer.c
-index 984ab4a0421e..037f54263aee 100644
+index 984ab4a0421ed..037f54263aeed 100644
 --- a/net/ipv4/tcp_timer.c
 +++ b/net/ipv4/tcp_timer.c
 @@ -653,6 +653,7 @@ void tcp_write_timer_handler(struct sock *sk)
@@ -6030,11 +6030,11 @@ index 984ab4a0421e..037f54263aee 100644
  	event = icsk->icsk_pending;
  
 -- 
-2.43.0.rc2
+2.43.0
 
-From 7e117f0c46cc3b137aca432d14583689ce742c90 Mon Sep 17 00:00:00 2001
+From c3da3b4d4c93e2b818f182438a2b374b38d05826 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 9 Oct 2023 17:29:27 +0200
+Date: Wed, 29 Nov 2023 19:56:03 +0100
 Subject: [PATCH 4/7] cachy
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -6082,7 +6082,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  create mode 100644 drivers/platform/x86/steamdeck.c
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index e35b795aa8aa..dbf3cbee7107 100644
+index 6e121fdb68f92..0fba49520140f 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
 @@ -4292,6 +4292,15 @@
@@ -6102,7 +6102,7 @@ index e35b795aa8aa..dbf3cbee7107 100644
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
 diff --git a/Makefile b/Makefile
-index 03c52108af62..e7b5dc079481 100644
+index cbe63ba9126ee..c6632a484b5ed 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -819,6 +819,9 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
@@ -6116,7 +6116,7 @@ index 03c52108af62..e7b5dc079481 100644
  KBUILD_CFLAGS += -Os
  KBUILD_RUSTFLAGS += -Copt-level=s
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
-index 00468adf180f..46cc91cb622f 100644
+index 00468adf180f1..46cc91cb622fc 100644
 --- a/arch/x86/Kconfig.cpu
 +++ b/arch/x86/Kconfig.cpu
 @@ -157,7 +157,7 @@ config MPENTIUM4
@@ -6649,7 +6649,7 @@ index 00468adf180f..46cc91cb622f 100644
  config IA32_FEAT_CTL
  	def_bool y
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 5bfe5caaa444..b7717a5e10ed 100644
+index 5bfe5caaa444b..b7717a5e10ed1 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -151,8 +151,48 @@ else
@@ -6704,7 +6704,7 @@ index 5bfe5caaa444..b7717a5e10ed 100644
          KBUILD_CFLAGS += $(cflags-y)
  
 diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index b40c462b4af3..c4e66e60d559 100644
+index b40c462b4af36..c4e66e60d559d 100644
 --- a/arch/x86/include/asm/pci.h
 +++ b/arch/x86/include/asm/pci.h
 @@ -27,6 +27,7 @@ struct pci_sysdata {
@@ -6728,7 +6728,7 @@ index b40c462b4af3..c4e66e60d559 100644
     already-configured bus numbers - to be used for buggy BIOSes
     or architectures with incomplete PCI setup by the loader */
 diff --git a/arch/x86/include/asm/vermagic.h b/arch/x86/include/asm/vermagic.h
-index 75884d2cdec3..02c1386eb653 100644
+index 75884d2cdec37..02c1386eb653e 100644
 --- a/arch/x86/include/asm/vermagic.h
 +++ b/arch/x86/include/asm/vermagic.h
 @@ -17,6 +17,54 @@
@@ -6820,7 +6820,7 @@ index 75884d2cdec3..02c1386eb653 100644
  #define MODULE_PROC_FAMILY "ELAN "
  #elif defined CONFIG_MCRUSOE
 diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index ddb798603201..7c20387d8202 100644
+index ddb798603201e..7c20387d82029 100644
 --- a/arch/x86/pci/common.c
 +++ b/arch/x86/pci/common.c
 @@ -723,12 +723,15 @@ int pci_ext_cfg_avail(void)
@@ -6842,7 +6842,7 @@ index ddb798603201..7c20387d8202 100644
  }
 -#endif
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 3cce6de464a7..7bdaa2e3a8ee 100644
+index 3cce6de464a7b..7bdaa2e3a8ee5 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
 @@ -7627,6 +7627,7 @@ MODULE_ALIAS("bfq-iosched");
@@ -6866,7 +6866,7 @@ index 3cce6de464a7..7bdaa2e3a8ee 100644
  
  slab_kill:
 diff --git a/drivers/Makefile b/drivers/Makefile
-index 1bec7819a837..dcdb0ddb7b66 100644
+index 1bec7819a837a..dcdb0ddb7b66d 100644
 --- a/drivers/Makefile
 +++ b/drivers/Makefile
 @@ -66,15 +66,8 @@ obj-y				+= char/
@@ -6901,7 +6901,7 @@ index 1bec7819a837..dcdb0ddb7b66 100644
  obj-$(CONFIG_MTD)		+= mtd/
  obj-$(CONFIG_SPI)		+= spi/
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 08745e7db820..07483490913d 100644
+index 08745e7db8201..07483490913d0 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
 @@ -1524,7 +1524,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
@@ -6957,7 +6957,7 @@ index 08745e7db820..07483490913d 100644
  	sysfs_add_file_to_group(&pdev->dev.kobj,
  				&dev_attr_remapped_nvme.attr,
 diff --git a/drivers/cpufreq/Kconfig.x86 b/drivers/cpufreq/Kconfig.x86
-index 438c9e75a04d..1bbfeca5f01e 100644
+index 438c9e75a04dc..1bbfeca5f01ec 100644
 --- a/drivers/cpufreq/Kconfig.x86
 +++ b/drivers/cpufreq/Kconfig.x86
 @@ -9,7 +9,6 @@ config X86_INTEL_PSTATE
@@ -6977,10 +6977,10 @@ index 438c9e75a04d..1bbfeca5f01e 100644
  	  This driver adds a CPUFreq driver which utilizes a fine grain
  	  processor performance frequency control range instead of legacy
 diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 6644eebedaf3..e1950105d861 100644
+index 97d27e01a6ee2..6a5ca108ac71e 100644
 --- a/drivers/i2c/busses/Kconfig
 +++ b/drivers/i2c/busses/Kconfig
-@@ -229,6 +229,15 @@ config I2C_CHT_WC
+@@ -230,6 +230,15 @@ config I2C_CHT_WC
  	  combined with a FUSB302 Type-C port-controller as such it is advised
  	  to also select CONFIG_TYPEC_FUSB302=m.
  
@@ -6997,7 +6997,7 @@ index 6644eebedaf3..e1950105d861 100644
  	tristate "Nvidia nForce2, nForce3 and nForce4"
  	depends on PCI
 diff --git a/drivers/i2c/busses/Makefile b/drivers/i2c/busses/Makefile
-index af56fe2c75c0..76be74584719 100644
+index af56fe2c75c09..76be74584719e 100644
 --- a/drivers/i2c/busses/Makefile
 +++ b/drivers/i2c/busses/Makefile
 @@ -20,6 +20,7 @@ obj-$(CONFIG_I2C_CHT_WC)	+= i2c-cht-wc.o
@@ -7010,7 +7010,7 @@ index af56fe2c75c0..76be74584719 100644
  obj-$(CONFIG_I2C_NVIDIA_GPU)	+= i2c-nvidia-gpu.o
 diff --git a/drivers/i2c/busses/i2c-nct6775.c b/drivers/i2c/busses/i2c-nct6775.c
 new file mode 100644
-index 000000000000..e919d1e10c51
+index 0000000000000..e919d1e10c515
 --- /dev/null
 +++ b/drivers/i2c/busses/i2c-nct6775.c
 @@ -0,0 +1,648 @@
@@ -7663,7 +7663,7 @@ index 000000000000..e919d1e10c51
 +module_init(i2c_nct6775_init);
 +module_exit(i2c_nct6775_exit);
 diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-index 809fbd014cd6..d54b35b147ee 100644
+index 809fbd014cd68..d54b35b147ee9 100644
 --- a/drivers/i2c/busses/i2c-piix4.c
 +++ b/drivers/i2c/busses/i2c-piix4.c
 @@ -568,11 +568,11 @@ static int piix4_transaction(struct i2c_adapter *piix4_adapter)
@@ -7681,10 +7681,10 @@ index 809fbd014cd6..d54b35b147ee 100644
  	/* If the SMBus is still busy, we give up */
  	if (timeout == MAX_TIMEOUT) {
 diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 5315fd261c23..0c137e8118c7 100644
+index cef9353370b20..89747847dfc8f 100644
 --- a/drivers/md/dm-crypt.c
 +++ b/drivers/md/dm-crypt.c
-@@ -3240,6 +3240,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+@@ -3249,6 +3249,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
  			goto bad;
  	}
  
@@ -7697,7 +7697,7 @@ index 5315fd261c23..0c137e8118c7 100644
  	if (ret < 0)
  		goto bad;
 diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index 37c8663de7fe..897d19f92ede 100644
+index 37c8663de7fe1..897d19f92edeb 100644
 --- a/drivers/pci/controller/Makefile
 +++ b/drivers/pci/controller/Makefile
 @@ -1,4 +1,10 @@
@@ -7713,7 +7713,7 @@ index 37c8663de7fe..897d19f92ede 100644
  obj-$(CONFIG_PCI_IXP4XX) += pci-ixp4xx.o
 diff --git a/drivers/pci/controller/intel-nvme-remap.c b/drivers/pci/controller/intel-nvme-remap.c
 new file mode 100644
-index 000000000000..e105e6f5cc91
+index 0000000000000..e105e6f5cc91d
 --- /dev/null
 +++ b/drivers/pci/controller/intel-nvme-remap.c
 @@ -0,0 +1,462 @@
@@ -8180,7 +8180,7 @@ index 000000000000..e105e6f5cc91
 +MODULE_AUTHOR("Daniel Drake <drake@endlessm.com>");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e3e915329510..d9775b291b77 100644
+index ae95d09507722..07596cfed8b79 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
 @@ -3722,6 +3722,106 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
@@ -8299,7 +8299,7 @@ index e3e915329510..d9775b291b77 100644
  };
  
 diff --git a/drivers/platform/x86/Kconfig b/drivers/platform/x86/Kconfig
-index 2a1070543391..522e52d788b4 100644
+index 2a10705433911..522e52d788b42 100644
 --- a/drivers/platform/x86/Kconfig
 +++ b/drivers/platform/x86/Kconfig
 @@ -643,6 +643,16 @@ config THINKPAD_LMI
@@ -8341,7 +8341,7 @@ index 2a1070543391..522e52d788b4 100644
  
  config P2SB
 diff --git a/drivers/platform/x86/Makefile b/drivers/platform/x86/Makefile
-index b457de5abf7d..ecfbaf2e4e86 100644
+index b457de5abf7d7..ecfbaf2e4e86a 100644
 --- a/drivers/platform/x86/Makefile
 +++ b/drivers/platform/x86/Makefile
 @@ -65,6 +65,7 @@ obj-$(CONFIG_LENOVO_YMC)	+= lenovo-ymc.o
@@ -8361,7 +8361,7 @@ index b457de5abf7d..ecfbaf2e4e86 100644
 +obj-$(CONFIG_STEAMDECK)			+= steamdeck.o
 diff --git a/drivers/platform/x86/legion-laptop.c b/drivers/platform/x86/legion-laptop.c
 new file mode 100644
-index 000000000000..7275105071d2
+index 0000000000000..7275105071d27
 --- /dev/null
 +++ b/drivers/platform/x86/legion-laptop.c
 @@ -0,0 +1,5858 @@
@@ -14225,7 +14225,7 @@ index 000000000000..7275105071d2
 +module_exit(legion_exit);
 diff --git a/drivers/platform/x86/steamdeck.c b/drivers/platform/x86/steamdeck.c
 new file mode 100644
-index 000000000000..77a6677ec19e
+index 0000000000000..77a6677ec19e6
 --- /dev/null
 +++ b/drivers/platform/x86/steamdeck.c
 @@ -0,0 +1,523 @@
@@ -14753,7 +14753,7 @@ index 000000000000..77a6677ec19e
 +MODULE_DESCRIPTION("Steam Deck ACPI platform driver");
 +MODULE_LICENSE("GPL");
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index bf5d0b1b16f4..5a62f3ab1b80 100644
+index bf5d0b1b16f43..5a62f3ab1b809 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
 @@ -191,7 +191,7 @@ static inline void __mm_zero_struct_page(struct page *page)
@@ -14766,10 +14766,10 @@ index bf5d0b1b16f4..5a62f3ab1b80 100644
  extern int sysctl_max_map_count;
  
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 351c3b7f93a1..a2ab344fc08b 100644
+index 8c9608b217b00..0bdee469ff931 100644
 --- a/include/linux/pagemap.h
 +++ b/include/linux/pagemap.h
-@@ -1261,7 +1261,7 @@ struct readahead_control {
+@@ -1278,7 +1278,7 @@ struct readahead_control {
  		._index = i,						\
  	}
  
@@ -14779,7 +14779,7 @@ index 351c3b7f93a1..a2ab344fc08b 100644
  void page_cache_ra_unbounded(struct readahead_control *,
  		unsigned long nr_to_read, unsigned long lookahead_count);
 diff --git a/include/linux/user_namespace.h b/include/linux/user_namespace.h
-index 45f09bec02c4..87b20e2ee274 100644
+index 45f09bec02c48..87b20e2ee2744 100644
 --- a/include/linux/user_namespace.h
 +++ b/include/linux/user_namespace.h
 @@ -148,6 +148,8 @@ static inline void set_userns_rlimit_max(struct user_namespace *ns,
@@ -14801,7 +14801,7 @@ index 45f09bec02c4..87b20e2ee274 100644
  {
  	return &init_user_ns;
 diff --git a/init/Kconfig b/init/Kconfig
-index 6d35728b94b2..9dee4c100348 100644
+index 6d35728b94b2b..9dee4c100348e 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -123,6 +123,10 @@ config THREAD_INFO_IN_TASK
@@ -14852,7 +14852,7 @@ index 6d35728b94b2..9dee4c100348 100644
  	bool "Optimize for size (-Os)"
  	help
 diff --git a/kernel/Kconfig.hz b/kernel/Kconfig.hz
-index 38ef6d06888e..0f78364efd4f 100644
+index 38ef6d06888ef..0f78364efd4f2 100644
 --- a/kernel/Kconfig.hz
 +++ b/kernel/Kconfig.hz
 @@ -40,6 +40,27 @@ choice
@@ -14894,7 +14894,7 @@ index 38ef6d06888e..0f78364efd4f 100644
  
  config SCHED_HRTICK
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 3b6d20dfb9a8..200a77738a80 100644
+index 177ce7438db6b..6ecece1407fc3 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -100,6 +100,10 @@
@@ -14933,7 +14933,7 @@ index 3b6d20dfb9a8..200a77738a80 100644
  	if (err)
  		goto bad_unshare_out;
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 354a2d294f52..4dc780aa3bcc 100644
+index 354a2d294f526..4dc780aa3bcc8 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
 @@ -95,6 +95,9 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
@@ -14963,7 +14963,7 @@ index 354a2d294f52..4dc780aa3bcc 100644
  	{
  		.procname	= "tainted",
 diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
-index 1d8e47bed3f1..fec01d016a35 100644
+index 1d8e47bed3f11..fec01d016a351 100644
 --- a/kernel/user_namespace.c
 +++ b/kernel/user_namespace.c
 @@ -22,6 +22,13 @@
@@ -14981,7 +14981,7 @@ index 1d8e47bed3f1..fec01d016a35 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 diff --git a/mm/Kconfig b/mm/Kconfig
-index 264a2df5ecf5..0bf8853cc3a8 100644
+index 264a2df5ecf5b..0bf8853cc3a81 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
 @@ -653,7 +653,7 @@ config COMPACTION
@@ -14994,7 +14994,7 @@ index 264a2df5ecf5..0bf8853cc3a8 100644
  
  #
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index b8d3d7040a50..b11fde5c697c 100644
+index 4656534b8f5cc..15ac9f2049c9d 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
 @@ -71,7 +71,11 @@ static long ratelimit_pages = 32;
@@ -15022,7 +15022,7 @@ index b8d3d7040a50..b11fde5c697c 100644
  EXPORT_SYMBOL_GPL(dirty_writeback_interval);
  
 diff --git a/mm/swap.c b/mm/swap.c
-index cd8f0150ba3a..42c405a4f114 100644
+index cd8f0150ba3aa..42c405a4f114c 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
 @@ -1090,6 +1090,10 @@ void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
@@ -15043,7 +15043,7 @@ index cd8f0150ba3a..42c405a4f114 100644
 +#endif
  }
 diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 22c6689d9302..bf65bd9abdf3 100644
+index 22c6689d93027..bf65bd9abdf34 100644
 --- a/mm/vmpressure.c
 +++ b/mm/vmpressure.c
 @@ -43,7 +43,11 @@ static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
@@ -15059,7 +15059,7 @@ index 22c6689d9302..bf65bd9abdf3 100644
  
  /*
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 6f13394b112e..1fb69bffa109 100644
+index 6f13394b112ea..1fb69bffa109a 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
 @@ -186,7 +186,11 @@ struct scan_control {
@@ -15087,11 +15087,11 @@ index 6f13394b112e..1fb69bffa109 100644
  static void lru_gen_age_node(struct pglist_data *pgdat, struct scan_control *sc)
  {
 -- 
-2.43.0.rc2
+2.43.0
 
-From 32f44d74fcff298e05d558c092c9fa5488580da8 Mon Sep 17 00:00:00 2001
+From 1b4252c882c357b2252380a370cac4291a4fe65f Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 9 Oct 2023 17:29:38 +0200
+Date: Wed, 29 Nov 2023 19:56:14 +0100
 Subject: [PATCH 5/7] fixes
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -15102,7 +15102,9 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  Documentation/leds/ledtrig-blkdev.rst         |  158 +++
  arch/x86/include/asm/barrier.h                |   18 -
  arch/x86/include/asm/processor.h              |   19 +
+ drivers/acpi/acpi_video.c                     |   14 +-
  drivers/bluetooth/btusb.c                     |    2 +-
+ drivers/hid/amd-sfh-hid/amd_sfh_client.c      |    6 +
  drivers/leds/trigger/Kconfig                  |    9 +
  drivers/leds/trigger/Makefile                 |    1 +
  drivers/leds/trigger/ledtrig-blkdev.c         | 1218 +++++++++++++++++
@@ -15112,13 +15114,13 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  mm/page_alloc.c                               |    2 +-
  mm/slub.c                                     |   17 +-
  sound/pci/hda/patch_realtek.c                 |    1 +
- 16 files changed, 1508 insertions(+), 34 deletions(-)
+ 18 files changed, 1519 insertions(+), 43 deletions(-)
  create mode 100644 Documentation/ABI/testing/sysfs-class-led-trigger-blkdev
  create mode 100644 Documentation/leds/ledtrig-blkdev.rst
  create mode 100644 drivers/leds/trigger/ledtrig-blkdev.c
 
 diff --git a/Documentation/ABI/stable/sysfs-block b/Documentation/ABI/stable/sysfs-block
-index 1fe9a553c37b..edeac5e4c83d 100644
+index 1fe9a553c37b7..edeac5e4c83dc 100644
 --- a/Documentation/ABI/stable/sysfs-block
 +++ b/Documentation/ABI/stable/sysfs-block
 @@ -101,6 +101,16 @@ Description:
@@ -15140,7 +15142,7 @@ index 1fe9a553c37b..edeac5e4c83d 100644
  Contact:	Martin K. Petersen <martin.petersen@oracle.com>
 diff --git a/Documentation/ABI/testing/sysfs-class-led-trigger-blkdev b/Documentation/ABI/testing/sysfs-class-led-trigger-blkdev
 new file mode 100644
-index 000000000000..28ce8c814fb7
+index 0000000000000..28ce8c814fb76
 --- /dev/null
 +++ b/Documentation/ABI/testing/sysfs-class-led-trigger-blkdev
 @@ -0,0 +1,78 @@
@@ -15223,7 +15225,7 @@ index 000000000000..28ce8c814fb7
 +		may not match the device special file paths written to
 +		link_device and unlink_device.)
 diff --git a/Documentation/leds/index.rst b/Documentation/leds/index.rst
-index 3ade16c18328..3fd55a2cbfb5 100644
+index 3ade16c18328a..3fd55a2cbfb5f 100644
 --- a/Documentation/leds/index.rst
 +++ b/Documentation/leds/index.rst
 @@ -10,6 +10,7 @@ LEDs
@@ -15236,7 +15238,7 @@ index 3ade16c18328..3fd55a2cbfb5 100644
     ledtrig-usbport
 diff --git a/Documentation/leds/ledtrig-blkdev.rst b/Documentation/leds/ledtrig-blkdev.rst
 new file mode 100644
-index 000000000000..9ff5b99de451
+index 0000000000000..9ff5b99de4514
 --- /dev/null
 +++ b/Documentation/leds/ledtrig-blkdev.rst
 @@ -0,0 +1,158 @@
@@ -15399,7 +15401,7 @@ index 000000000000..9ff5b99de451
 +  A device can be associated with multiple LEDs, and an LED can be associated
 +  with multiple devices.
 diff --git a/arch/x86/include/asm/barrier.h b/arch/x86/include/asm/barrier.h
-index 35389b2af88e..0216f63a366b 100644
+index 35389b2af88ee..0216f63a366b5 100644
 --- a/arch/x86/include/asm/barrier.h
 +++ b/arch/x86/include/asm/barrier.h
 @@ -81,22 +81,4 @@ do {									\
@@ -15426,7 +15428,7 @@ index 35389b2af88e..0216f63a366b 100644
 -
  #endif /* _ASM_X86_BARRIER_H */
 diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index a3669a7774ed..3e175d55488d 100644
+index a3669a7774edb..3e175d55488d2 100644
 --- a/arch/x86/include/asm/processor.h
 +++ b/arch/x86/include/asm/processor.h
 @@ -734,4 +734,23 @@ bool arch_is_platform_page(u64 paddr);
@@ -15453,11 +15455,64 @@ index a3669a7774ed..3e175d55488d 100644
 +}
 +
  #endif /* _ASM_X86_PROCESSOR_H */
+diff --git a/drivers/acpi/acpi_video.c b/drivers/acpi/acpi_video.c
+index 4e868454b38df..35f071ad95324 100644
+--- a/drivers/acpi/acpi_video.c
++++ b/drivers/acpi/acpi_video.c
+@@ -253,8 +253,7 @@ static const struct backlight_ops acpi_backlight_ops = {
+ static int video_get_max_state(struct thermal_cooling_device *cooling_dev,
+ 			       unsigned long *state)
+ {
+-	struct acpi_device *device = cooling_dev->devdata;
+-	struct acpi_video_device *video = acpi_driver_data(device);
++	struct acpi_video_device *video = cooling_dev->devdata;
+ 
+ 	*state = video->brightness->count - ACPI_VIDEO_FIRST_LEVEL - 1;
+ 	return 0;
+@@ -263,8 +262,7 @@ static int video_get_max_state(struct thermal_cooling_device *cooling_dev,
+ static int video_get_cur_state(struct thermal_cooling_device *cooling_dev,
+ 			       unsigned long *state)
+ {
+-	struct acpi_device *device = cooling_dev->devdata;
+-	struct acpi_video_device *video = acpi_driver_data(device);
++	struct acpi_video_device *video = cooling_dev->devdata;
+ 	unsigned long long level;
+ 	int offset;
+ 
+@@ -283,8 +281,7 @@ static int video_get_cur_state(struct thermal_cooling_device *cooling_dev,
+ static int
+ video_set_cur_state(struct thermal_cooling_device *cooling_dev, unsigned long state)
+ {
+-	struct acpi_device *device = cooling_dev->devdata;
+-	struct acpi_video_device *video = acpi_driver_data(device);
++	struct acpi_video_device *video = cooling_dev->devdata;
+ 	int level;
+ 
+ 	if (state >= video->brightness->count - ACPI_VIDEO_FIRST_LEVEL)
+@@ -1125,7 +1122,6 @@ static int acpi_video_bus_get_one_device(struct acpi_device *device, void *arg)
+ 
+ 	strcpy(acpi_device_name(device), ACPI_VIDEO_DEVICE_NAME);
+ 	strcpy(acpi_device_class(device), ACPI_VIDEO_CLASS);
+-	device->driver_data = data;
+ 
+ 	data->device_id = device_id;
+ 	data->video = video;
+@@ -1747,8 +1743,8 @@ static void acpi_video_dev_register_backlight(struct acpi_video_device *device)
+ 	device->backlight->props.brightness =
+ 			acpi_video_get_brightness(device->backlight);
+ 
+-	device->cooling_dev = thermal_cooling_device_register("LCD",
+-				device->dev, &video_cooling_ops);
++	device->cooling_dev = thermal_cooling_device_register("LCD", device,
++							      &video_cooling_ops);
+ 	if (IS_ERR(device->cooling_dev)) {
+ 		/*
+ 		 * Set cooling_dev to NULL so we don't crash trying to free it.
 diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index 499f4809fcdf..5e610bdba167 100644
+index 66080fae072f2..7778883d3381b 100644
 --- a/drivers/bluetooth/btusb.c
 +++ b/drivers/bluetooth/btusb.c
-@@ -1028,7 +1028,7 @@ static void btusb_qca_cmd_timeout(struct hci_dev *hdev)
+@@ -1032,7 +1032,7 @@ static void btusb_qca_cmd_timeout(struct hci_dev *hdev)
  		}
  
  		gpiod_set_value_cansleep(reset_gpio, 0);
@@ -15466,8 +15521,32 @@ index 499f4809fcdf..5e610bdba167 100644
  		gpiod_set_value_cansleep(reset_gpio, 1);
  
  		return;
+diff --git a/drivers/hid/amd-sfh-hid/amd_sfh_client.c b/drivers/hid/amd-sfh-hid/amd_sfh_client.c
+index bdb578e0899f5..0f1d6778051fc 100644
+--- a/drivers/hid/amd-sfh-hid/amd_sfh_client.c
++++ b/drivers/hid/amd-sfh-hid/amd_sfh_client.c
+@@ -25,6 +25,9 @@ void amd_sfh_set_report(struct hid_device *hid, int report_id,
+ 	struct amdtp_cl_data *cli_data = hid_data->cli_data;
+ 	int i;
+ 
++	if (!cli_data->is_any_sensor_enabled)
++		return;
++
+ 	for (i = 0; i < cli_data->num_hid_devices; i++) {
+ 		if (cli_data->hid_sensor_hubs[i] == hid) {
+ 			cli_data->cur_hid_dev = i;
+@@ -41,6 +44,9 @@ int amd_sfh_get_report(struct hid_device *hid, int report_id, int report_type)
+ 	struct request_list *req_list = &cli_data->req_list;
+ 	int i;
+ 
++	if (!cli_data->is_any_sensor_enabled)
++		return -ENODEV;
++
+ 	for (i = 0; i < cli_data->num_hid_devices; i++) {
+ 		if (cli_data->hid_sensor_hubs[i] == hid) {
+ 			struct request_list *new = kzalloc(sizeof(*new), GFP_KERNEL);
 diff --git a/drivers/leds/trigger/Kconfig b/drivers/leds/trigger/Kconfig
-index 2a57328eca20..05e80cfd0ed8 100644
+index 2a57328eca207..05e80cfd0ed8d 100644
 --- a/drivers/leds/trigger/Kconfig
 +++ b/drivers/leds/trigger/Kconfig
 @@ -155,4 +155,13 @@ config LEDS_TRIGGER_TTY
@@ -15485,7 +15564,7 @@ index 2a57328eca20..05e80cfd0ed8 100644
 +
  endif # LEDS_TRIGGERS
 diff --git a/drivers/leds/trigger/Makefile b/drivers/leds/trigger/Makefile
-index 25c4db97cdd4..d53bab5d93f1 100644
+index 25c4db97cdd4c..d53bab5d93f1c 100644
 --- a/drivers/leds/trigger/Makefile
 +++ b/drivers/leds/trigger/Makefile
 @@ -16,3 +16,4 @@ obj-$(CONFIG_LEDS_TRIGGER_NETDEV)	+= ledtrig-netdev.o
@@ -15495,7 +15574,7 @@ index 25c4db97cdd4..d53bab5d93f1 100644
 +obj-$(CONFIG_LEDS_TRIGGER_BLKDEV)	+= ledtrig-blkdev.o
 diff --git a/drivers/leds/trigger/ledtrig-blkdev.c b/drivers/leds/trigger/ledtrig-blkdev.c
 new file mode 100644
-index 000000000000..9e0c4b66ea27
+index 0000000000000..9e0c4b66ea27d
 --- /dev/null
 +++ b/drivers/leds/trigger/ledtrig-blkdev.c
 @@ -0,0 +1,1218 @@
@@ -16718,7 +16797,7 @@ index 000000000000..9e0c4b66ea27
 +MODULE_AUTHOR("Ian Pilcher <arequipeno@gmail.com>");
 +MODULE_LICENSE("GPL v2");
 diff --git a/include/linux/pageblock-flags.h b/include/linux/pageblock-flags.h
-index e83c4c095041..21b8dfa5d828 100644
+index e83c4c0950417..21b8dfa5d8286 100644
 --- a/include/linux/pageblock-flags.h
 +++ b/include/linux/pageblock-flags.h
 @@ -48,7 +48,7 @@ extern unsigned int pageblock_order;
@@ -16731,7 +16810,7 @@ index e83c4c095041..21b8dfa5d828 100644
  #endif /* CONFIG_HUGETLB_PAGE */
  
 diff --git a/kernel/padata.c b/kernel/padata.c
-index ff349e1084c1..5f3c6c4bdeb6 100644
+index 179fb1518070c..b6bb0c45d7b8c 100644
 --- a/kernel/padata.c
 +++ b/kernel/padata.c
 @@ -45,7 +45,7 @@ struct padata_mt_job_state {
@@ -16753,10 +16832,10 @@ index ff349e1084c1..5f3c6c4bdeb6 100644
  	struct padata_work *pw = container_of(w, struct padata_work, pw_work);
  	struct padata_mt_job_state *ps = pw->pw_data;
 diff --git a/kernel/smp.c b/kernel/smp.c
-index 8455a53465af..1d330b086290 100644
+index 695eb13a276d2..83b0468808f96 100644
 --- a/kernel/smp.c
 +++ b/kernel/smp.c
-@@ -946,7 +946,7 @@ early_param("maxcpus", maxcpus);
+@@ -957,7 +957,7 @@ early_param("maxcpus", maxcpus);
  
  #if (NR_CPUS > 1) && !defined(CONFIG_FORCE_NR_CPUS)
  /* Setup number of possible processor ids */
@@ -16766,7 +16845,7 @@ index 8455a53465af..1d330b086290 100644
  #endif
  
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 85741403948f..313338789e46 100644
+index 85741403948f5..313338789e462 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
 @@ -294,7 +294,7 @@ int movable_zone;
@@ -16779,7 +16858,7 @@ index 85741403948f..313338789e46 100644
  EXPORT_SYMBOL(nr_node_ids);
  EXPORT_SYMBOL(nr_online_nodes);
 diff --git a/mm/slub.c b/mm/slub.c
-index f7940048138c..3cf4842d534e 100644
+index f7940048138c5..3cf4842d534e8 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
 @@ -287,6 +287,7 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
@@ -16830,10 +16909,10 @@ index f7940048138c..3cf4842d534e 100644
  	 * Doh this slab cannot be placed using slub_max_order.
  	 */
 diff --git a/sound/pci/hda/patch_realtek.c b/sound/pci/hda/patch_realtek.c
-index 3ed2cba5ee8a..24cebeeecce6 100644
+index 87bc1d2f8a432..f19a87f473e1a 100644
 --- a/sound/pci/hda/patch_realtek.c
 +++ b/sound/pci/hda/patch_realtek.c
-@@ -9850,6 +9850,7 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
+@@ -9861,6 +9861,7 @@ static const struct snd_pci_quirk alc269_fixup_tbl[] = {
  	SND_PCI_QUIRK(0x1043, 0x17f3, "ROG Ally RC71L_RC71L", ALC294_FIXUP_ASUS_ALLY),
  	SND_PCI_QUIRK(0x1043, 0x1881, "ASUS Zephyrus S/M", ALC294_FIXUP_ASUS_GX502_PINS),
  	SND_PCI_QUIRK(0x1043, 0x18b1, "Asus MJ401TA", ALC256_FIXUP_ASUS_HEADSET_MIC),
@@ -16842,11 +16921,11 @@ index 3ed2cba5ee8a..24cebeeecce6 100644
  	SND_PCI_QUIRK(0x1043, 0x194e, "ASUS UX563FD", ALC294_FIXUP_ASUS_HPE),
  	SND_PCI_QUIRK(0x1043, 0x1970, "ASUS UX550VE", ALC289_FIXUP_ASUS_GA401),
 -- 
-2.43.0.rc2
+2.43.0
 
-From 5ce2f13ef6d05c3a004dff0159634fddee812a7b Mon Sep 17 00:00:00 2001
+From c248e35c84e2b12a9d1217157a394ae42d195433 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 9 Oct 2023 17:29:48 +0200
+Date: Wed, 29 Nov 2023 19:56:24 +0100
 Subject: [PATCH 6/7] ksm
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -16876,7 +16955,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  22 files changed, 218 insertions(+), 2 deletions(-)
 
 diff --git a/arch/alpha/kernel/syscalls/syscall.tbl b/arch/alpha/kernel/syscalls/syscall.tbl
-index ad37569d0507..9f4311e21c42 100644
+index ad37569d05072..9f4311e21c421 100644
 --- a/arch/alpha/kernel/syscalls/syscall.tbl
 +++ b/arch/alpha/kernel/syscalls/syscall.tbl
 @@ -492,3 +492,6 @@
@@ -16887,7 +16966,7 @@ index ad37569d0507..9f4311e21c42 100644
 +564	common	process_ksm_disable		sys_process_ksm_disable
 +565	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/arm/tools/syscall.tbl b/arch/arm/tools/syscall.tbl
-index c572d6c3dee0..8d40b3a4572e 100644
+index c572d6c3dee0f..8d40b3a4572ee 100644
 --- a/arch/arm/tools/syscall.tbl
 +++ b/arch/arm/tools/syscall.tbl
 @@ -466,3 +466,6 @@
@@ -16898,7 +16977,7 @@ index c572d6c3dee0..8d40b3a4572e 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/arm64/include/asm/unistd.h b/arch/arm64/include/asm/unistd.h
-index bd77253b62e0..f33190f17ebb 100644
+index bd77253b62e01..f33190f17ebb6 100644
 --- a/arch/arm64/include/asm/unistd.h
 +++ b/arch/arm64/include/asm/unistd.h
 @@ -39,7 +39,7 @@
@@ -16911,7 +16990,7 @@ index bd77253b62e0..f33190f17ebb 100644
  
  #define __ARCH_WANT_SYS_CLONE
 diff --git a/arch/arm64/include/asm/unistd32.h b/arch/arm64/include/asm/unistd32.h
-index 78b68311ec81..8c8b1c7497c5 100644
+index 78b68311ec819..8c8b1c7497c55 100644
 --- a/arch/arm64/include/asm/unistd32.h
 +++ b/arch/arm64/include/asm/unistd32.h
 @@ -911,6 +911,12 @@ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
@@ -16928,7 +17007,7 @@ index 78b68311ec81..8c8b1c7497c5 100644
  /*
   * Please add new compat syscalls above this comment and update
 diff --git a/arch/ia64/kernel/syscalls/syscall.tbl b/arch/ia64/kernel/syscalls/syscall.tbl
-index 83d8609aec03..2c370b5695ef 100644
+index 83d8609aec030..2c370b5695ef1 100644
 --- a/arch/ia64/kernel/syscalls/syscall.tbl
 +++ b/arch/ia64/kernel/syscalls/syscall.tbl
 @@ -373,3 +373,6 @@
@@ -16939,7 +17018,7 @@ index 83d8609aec03..2c370b5695ef 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/m68k/kernel/syscalls/syscall.tbl b/arch/m68k/kernel/syscalls/syscall.tbl
-index 259ceb125367..346033761c74 100644
+index 259ceb125367d..346033761c74e 100644
 --- a/arch/m68k/kernel/syscalls/syscall.tbl
 +++ b/arch/m68k/kernel/syscalls/syscall.tbl
 @@ -452,3 +452,6 @@
@@ -16950,7 +17029,7 @@ index 259ceb125367..346033761c74 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/microblaze/kernel/syscalls/syscall.tbl b/arch/microblaze/kernel/syscalls/syscall.tbl
-index a3798c2637fd..3d550ff347e4 100644
+index a3798c2637fd1..3d550ff347e48 100644
 --- a/arch/microblaze/kernel/syscalls/syscall.tbl
 +++ b/arch/microblaze/kernel/syscalls/syscall.tbl
 @@ -458,3 +458,6 @@
@@ -16961,7 +17040,7 @@ index a3798c2637fd..3d550ff347e4 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/mips/kernel/syscalls/syscall_n32.tbl b/arch/mips/kernel/syscalls/syscall_n32.tbl
-index 152034b8e0a0..49bedc66cdd8 100644
+index 152034b8e0a0f..49bedc66cdd81 100644
 --- a/arch/mips/kernel/syscalls/syscall_n32.tbl
 +++ b/arch/mips/kernel/syscalls/syscall_n32.tbl
 @@ -391,3 +391,6 @@
@@ -16972,7 +17051,7 @@ index 152034b8e0a0..49bedc66cdd8 100644
 +454	n32	process_ksm_disable		sys_process_ksm_disable
 +455	n32	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/mips/kernel/syscalls/syscall_n64.tbl b/arch/mips/kernel/syscalls/syscall_n64.tbl
-index cb5e757f6621..5c17a0a34f68 100644
+index cb5e757f6621c..5c17a0a34f68f 100644
 --- a/arch/mips/kernel/syscalls/syscall_n64.tbl
 +++ b/arch/mips/kernel/syscalls/syscall_n64.tbl
 @@ -367,3 +367,6 @@
@@ -16983,7 +17062,7 @@ index cb5e757f6621..5c17a0a34f68 100644
 +454	n64	process_ksm_disable		sys_process_ksm_disable
 +455	n64	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/mips/kernel/syscalls/syscall_o32.tbl b/arch/mips/kernel/syscalls/syscall_o32.tbl
-index 1a646813afdc..95dbd2c60dd8 100644
+index 1a646813afdca..95dbd2c60dd84 100644
 --- a/arch/mips/kernel/syscalls/syscall_o32.tbl
 +++ b/arch/mips/kernel/syscalls/syscall_o32.tbl
 @@ -440,3 +440,6 @@
@@ -16994,7 +17073,7 @@ index 1a646813afdc..95dbd2c60dd8 100644
 +454	o32	process_ksm_disable		sys_process_ksm_disable
 +455	o32	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/parisc/kernel/syscalls/syscall.tbl b/arch/parisc/kernel/syscalls/syscall.tbl
-index e97c175b56f9..9b325ef36d52 100644
+index e97c175b56f96..9b325ef36d52b 100644
 --- a/arch/parisc/kernel/syscalls/syscall.tbl
 +++ b/arch/parisc/kernel/syscalls/syscall.tbl
 @@ -451,3 +451,6 @@
@@ -17005,7 +17084,7 @@ index e97c175b56f9..9b325ef36d52 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/powerpc/kernel/syscalls/syscall.tbl b/arch/powerpc/kernel/syscalls/syscall.tbl
-index 20e50586e8a2..b62ba0834869 100644
+index 20e50586e8a26..b62ba0834869b 100644
 --- a/arch/powerpc/kernel/syscalls/syscall.tbl
 +++ b/arch/powerpc/kernel/syscalls/syscall.tbl
 @@ -539,3 +539,6 @@
@@ -17016,7 +17095,7 @@ index 20e50586e8a2..b62ba0834869 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/s390/kernel/syscalls/syscall.tbl b/arch/s390/kernel/syscalls/syscall.tbl
-index 0122cc156952..70165723f772 100644
+index 0122cc156952c..70165723f7729 100644
 --- a/arch/s390/kernel/syscalls/syscall.tbl
 +++ b/arch/s390/kernel/syscalls/syscall.tbl
 @@ -455,3 +455,6 @@
@@ -17027,7 +17106,7 @@ index 0122cc156952..70165723f772 100644
 +454  common	process_ksm_disable	sys_process_ksm_disable		sys_process_ksm_disable
 +455  common	process_ksm_status	sys_process_ksm_status		sys_process_ksm_status
 diff --git a/arch/sh/kernel/syscalls/syscall.tbl b/arch/sh/kernel/syscalls/syscall.tbl
-index e90d585c4d3e..80769b880b37 100644
+index e90d585c4d3e7..80769b880b376 100644
 --- a/arch/sh/kernel/syscalls/syscall.tbl
 +++ b/arch/sh/kernel/syscalls/syscall.tbl
 @@ -455,3 +455,6 @@
@@ -17038,7 +17117,7 @@ index e90d585c4d3e..80769b880b37 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/sparc/kernel/syscalls/syscall.tbl b/arch/sparc/kernel/syscalls/syscall.tbl
-index 4ed06c71c43f..fb3514cce0e7 100644
+index 4ed06c71c43fb..fb3514cce0e7d 100644
 --- a/arch/sparc/kernel/syscalls/syscall.tbl
 +++ b/arch/sparc/kernel/syscalls/syscall.tbl
 @@ -498,3 +498,6 @@
@@ -17049,7 +17128,7 @@ index 4ed06c71c43f..fb3514cce0e7 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 2d0b1bd866ea..80a57f6a8981 100644
+index 2d0b1bd866ead..80a57f6a8981d 100644
 --- a/arch/x86/entry/syscalls/syscall_32.tbl
 +++ b/arch/x86/entry/syscalls/syscall_32.tbl
 @@ -457,3 +457,6 @@
@@ -17060,7 +17139,7 @@ index 2d0b1bd866ea..80a57f6a8981 100644
 +454	i386	process_ksm_disable		sys_process_ksm_disable
 +455	i386	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index 1d6eee30eceb..38faca76e9a0 100644
+index 1d6eee30eceb2..38faca76e9a0e 100644
 --- a/arch/x86/entry/syscalls/syscall_64.tbl
 +++ b/arch/x86/entry/syscalls/syscall_64.tbl
 @@ -375,6 +375,9 @@
@@ -17074,7 +17153,7 @@ index 1d6eee30eceb..38faca76e9a0 100644
  #
  # Due to a historical design error, certain syscalls are numbered differently
 diff --git a/arch/xtensa/kernel/syscalls/syscall.tbl b/arch/xtensa/kernel/syscalls/syscall.tbl
-index fc1a4f3c81d9..83f5032b2526 100644
+index fc1a4f3c81d9b..83f5032b25261 100644
 --- a/arch/xtensa/kernel/syscalls/syscall.tbl
 +++ b/arch/xtensa/kernel/syscalls/syscall.tbl
 @@ -423,3 +423,6 @@
@@ -17085,7 +17164,7 @@ index fc1a4f3c81d9..83f5032b2526 100644
 +454	common	process_ksm_disable		sys_process_ksm_disable
 +455	common	process_ksm_status		sys_process_ksm_status
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 22bc6bc147f8..da013ad43df9 100644
+index 22bc6bc147f89..da013ad43df93 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
 @@ -799,6 +799,9 @@ asmlinkage long sys_madvise(unsigned long start, size_t len, int behavior);
@@ -17099,7 +17178,7 @@ index 22bc6bc147f8..da013ad43df9 100644
  			unsigned long prot, unsigned long pgoff,
  			unsigned long flags);
 diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
-index abe087c53b4b..e393422e2983 100644
+index abe087c53b4b0..e393422e29836 100644
 --- a/include/uapi/asm-generic/unistd.h
 +++ b/include/uapi/asm-generic/unistd.h
 @@ -823,8 +823,17 @@ __SYSCALL(__NR_cachestat, sys_cachestat)
@@ -17122,10 +17201,10 @@ index abe087c53b4b..e393422e2983 100644
  /*
   * 32 bit systems traditionally used different
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 2410e3999ebe..b0841a2dd2b7 100644
+index 7a4ae6d5aecd5..8e0080338bfc1 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
-@@ -2727,6 +2727,153 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+@@ -2751,6 +2751,153 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
  	return error;
  }
  
@@ -17280,7 +17359,7 @@ index 2410e3999ebe..b0841a2dd2b7 100644
  		struct getcpu_cache __user *, unused)
  {
 diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
-index e137c1385c56..2d9772d11c92 100644
+index e137c1385c569..2d9772d11c923 100644
 --- a/kernel/sys_ni.c
 +++ b/kernel/sys_ni.c
 @@ -184,6 +184,9 @@ COND_SYSCALL(mincore);
@@ -17294,11 +17373,11 @@ index e137c1385c56..2d9772d11c92 100644
  COND_SYSCALL(mbind);
  COND_SYSCALL(get_mempolicy);
 -- 
-2.43.0.rc2
+2.43.0
 
-From a2e3cec5e65fa673ac388d138ecdbac69be5282d Mon Sep 17 00:00:00 2001
+From 9ac45eafd05c07513489427b2e79214940eab4e2 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 16 Oct 2023 19:50:40 +0200
+Date: Wed, 29 Nov 2023 19:56:57 +0100
 Subject: [PATCH 7/7] zstd
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -17312,7 +17391,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/common/bitstream.h                   |   53 +-
  lib/zstd/common/compiler.h                    |   14 +-
  lib/zstd/common/cpu.h                         |    3 +-
- lib/zstd/common/debug.c                       |    3 +-
+ lib/zstd/common/debug.c                       |    5 +-
  lib/zstd/common/debug.h                       |    3 +-
  lib/zstd/common/entropy_common.c              |   42 +-
  lib/zstd/common/error_private.c               |   12 +-
@@ -17323,7 +17402,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/common/mem.h                         |    2 +-
  lib/zstd/common/portability_macros.h          |   26 +-
  lib/zstd/common/zstd_common.c                 |   38 +-
- lib/zstd/common/zstd_deps.h                   |   20 +-
+ lib/zstd/common/zstd_deps.h                   |   16 +-
  lib/zstd/common/zstd_internal.h               |   99 +-
  lib/zstd/compress/clevels.h                   |    3 +-
  lib/zstd/compress/fse_compress.c              |   59 +-
@@ -17350,7 +17429,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/compress/zstd_ldm_geartab.h          |    3 +-
  lib/zstd/compress/zstd_opt.c                  |  187 +-
  lib/zstd/compress/zstd_opt.h                  |    3 +-
- lib/zstd/decompress/huf_decompress.c          |  731 ++++---
+ lib/zstd/decompress/huf_decompress.c          |  770 ++++---
  lib/zstd/decompress/zstd_ddict.c              |    9 +-
  lib/zstd/decompress/zstd_ddict.h              |    3 +-
  lib/zstd/decompress/zstd_decompress.c         |  261 ++-
@@ -17360,13 +17439,13 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/decompress_sources.h                 |    2 +-
  lib/zstd/zstd_common_module.c                 |    5 +-
  lib/zstd/zstd_compress_module.c               |    2 +-
- lib/zstd/zstd_decompress_module.c             |    2 +-
- 58 files changed, 4752 insertions(+), 2594 deletions(-)
+ lib/zstd/zstd_decompress_module.c             |    4 +-
+ 58 files changed, 4790 insertions(+), 2595 deletions(-)
  create mode 100644 lib/zstd/common/allocations.h
  create mode 100644 lib/zstd/common/bits.h
 
 diff --git a/include/linux/zstd.h b/include/linux/zstd.h
-index 113408eef6ec..f109d49f43f8 100644
+index 113408eef6ece..f109d49f43f80 100644
 --- a/include/linux/zstd.h
 +++ b/include/linux/zstd.h
 @@ -1,6 +1,6 @@
@@ -17378,7 +17457,7 @@ index 113408eef6ec..f109d49f43f8 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/include/linux/zstd_errors.h b/include/linux/zstd_errors.h
-index 58b6dd45a969..6d5cf55f0bf3 100644
+index 58b6dd45a969f..6d5cf55f0bf3e 100644
 --- a/include/linux/zstd_errors.h
 +++ b/include/linux/zstd_errors.h
 @@ -1,5 +1,6 @@
@@ -17444,7 +17523,7 @@ index 58b6dd45a969..6d5cf55f0bf3 100644
  } ZSTD_ErrorCode;
  
 diff --git a/include/linux/zstd_lib.h b/include/linux/zstd_lib.h
-index 79d55465d5c1..8b4ffe649df5 100644
+index 79d55465d5c1d..8b4ffe649df57 100644
 --- a/include/linux/zstd_lib.h
 +++ b/include/linux/zstd_lib.h
 @@ -1,5 +1,6 @@
@@ -18636,7 +18715,7 @@ index 79d55465d5c1..8b4ffe649df5 100644
  #endif   /* ZSTD_H_ZSTD_STATIC_LINKING_ONLY */
  
 diff --git a/lib/zstd/Makefile b/lib/zstd/Makefile
-index 20f08c644b71..464c410b2768 100644
+index 20f08c644b71a..464c410b2768c 100644
 --- a/lib/zstd/Makefile
 +++ b/lib/zstd/Makefile
 @@ -1,6 +1,6 @@
@@ -18649,7 +18728,7 @@ index 20f08c644b71..464c410b2768 100644
  # This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/allocations.h b/lib/zstd/common/allocations.h
 new file mode 100644
-index 000000000000..05adbbeccaa9
+index 0000000000000..05adbbeccaa9b
 --- /dev/null
 +++ b/lib/zstd/common/allocations.h
 @@ -0,0 +1,56 @@
@@ -18711,7 +18790,7 @@ index 000000000000..05adbbeccaa9
 +#endif /* ZSTD_ALLOCATIONS_H */
 diff --git a/lib/zstd/common/bits.h b/lib/zstd/common/bits.h
 new file mode 100644
-index 000000000000..aa3487ec4b6a
+index 0000000000000..aa3487ec4b6a7
 --- /dev/null
 +++ b/lib/zstd/common/bits.h
 @@ -0,0 +1,149 @@
@@ -18865,7 +18944,7 @@ index 000000000000..aa3487ec4b6a
 +
 +#endif /* ZSTD_BITS_H */
 diff --git a/lib/zstd/common/bitstream.h b/lib/zstd/common/bitstream.h
-index feef3a1b1d60..444dc4f85c64 100644
+index feef3a1b1d600..444dc4f85c649 100644
 --- a/lib/zstd/common/bitstream.h
 +++ b/lib/zstd/common/bitstream.h
 @@ -1,7 +1,8 @@
@@ -18992,7 +19071,7 @@ index feef3a1b1d60..444dc4f85c64 100644
      if (bitD->bitsConsumed > (sizeof(bitD->bitContainer)*8))  /* overflow detected, like end of stream */
          return BIT_DStream_overflow;
 diff --git a/lib/zstd/common/compiler.h b/lib/zstd/common/compiler.h
-index c42d39faf9bd..c437e0975575 100644
+index c42d39faf9bd8..c437e09755750 100644
 --- a/lib/zstd/common/compiler.h
 +++ b/lib/zstd/common/compiler.h
 @@ -1,5 +1,6 @@
@@ -19022,7 +19101,7 @@ index c42d39faf9bd..c437e0975575 100644
  
  #endif /* ZSTD_COMPILER_H */
 diff --git a/lib/zstd/common/cpu.h b/lib/zstd/common/cpu.h
-index 0db7b42407ee..d8319a2bef4c 100644
+index 0db7b42407eea..d8319a2bef4ce 100644
 --- a/lib/zstd/common/cpu.h
 +++ b/lib/zstd/common/cpu.h
 @@ -1,5 +1,6 @@
@@ -19034,7 +19113,7 @@ index 0db7b42407ee..d8319a2bef4c 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/debug.c b/lib/zstd/common/debug.c
-index bb863c9ea616..e56ff6464e91 100644
+index bb863c9ea6164..d77926cbad14b 100644
 --- a/lib/zstd/common/debug.c
 +++ b/lib/zstd/common/debug.c
 @@ -1,7 +1,8 @@
@@ -19047,8 +19126,15 @@ index bb863c9ea616..e56ff6464e91 100644
   *
   * You can contact the author at :
   * - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
+@@ -21,4 +22,6 @@
+ 
+ #include "debug.h"
+ 
++#if (DEBUGLEVEL>=2)
+ int g_debuglevel = DEBUGLEVEL;
++#endif
 diff --git a/lib/zstd/common/debug.h b/lib/zstd/common/debug.h
-index 6dd88d1fbd02..da0dbfc614b8 100644
+index 6dd88d1fbd02c..da0dbfc614b88 100644
 --- a/lib/zstd/common/debug.h
 +++ b/lib/zstd/common/debug.h
 @@ -1,7 +1,8 @@
@@ -19062,7 +19148,7 @@ index 6dd88d1fbd02..da0dbfc614b8 100644
   * You can contact the author at :
   * - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/common/entropy_common.c b/lib/zstd/common/entropy_common.c
-index fef67056f052..6cdd82233fb5 100644
+index fef67056f0524..6cdd82233fb59 100644
 --- a/lib/zstd/common/entropy_common.c
 +++ b/lib/zstd/common/entropy_common.c
 @@ -1,6 +1,7 @@
@@ -19180,7 +19266,7 @@ index fef67056f052..6cdd82233fb5 100644
      return HUF_readStats_body_default(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize);
  }
 diff --git a/lib/zstd/common/error_private.c b/lib/zstd/common/error_private.c
-index 6d1135f8c373..a4062d30d170 100644
+index 6d1135f8c3733..a4062d30d1703 100644
 --- a/lib/zstd/common/error_private.c
 +++ b/lib/zstd/common/error_private.c
 @@ -1,5 +1,6 @@
@@ -19228,7 +19314,7 @@ index 6d1135f8c373..a4062d30d170 100644
      default: return notErrorCode;
      }
 diff --git a/lib/zstd/common/error_private.h b/lib/zstd/common/error_private.h
-index ca5101e542fa..9a4699a38a88 100644
+index ca5101e542faa..9a4699a38a881 100644
 --- a/lib/zstd/common/error_private.h
 +++ b/lib/zstd/common/error_private.h
 @@ -1,5 +1,6 @@
@@ -19240,7 +19326,7 @@ index ca5101e542fa..9a4699a38a88 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/fse.h b/lib/zstd/common/fse.h
-index 4507043b2287..c4e25a219142 100644
+index 4507043b2287c..c4e25a2191429 100644
 --- a/lib/zstd/common/fse.h
 +++ b/lib/zstd/common/fse.h
 @@ -1,7 +1,8 @@
@@ -19392,7 +19478,7 @@ index 4507043b2287..c4e25a219142 100644
   * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
  MEM_STATIC U32 FSE_getMaxNbBits(const void* symbolTTPtr, U32 symbolValue)
 diff --git a/lib/zstd/common/fse_decompress.c b/lib/zstd/common/fse_decompress.c
-index a0d06095be83..99ce8fa54d08 100644
+index a0d06095be83d..99ce8fa54d084 100644
 --- a/lib/zstd/common/fse_decompress.c
 +++ b/lib/zstd/common/fse_decompress.c
 @@ -1,6 +1,7 @@
@@ -19556,7 +19642,7 @@ index a0d06095be83..99ce8fa54d08 100644
 -
  #endif   /* FSE_COMMONDEFS_ONLY */
 diff --git a/lib/zstd/common/huf.h b/lib/zstd/common/huf.h
-index 5042ff870308..8e7943092ed1 100644
+index 5042ff8703087..8e7943092ed1a 100644
 --- a/lib/zstd/common/huf.h
 +++ b/lib/zstd/common/huf.h
 @@ -1,7 +1,8 @@
@@ -19883,7 +19969,7 @@ index 5042ff870308..8e7943092ed1 100644
 +#endif   /* HUF_H_298734234 */
  
 diff --git a/lib/zstd/common/mem.h b/lib/zstd/common/mem.h
-index 1d9cc03924ca..a7231822b6e3 100644
+index 1d9cc03924ca9..a7231822b6e32 100644
 --- a/lib/zstd/common/mem.h
 +++ b/lib/zstd/common/mem.h
 @@ -1,6 +1,6 @@
@@ -19895,7 +19981,7 @@ index 1d9cc03924ca..a7231822b6e3 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/portability_macros.h b/lib/zstd/common/portability_macros.h
-index 0e3b2c0a527d..7ede8cf1ffe5 100644
+index 0e3b2c0a527db..7ede8cf1ffe57 100644
 --- a/lib/zstd/common/portability_macros.h
 +++ b/lib/zstd/common/portability_macros.h
 @@ -1,5 +1,6 @@
@@ -19949,7 +20035,7 @@ index 0e3b2c0a527d..7ede8cf1ffe5 100644
 +
  #endif /* ZSTD_PORTABILITY_MACROS_H */
 diff --git a/lib/zstd/common/zstd_common.c b/lib/zstd/common/zstd_common.c
-index 3d7e35b309b5..44b95b25344a 100644
+index 3d7e35b309b5d..44b95b25344a1 100644
 --- a/lib/zstd/common/zstd_common.c
 +++ b/lib/zstd/common/zstd_common.c
 @@ -1,5 +1,6 @@
@@ -20007,7 +20093,7 @@ index 3d7e35b309b5..44b95b25344a 100644
 -    }
 -}
 diff --git a/lib/zstd/common/zstd_deps.h b/lib/zstd/common/zstd_deps.h
-index 2c34e8a33a1c..670c5fa2a952 100644
+index 2c34e8a33a1c1..f931f7d0e2947 100644
 --- a/lib/zstd/common/zstd_deps.h
 +++ b/lib/zstd/common/zstd_deps.h
 @@ -1,6 +1,6 @@
@@ -20018,7 +20104,7 @@ index 2c34e8a33a1c..670c5fa2a952 100644
   * All rights reserved.
   *
   * This source code is licensed under both the BSD-style license (found in the
-@@ -105,3 +105,21 @@ static uint64_t ZSTD_div64(uint64_t dividend, uint32_t divisor) {
+@@ -105,3 +105,17 @@ static uint64_t ZSTD_div64(uint64_t dividend, uint32_t divisor) {
  
  #endif /* ZSTD_DEPS_IO */
  #endif /* ZSTD_DEPS_NEED_IO */
@@ -20032,16 +20118,12 @@ index 2c34e8a33a1c..670c5fa2a952 100644
 +#ifndef ZSTD_DEPS_STDINT
 +#define ZSTD_DEPS_STDINT
 +
-+/*
-+ * The Linux Kernel doesn't provide intptr_t, only uintptr_t, which
-+ * is an unsigned long.
-+ */
-+typedef long intptr_t;
++/* intptr_t already provided by ZSTD_DEPS_COMMON */
 +
 +#endif /* ZSTD_DEPS_STDINT */
 +#endif /* ZSTD_DEPS_NEED_STDINT */
 diff --git a/lib/zstd/common/zstd_internal.h b/lib/zstd/common/zstd_internal.h
-index 93305d9b41bb..7f023e4d4774 100644
+index 93305d9b41bba..7f023e4d47740 100644
 --- a/lib/zstd/common/zstd_internal.h
 +++ b/lib/zstd/common/zstd_internal.h
 @@ -1,5 +1,6 @@
@@ -20227,7 +20309,7 @@ index 93305d9b41bb..7f023e4d4774 100644
  
  /* ZSTD_invalidateRepCodes() :
 diff --git a/lib/zstd/compress/clevels.h b/lib/zstd/compress/clevels.h
-index d9a76112ec3a..6ab8be6532ef 100644
+index d9a76112ec3af..6ab8be6532efc 100644
 --- a/lib/zstd/compress/clevels.h
 +++ b/lib/zstd/compress/clevels.h
 @@ -1,5 +1,6 @@
@@ -20239,7 +20321,7 @@ index d9a76112ec3a..6ab8be6532ef 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/fse_compress.c b/lib/zstd/compress/fse_compress.c
-index ec5b1ca6d71a..e46ca6621b48 100644
+index ec5b1ca6d71af..e46ca6621b488 100644
 --- a/lib/zstd/compress/fse_compress.c
 +++ b/lib/zstd/compress/fse_compress.c
 @@ -1,6 +1,7 @@
@@ -20358,7 +20440,7 @@ index ec5b1ca6d71a..e46ca6621b48 100644
 -
  #endif   /* FSE_COMMONDEFS_ONLY */
 diff --git a/lib/zstd/compress/hist.c b/lib/zstd/compress/hist.c
-index 3ddc6dfb6894..0b12587cc14b 100644
+index 3ddc6dfb68948..0b12587cc14b1 100644
 --- a/lib/zstd/compress/hist.c
 +++ b/lib/zstd/compress/hist.c
 @@ -1,7 +1,8 @@
@@ -20372,7 +20454,7 @@ index 3ddc6dfb6894..0b12587cc14b 100644
   *  You can contact the author at :
   *  - FSE source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/compress/hist.h b/lib/zstd/compress/hist.h
-index fc1830abc9c6..f7687b0fc20a 100644
+index fc1830abc9c63..f7687b0fc20a0 100644
 --- a/lib/zstd/compress/hist.h
 +++ b/lib/zstd/compress/hist.h
 @@ -1,7 +1,8 @@
@@ -20386,7 +20468,7 @@ index fc1830abc9c6..f7687b0fc20a 100644
   *  You can contact the author at :
   *  - FSE source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/compress/huf_compress.c b/lib/zstd/compress/huf_compress.c
-index 74ef0db47621..83241abafe35 100644
+index 74ef0db476210..83241abafe35e 100644
 --- a/lib/zstd/compress/huf_compress.c
 +++ b/lib/zstd/compress/huf_compress.c
 @@ -1,6 +1,7 @@
@@ -21143,7 +21225,7 @@ index 74ef0db47621..83241abafe35 100644
  }
 -
 diff --git a/lib/zstd/compress/zstd_compress.c b/lib/zstd/compress/zstd_compress.c
-index f620cafca633..c1c316e9e289 100644
+index f620cafca633b..c1c316e9e289f 100644
 --- a/lib/zstd/compress/zstd_compress.c
 +++ b/lib/zstd/compress/zstd_compress.c
 @@ -1,5 +1,6 @@
@@ -24525,7 +24607,7 @@ index f620cafca633..c1c316e9e289 100644
 +    }
 +}
 diff --git a/lib/zstd/compress/zstd_compress_internal.h b/lib/zstd/compress/zstd_compress_internal.h
-index 71697a11ae30..899f5e2de8e9 100644
+index 71697a11ae305..899f5e2de8e96 100644
 --- a/lib/zstd/compress/zstd_compress_internal.h
 +++ b/lib/zstd/compress/zstd_compress_internal.h
 @@ -1,5 +1,6 @@
@@ -25079,7 +25161,7 @@ index 71697a11ae30..899f5e2de8e9 100644
 +
  #endif /* ZSTD_COMPRESS_H */
 diff --git a/lib/zstd/compress/zstd_compress_literals.c b/lib/zstd/compress/zstd_compress_literals.c
-index 52b0a8059aba..3e9ea46a670a 100644
+index 52b0a8059aba9..3e9ea46a670a6 100644
 --- a/lib/zstd/compress/zstd_compress_literals.c
 +++ b/lib/zstd/compress/zstd_compress_literals.c
 @@ -1,5 +1,6 @@
@@ -25321,7 +25403,7 @@ index 52b0a8059aba..3e9ea46a670a 100644
              MEM_writeLE32(ostart, lhc);
              ostart[4] = (BYTE)(cLitSize >> 10);
 diff --git a/lib/zstd/compress/zstd_compress_literals.h b/lib/zstd/compress/zstd_compress_literals.h
-index 9775fb97cb70..a2a85d6b69e5 100644
+index 9775fb97cb702..a2a85d6b69e53 100644
 --- a/lib/zstd/compress/zstd_compress_literals.h
 +++ b/lib/zstd/compress/zstd_compress_literals.h
 @@ -1,5 +1,6 @@
@@ -25365,7 +25447,7 @@ index 9775fb97cb70..a2a85d6b69e5 100644
  
  #endif /* ZSTD_COMPRESS_LITERALS_H */
 diff --git a/lib/zstd/compress/zstd_compress_sequences.c b/lib/zstd/compress/zstd_compress_sequences.c
-index 21ddc1b37acf..5c028c78d889 100644
+index 21ddc1b37acf8..5c028c78d889b 100644
 --- a/lib/zstd/compress/zstd_compress_sequences.c
 +++ b/lib/zstd/compress/zstd_compress_sequences.c
 @@ -1,5 +1,6 @@
@@ -25395,7 +25477,7 @@ index 21ddc1b37acf..5c028c78d889 100644
               * If basic encoding isn't possible, always choose RLE.
               */
 diff --git a/lib/zstd/compress/zstd_compress_sequences.h b/lib/zstd/compress/zstd_compress_sequences.h
-index 7991364c2f71..7fe6f4ff5cf2 100644
+index 7991364c2f71f..7fe6f4ff5cf25 100644
 --- a/lib/zstd/compress/zstd_compress_sequences.h
 +++ b/lib/zstd/compress/zstd_compress_sequences.h
 @@ -1,5 +1,6 @@
@@ -25407,7 +25489,7 @@ index 7991364c2f71..7fe6f4ff5cf2 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_compress_superblock.c b/lib/zstd/compress/zstd_compress_superblock.c
-index 17d836cc84e8..dbacbaf72733 100644
+index 17d836cc84e8f..dbacbaf727338 100644
 --- a/lib/zstd/compress/zstd_compress_superblock.c
 +++ b/lib/zstd/compress/zstd_compress_superblock.c
 @@ -1,5 +1,6 @@
@@ -25506,7 +25588,7 @@ index 17d836cc84e8..dbacbaf72733 100644
              ZSTD_memcpy(nextCBlock->rep, &rep, sizeof(rep));
          }
 diff --git a/lib/zstd/compress/zstd_compress_superblock.h b/lib/zstd/compress/zstd_compress_superblock.h
-index 224ece79546e..826bbc9e029b 100644
+index 224ece79546eb..826bbc9e029b1 100644
 --- a/lib/zstd/compress/zstd_compress_superblock.h
 +++ b/lib/zstd/compress/zstd_compress_superblock.h
 @@ -1,5 +1,6 @@
@@ -25518,7 +25600,7 @@ index 224ece79546e..826bbc9e029b 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_cwksp.h b/lib/zstd/compress/zstd_cwksp.h
-index 349fc923c355..65ea53b62844 100644
+index 349fc923c355a..65ea53b628447 100644
 --- a/lib/zstd/compress/zstd_cwksp.h
 +++ b/lib/zstd/compress/zstd_cwksp.h
 @@ -1,5 +1,6 @@
@@ -25823,7 +25905,7 @@ index 349fc923c355..65ea53b62844 100644
  
  
 diff --git a/lib/zstd/compress/zstd_double_fast.c b/lib/zstd/compress/zstd_double_fast.c
-index 76933dea2624..ab9440a99603 100644
+index 76933dea2624e..ab9440a996039 100644
 --- a/lib/zstd/compress/zstd_double_fast.c
 +++ b/lib/zstd/compress/zstd_double_fast.c
 @@ -1,5 +1,6 @@
@@ -26136,7 +26218,7 @@ index 76933dea2624..ab9440a99603 100644
                      hashLong[ZSTD_hashPtr(ip, hBitsL, 8)] = current2;
                      ip += repLength2;
 diff --git a/lib/zstd/compress/zstd_double_fast.h b/lib/zstd/compress/zstd_double_fast.h
-index 6822bde65a1d..0204f12e4cf7 100644
+index 6822bde65a1d8..0204f12e4cf70 100644
 --- a/lib/zstd/compress/zstd_double_fast.h
 +++ b/lib/zstd/compress/zstd_double_fast.h
 @@ -1,5 +1,6 @@
@@ -26158,7 +26240,7 @@ index 6822bde65a1d..0204f12e4cf7 100644
          ZSTD_matchState_t* ms, seqStore_t* seqStore, U32 rep[ZSTD_REP_NUM],
          void const* src, size_t srcSize);
 diff --git a/lib/zstd/compress/zstd_fast.c b/lib/zstd/compress/zstd_fast.c
-index a752e6beab52..3399b39c5dbc 100644
+index a752e6beab52e..3399b39c5dbc5 100644
 --- a/lib/zstd/compress/zstd_fast.c
 +++ b/lib/zstd/compress/zstd_fast.c
 @@ -1,5 +1,6 @@
@@ -26941,7 +27023,7 @@ index a752e6beab52..3399b39c5dbc 100644
      {
      default: /* includes case 3 */
 diff --git a/lib/zstd/compress/zstd_fast.h b/lib/zstd/compress/zstd_fast.h
-index fddc2f532d21..e64d9e1b2d39 100644
+index fddc2f532d21d..e64d9e1b2d393 100644
 --- a/lib/zstd/compress/zstd_fast.h
 +++ b/lib/zstd/compress/zstd_fast.h
 @@ -1,5 +1,6 @@
@@ -26963,7 +27045,7 @@ index fddc2f532d21..e64d9e1b2d39 100644
          ZSTD_matchState_t* ms, seqStore_t* seqStore, U32 rep[ZSTD_REP_NUM],
          void const* src, size_t srcSize);
 diff --git a/lib/zstd/compress/zstd_lazy.c b/lib/zstd/compress/zstd_lazy.c
-index 0298a01a7504..f6b4978ceba7 100644
+index 0298a01a7504a..f6b4978ceba7f 100644
 --- a/lib/zstd/compress/zstd_lazy.c
 +++ b/lib/zstd/compress/zstd_lazy.c
 @@ -1,5 +1,6 @@
@@ -28026,7 +28108,7 @@ index 0298a01a7504..f6b4978ceba7 100644
      return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, search_rowHash, 2);
  }
 diff --git a/lib/zstd/compress/zstd_lazy.h b/lib/zstd/compress/zstd_lazy.h
-index e5bdf4df8dde..9505bed93c03 100644
+index e5bdf4df8dde0..9505bed93c031 100644
 --- a/lib/zstd/compress/zstd_lazy.h
 +++ b/lib/zstd/compress/zstd_lazy.h
 @@ -1,5 +1,6 @@
@@ -28056,7 +28138,7 @@ index e5bdf4df8dde..9505bed93c03 100644
  
  #endif /* ZSTD_LAZY_H */
 diff --git a/lib/zstd/compress/zstd_ldm.c b/lib/zstd/compress/zstd_ldm.c
-index dd86fc83e7dd..b7da76b0db7c 100644
+index dd86fc83e7dde..b7da76b0db7c4 100644
 --- a/lib/zstd/compress/zstd_ldm.c
 +++ b/lib/zstd/compress/zstd_ldm.c
 @@ -1,5 +1,6 @@
@@ -28100,7 +28182,7 @@ index dd86fc83e7dd..b7da76b0db7c 100644
              ip += sequence.matchLength;
          }
 diff --git a/lib/zstd/compress/zstd_ldm.h b/lib/zstd/compress/zstd_ldm.h
-index fbc6a5e88fd7..c540731abde7 100644
+index fbc6a5e88fd7a..c540731abde72 100644
 --- a/lib/zstd/compress/zstd_ldm.h
 +++ b/lib/zstd/compress/zstd_ldm.h
 @@ -1,5 +1,6 @@
@@ -28112,7 +28194,7 @@ index fbc6a5e88fd7..c540731abde7 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_ldm_geartab.h b/lib/zstd/compress/zstd_ldm_geartab.h
-index 647f865be290..cfccfc46f6f7 100644
+index 647f865be2903..cfccfc46f6f7b 100644
 --- a/lib/zstd/compress/zstd_ldm_geartab.h
 +++ b/lib/zstd/compress/zstd_ldm_geartab.h
 @@ -1,5 +1,6 @@
@@ -28124,7 +28206,7 @@ index 647f865be290..cfccfc46f6f7 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_opt.c b/lib/zstd/compress/zstd_opt.c
-index fd82acfda62f..1e41cb04f482 100644
+index fd82acfda62f6..1e41cb04f4820 100644
 --- a/lib/zstd/compress/zstd_opt.c
 +++ b/lib/zstd/compress/zstd_opt.c
 @@ -1,5 +1,6 @@
@@ -28606,7 +28688,7 @@ index fd82acfda62f..1e41cb04f482 100644
          ZSTD_initStats_ultra(ms, seqStore, rep, src, srcSize);
      }
 diff --git a/lib/zstd/compress/zstd_opt.h b/lib/zstd/compress/zstd_opt.h
-index 22b862858ba7..faa73ff4b03d 100644
+index 22b862858ba7a..faa73ff4b03dc 100644
 --- a/lib/zstd/compress/zstd_opt.h
 +++ b/lib/zstd/compress/zstd_opt.h
 @@ -1,5 +1,6 @@
@@ -28618,7 +28700,7 @@ index 22b862858ba7..faa73ff4b03d 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/decompress/huf_decompress.c b/lib/zstd/decompress/huf_decompress.c
-index 60958afebc41..d172e35fbd9a 100644
+index 60958afebc415..db670d71fdab7 100644
 --- a/lib/zstd/decompress/huf_decompress.c
 +++ b/lib/zstd/decompress/huf_decompress.c
 @@ -1,7 +1,8 @@
@@ -28643,7 +28725,20 @@ index 60958afebc41..d172e35fbd9a 100644
  
  /* **************************************************************
  *  Constants
-@@ -43,27 +44,25 @@
+@@ -34,6 +35,12 @@
+ *  Macros
+ ****************************************************************/
+ 
++#ifdef HUF_DISABLE_FAST_DECODE
++# define HUF_ENABLE_FAST_DECODE 0
++#else
++# define HUF_ENABLE_FAST_DECODE 1
++#endif
++
+ /* These two optional macros force the use one way or another of the two
+  * Huffman decompression implementations. You can't force in both directions
+  * at the same time.
+@@ -43,27 +50,25 @@
  #error "Cannot force the use of the X1 and X2 decoders at the same time!"
  #endif
  
@@ -28679,7 +28774,7 @@ index 60958afebc41..d172e35fbd9a 100644
  /* **************************************************************
  *  Error Management
  ****************************************************************/
-@@ -80,6 +79,11 @@
+@@ -80,6 +85,11 @@
  /* **************************************************************
  *  BMI2 Variant Wrappers
  ****************************************************************/
@@ -28691,7 +28786,7 @@ index 60958afebc41..d172e35fbd9a 100644
  #if DYNAMIC_BMI2
  
  #define HUF_DGEN(fn)                                                        \
-@@ -101,9 +105,9 @@
+@@ -101,9 +111,9 @@
      }                                                                       \
                                                                              \
      static size_t fn(void* dst, size_t dstSize, void const* cSrc,           \
@@ -28703,7 +28798,7 @@ index 60958afebc41..d172e35fbd9a 100644
              return fn##_bmi2(dst, dstSize, cSrc, cSrcSize, DTable);         \
          }                                                                   \
          return fn##_default(dst, dstSize, cSrc, cSrcSize, DTable);          \
-@@ -113,9 +117,9 @@
+@@ -113,9 +123,9 @@
  
  #define HUF_DGEN(fn)                                                        \
      static size_t fn(void* dst, size_t dstSize, void const* cSrc,           \
@@ -28715,7 +28810,7 @@ index 60958afebc41..d172e35fbd9a 100644
          return fn##_body(dst, dstSize, cSrc, cSrcSize, DTable);             \
      }
  
-@@ -134,15 +138,28 @@ static DTableDesc HUF_getDTableDesc(const HUF_DTable* table)
+@@ -134,15 +144,28 @@ static DTableDesc HUF_getDTableDesc(const HUF_DTable* table)
      return dtd;
  }
  
@@ -28748,7 +28843,7 @@ index 60958afebc41..d172e35fbd9a 100644
  typedef struct {
      BYTE const* ip[4];
      BYTE* op[4];
-@@ -151,15 +168,17 @@ typedef struct {
+@@ -151,15 +174,17 @@ typedef struct {
      BYTE const* ilimit;
      BYTE* oend;
      BYTE const* iend[4];
@@ -28771,7 +28866,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      void const* dt = DTable + 1;
      U32 const dtLog = HUF_getDTableDesc(DTable).tableLog;
-@@ -168,9 +187,11 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -168,9 +193,11 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
  
      BYTE* const oend = (BYTE*)dst + dstSize;
  
@@ -28786,7 +28881,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* strict minimum : jump table + 1 byte per stream */
      if (srcSize < 10)
-@@ -181,7 +202,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -181,7 +208,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
       * On small inputs we don't have enough data to trigger the fast loop, so use the old decoder.
       */
      if (dtLog != HUF_DECODER_FAST_TABLELOG)
@@ -28795,7 +28890,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* Read the jump table. */
      {
-@@ -195,13 +216,13 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -195,13 +222,13 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
          args->iend[2] = args->iend[1] + length2;
          args->iend[3] = args->iend[2] + length3;
  
@@ -28811,7 +28906,7 @@ index 60958afebc41..d172e35fbd9a 100644
          if (length4 > srcSize) return ERROR(corruption_detected);   /* overflow */
      }
      /* ip[] contains the position that is currently loaded into bits[]. */
-@@ -218,7 +239,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -218,7 +245,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
  
      /* No point to call the ASM loop for tiny outputs. */
      if (args->op[3] >= oend)
@@ -28820,7 +28915,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* bits[] is the bit container.
          * It is read from the MSB down to the LSB.
-@@ -227,10 +248,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -227,10 +254,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
          * set, so that CountTrailingZeros(bits[]) can be used
          * to count how many bits we've consumed.
          */
@@ -28835,7 +28930,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* If ip[] >= ilimit, it is guaranteed to be safe to
          * reload bits[]. It may be beyond its section, but is
-@@ -241,10 +262,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -241,10 +268,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
      args->oend = oend;
      args->dt = dt;
  
@@ -28848,7 +28943,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* Validate that we haven't overwritten. */
      if (args->op[stream] > segmentEnd)
-@@ -258,15 +279,15 @@ static size_t HUF_initRemainingDStream(BIT_DStream_t* bit, HUF_DecompressAsmArgs
+@@ -258,15 +285,33 @@ static size_t HUF_initRemainingDStream(BIT_DStream_t* bit, HUF_DecompressAsmArgs
          return ERROR(corruption_detected);
  
      /* Construct the BIT_DStream_t. */
@@ -28864,10 +28959,28 @@ index 60958afebc41..d172e35fbd9a 100644
      return 0;
  }
 -#endif
++
++/* Calls X(N) for each stream 0, 1, 2, 3. */
++#define HUF_4X_FOR_EACH_STREAM(X) \
++    {                             \
++        X(0)                      \
++        X(1)                      \
++        X(2)                      \
++        X(3)                      \
++    }
++
++/* Calls X(N, var) for each stream 0, 1, 2, 3. */
++#define HUF_4X_FOR_EACH_STREAM_WITH_VAR(X, var) \
++    {                                           \
++        X(0, (var))                             \
++        X(1, (var))                             \
++        X(2, (var))                             \
++        X(3, (var))                             \
++    }
  
  
  #ifndef HUF_FORCE_DECOMPRESS_X2
-@@ -283,10 +304,11 @@ typedef struct { BYTE nbBits; BYTE byte; } HUF_DEltX1;   /* single-symbol decodi
+@@ -283,10 +328,11 @@ typedef struct { BYTE nbBits; BYTE byte; } HUF_DEltX1;   /* single-symbol decodi
  static U64 HUF_DEltX1_set4(BYTE symbol, BYTE nbBits) {
      U64 D4;
      if (MEM_isLittleEndian()) {
@@ -28881,7 +28994,7 @@ index 60958afebc41..d172e35fbd9a 100644
      D4 *= 0x0001000100010001ULL;
      return D4;
  }
-@@ -329,13 +351,7 @@ typedef struct {
+@@ -329,13 +375,7 @@ typedef struct {
          BYTE huffWeight[HUF_SYMBOLVALUE_MAX + 1];
  } HUF_ReadDTableX1_Workspace;
  
@@ -28896,7 +29009,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      U32 tableLog = 0;
      U32 nbSymbols = 0;
-@@ -350,7 +366,7 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -350,7 +390,7 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
      DEBUG_STATIC_ASSERT(sizeof(DTableDesc) == sizeof(HUF_DTable));
      /* ZSTD_memset(huffWeight, 0, sizeof(huffWeight)); */   /* is not necessary, even though some analyzer complain ... */
  
@@ -28905,7 +29018,7 @@ index 60958afebc41..d172e35fbd9a 100644
      if (HUF_isError(iSize)) return iSize;
  
  
-@@ -377,9 +393,8 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -377,9 +417,8 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
       * rankStart[0] is not filled because there are no entries in the table for
       * weight 0.
       */
@@ -28917,7 +29030,7 @@ index 60958afebc41..d172e35fbd9a 100644
          int const unroll = 4;
          int const nLimit = (int)nbSymbols - unroll + 1;
          for (n=0; n<(int)tableLog+1; n++) {
-@@ -406,10 +421,9 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -406,10 +445,9 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
       * We can switch based on the length to a different inner loop which is
       * optimized for that particular case.
       */
@@ -28931,7 +29044,7 @@ index 60958afebc41..d172e35fbd9a 100644
          for (w=1; w<tableLog+1; ++w) {
              int const symbolCount = wksp->rankVal[w];
              int const length = (1 << w) >> 1;
-@@ -519,7 +533,7 @@ HUF_decodeStreamX1(BYTE* p, BIT_DStream_t* const bitDPtr, BYTE* const pEnd, cons
+@@ -519,7 +557,7 @@ HUF_decodeStreamX1(BYTE* p, BIT_DStream_t* const bitDPtr, BYTE* const pEnd, cons
      while (p < pEnd)
          HUF_DECODE_SYMBOLX1_0(p, bitDPtr);
  
@@ -28940,7 +29053,7 @@ index 60958afebc41..d172e35fbd9a 100644
  }
  
  FORCE_INLINE_TEMPLATE size_t
-@@ -545,6 +559,10 @@ HUF_decompress1X1_usingDTable_internal_body(
+@@ -545,6 +583,10 @@ HUF_decompress1X1_usingDTable_internal_body(
      return dstSize;
  }
  
@@ -28951,7 +29064,7 @@ index 60958afebc41..d172e35fbd9a 100644
  FORCE_INLINE_TEMPLATE size_t
  HUF_decompress4X1_usingDTable_internal_body(
            void* dst,  size_t dstSize,
-@@ -588,6 +606,7 @@ HUF_decompress4X1_usingDTable_internal_body(
+@@ -588,6 +630,7 @@ HUF_decompress4X1_usingDTable_internal_body(
  
          if (length4 > cSrcSize) return ERROR(corruption_detected);   /* overflow */
          if (opStart4 > oend) return ERROR(corruption_detected);      /* overflow */
@@ -28959,7 +29072,7 @@ index 60958afebc41..d172e35fbd9a 100644
          CHECK_F( BIT_initDStream(&bitD1, istart1, length1) );
          CHECK_F( BIT_initDStream(&bitD2, istart2, length2) );
          CHECK_F( BIT_initDStream(&bitD3, istart3, length3) );
-@@ -650,38 +669,142 @@ size_t HUF_decompress4X1_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
+@@ -650,38 +693,156 @@ size_t HUF_decompress4X1_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
  }
  #endif
  
@@ -28999,7 +29112,6 @@ index 60958afebc41..d172e35fbd9a 100644
 +    for (;;) {
 +        BYTE* olimit;
 +        int stream;
-+        int symbol;
 +
 +        /* Assert loop preconditions */
 +#ifndef NDEBUG
@@ -29046,27 +29158,42 @@ index 60958afebc41..d172e35fbd9a 100644
 +        }
 +#endif
 +
++#define HUF_4X1_DECODE_SYMBOL(_stream, _symbol)                 \
++    {                                                           \
++        int const index = (int)(bits[(_stream)] >> 53);         \
++        int const entry = (int)dtable[index];                   \
++        bits[(_stream)] <<= (entry & 0x3F);                     \
++        op[(_stream)][(_symbol)] = (BYTE)((entry >> 8) & 0xFF); \
++    }
++
++#define HUF_4X1_RELOAD_STREAM(_stream)                              \
++    {                                                               \
++        int const ctz = ZSTD_countTrailingZeros64(bits[(_stream)]); \
++        int const nbBits = ctz & 7;                                 \
++        int const nbBytes = ctz >> 3;                               \
++        op[(_stream)] += 5;                                         \
++        ip[(_stream)] -= nbBytes;                                   \
++        bits[(_stream)] = MEM_read64(ip[(_stream)]) | 1;            \
++        bits[(_stream)] <<= nbBits;                                 \
++    }
++
++        /* Manually unroll the loop because compilers don't consistently
++         * unroll the inner loops, which destroys performance.
++         */
 +        do {
 +            /* Decode 5 symbols in each of the 4 streams */
-+            for (symbol = 0; symbol < 5; ++symbol) {
-+                for (stream = 0; stream < 4; ++stream) {
-+                    int const index = (int)(bits[stream] >> 53);
-+                    int const entry = (int)dtable[index];
-+                    bits[stream] <<= (entry & 63);
-+                    op[stream][symbol] = (BYTE)((entry >> 8) & 0xFF);
-+                }
-+            }
-+            /* Reload the bitstreams */
-+            for (stream = 0; stream < 4; ++stream) {
-+                int const ctz = ZSTD_countTrailingZeros64(bits[stream]);
-+                int const nbBits = ctz & 7;
-+                int const nbBytes = ctz >> 3;
-+                op[stream] += 5;
-+                ip[stream] -= nbBytes;
-+                bits[stream] = MEM_read64(ip[stream]) | 1;
-+                bits[stream] <<= nbBits;
-+            }
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 1)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 2)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 3)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 4)
++
++            /* Reload each of the 4 the bitstreams */
++            HUF_4X_FOR_EACH_STREAM(HUF_4X1_RELOAD_STREAM)
 +        } while (op[3] < olimit);
++
++#undef HUF_4X1_DECODE_SYMBOL
++#undef HUF_4X1_RELOAD_STREAM
 +    }
 +
 +_out:
@@ -29115,7 +29242,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* Our loop guarantees that ip[] >= ilimit and that we haven't
      * overwritten any op[].
-@@ -694,8 +817,7 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
+@@ -694,8 +855,7 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
      (void)iend;
  
      /* finish bit streams one by one. */
@@ -29125,7 +29252,7 @@ index 60958afebc41..d172e35fbd9a 100644
          BYTE* segmentEnd = (BYTE*)dst;
          int i;
          for (i = 0; i < 4; ++i) {
-@@ -712,97 +834,59 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
+@@ -712,97 +872,59 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
      }
  
      /* decoded size */
@@ -29187,13 +29314,13 @@ index 60958afebc41..d172e35fbd9a 100644
 -    if (dtd.tableType != 0) return ERROR(GENERIC);
 -    return HUF_decompress1X1_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
 -}
- 
+-
 -size_t HUF_decompress1X1_DCtx_wksp(HUF_DTable* DCtx, void* dst, size_t dstSize,
 -                                   const void* cSrc, size_t cSrcSize,
 -                                   void* workSpace, size_t wkspSize)
 -{
 -    const BYTE* ip = (const BYTE*) cSrc;
--
+ 
 -    size_t const hSize = HUF_readDTableX1_wksp(DCtx, cSrc, cSrcSize, workSpace, wkspSize);
 -    if (HUF_isError(hSize)) return hSize;
 -    if (hSize >= cSrcSize) return ERROR(srcSize_wrong);
@@ -29211,7 +29338,7 @@ index 60958afebc41..d172e35fbd9a 100644
 -    DTableDesc dtd = HUF_getDTableDesc(DTable);
 -    if (dtd.tableType != 0) return ERROR(GENERIC);
 -    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
-+    if (!(flags & HUF_flags_disableFast)) {
++    if (HUF_ENABLE_FAST_DECODE && !(flags & HUF_flags_disableFast)) {
 +        size_t const ret = HUF_decompress4X1_usingDTable_internal_fast(dst, dstSize, cSrc, cSrcSize, DTable, loopFn);
 +        if (ret != 0)
 +            return ret;
@@ -29234,21 +29361,21 @@ index 60958afebc41..d172e35fbd9a 100644
      ip += hSize; cSrcSize -= hSize;
  
 -    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, bmi2);
-+    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
- }
- 
+-}
+-
 -size_t HUF_decompress4X1_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
 -                                   const void* cSrc, size_t cSrcSize,
 -                                   void* workSpace, size_t wkspSize)
 -{
 -    return HUF_decompress4X1_DCtx_wksp_bmi2(dctx, dst, dstSize, cSrc, cSrcSize, workSpace, wkspSize, 0);
--}
--
++    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
+ }
+ 
 -
  #endif /* HUF_FORCE_DECOMPRESS_X2 */
  
  
-@@ -985,7 +1069,7 @@ static void HUF_fillDTableX2Level2(HUF_DEltX2* DTable, U32 targetLog, const U32
+@@ -985,7 +1107,7 @@ static void HUF_fillDTableX2Level2(HUF_DEltX2* DTable, U32 targetLog, const U32
  
  static void HUF_fillDTableX2(HUF_DEltX2* DTable, const U32 targetLog,
                             const sortedSymbol_t* sortedList,
@@ -29257,7 +29384,7 @@ index 60958afebc41..d172e35fbd9a 100644
                             const U32 nbBitsBaseline)
  {
      U32* const rankVal = rankValOrigin[0];
-@@ -1040,14 +1124,7 @@ typedef struct {
+@@ -1040,14 +1162,7 @@ typedef struct {
  
  size_t HUF_readDTableX2_wksp(HUF_DTable* DTable,
                         const void* src, size_t srcSize,
@@ -29273,7 +29400,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      U32 tableLog, maxW, nbSymbols;
      DTableDesc dtd = HUF_getDTableDesc(DTable);
-@@ -1069,7 +1146,7 @@ size_t HUF_readDTableX2_wksp_bmi2(HUF_DTable* DTable,
+@@ -1069,7 +1184,7 @@ size_t HUF_readDTableX2_wksp_bmi2(HUF_DTable* DTable,
      if (maxTableLog > HUF_TABLELOG_MAX) return ERROR(tableLog_tooLarge);
      /* ZSTD_memset(weightList, 0, sizeof(weightList)); */  /* is not necessary, even though some analyzer complain ... */
  
@@ -29282,7 +29409,7 @@ index 60958afebc41..d172e35fbd9a 100644
      if (HUF_isError(iSize)) return iSize;
  
      /* check result */
-@@ -1240,6 +1317,11 @@ HUF_decompress1X2_usingDTable_internal_body(
+@@ -1240,6 +1355,11 @@ HUF_decompress1X2_usingDTable_internal_body(
      /* decoded size */
      return dstSize;
  }
@@ -29294,7 +29421,7 @@ index 60958afebc41..d172e35fbd9a 100644
  FORCE_INLINE_TEMPLATE size_t
  HUF_decompress4X2_usingDTable_internal_body(
            void* dst,  size_t dstSize,
-@@ -1280,8 +1362,9 @@ HUF_decompress4X2_usingDTable_internal_body(
+@@ -1280,8 +1400,9 @@ HUF_decompress4X2_usingDTable_internal_body(
          DTableDesc const dtd = HUF_getDTableDesc(DTable);
          U32 const dtLog = dtd.tableLog;
  
@@ -29306,7 +29433,7 @@ index 60958afebc41..d172e35fbd9a 100644
          CHECK_F( BIT_initDStream(&bitD1, istart1, length1) );
          CHECK_F( BIT_initDStream(&bitD2, istart2, length2) );
          CHECK_F( BIT_initDStream(&bitD3, istart3, length3) );
-@@ -1366,36 +1449,177 @@ size_t HUF_decompress4X2_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
+@@ -1366,36 +1487,178 @@ size_t HUF_decompress4X2_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
  }
  #endif
  
@@ -29322,9 +29449,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
 -HUF_ASM_DECL void HUF_decompress4X2_usingDTable_internal_bmi2_asm_loop(HUF_DecompressAsmArgs* args) ZSTDLIB_HIDDEN;
 +HUF_ASM_DECL void HUF_decompress4X2_usingDTable_internal_fast_asm_loop(HUF_DecompressFastArgs* args) ZSTDLIB_HIDDEN;
- 
--static HUF_ASM_X86_64_BMI2_ATTRS size_t
--HUF_decompress4X2_usingDTable_internal_bmi2_asm(
++
 +#endif
 +
 +static HUF_FAST_BMI2_ATTRS
@@ -29353,7 +29478,6 @@ index 60958afebc41..d172e35fbd9a 100644
 +    for (;;) {
 +        BYTE* olimit;
 +        int stream;
-+        int symbol;
 +
 +        /* Assert loop preconditions */
 +#ifndef NDEBUG
@@ -29410,53 +29534,57 @@ index 60958afebc41..d172e35fbd9a 100644
 +        }
 +#endif
 +
++#define HUF_4X2_DECODE_SYMBOL(_stream, _decode3)        \
++    if ((_decode3) || (_stream) != 3) {                 \
++        int const index = (int)(bits[(_stream)] >> 53); \
++        HUF_DEltX2 const entry = dtable[index];         \
++        MEM_write16(op[(_stream)], entry.sequence);     \
++        bits[(_stream)] <<= (entry.nbBits) & 0x3F;      \
++        op[(_stream)] += (entry.length);                \
++    }
++
++#define HUF_4X2_RELOAD_STREAM(_stream)                                  \
++    {                                                                   \
++        HUF_4X2_DECODE_SYMBOL(3, 1)                                     \
++        {                                                               \
++            int const ctz = ZSTD_countTrailingZeros64(bits[(_stream)]); \
++            int const nbBits = ctz & 7;                                 \
++            int const nbBytes = ctz >> 3;                               \
++            ip[(_stream)] -= nbBytes;                                   \
++            bits[(_stream)] = MEM_read64(ip[(_stream)]) | 1;            \
++            bits[(_stream)] <<= nbBits;                                 \
++        }                                                               \
++    }
++
++        /* Manually unroll the loop because compilers don't consistently
++         * unroll the inner loops, which destroys performance.
++         */
 +        do {
-+            /* Do 5 table lookups for each of the first 3 streams */
-+            for (symbol = 0; symbol < 5; ++symbol) {
-+                for (stream = 0; stream < 3; ++stream) {
-+                    int const index = (int)(bits[stream] >> 53);
-+                    HUF_DEltX2 const entry = dtable[index];
-+                    MEM_write16(op[stream], entry.sequence);
-+                    bits[stream] <<= (entry.nbBits);
-+                    op[stream] += (entry.length);
-+                }
-+            }
-+            /* Do 1 table lookup from the final stream */
-+            {
-+                int const index = (int)(bits[3] >> 53);
-+                HUF_DEltX2 const entry = dtable[index];
-+                MEM_write16(op[3], entry.sequence);
-+                bits[3] <<= (entry.nbBits);
-+                op[3] += (entry.length);
-+            }
-+            /* Do 4 table lookups from the final stream & reload bitstreams */
-+            for (stream = 0; stream < 4; ++stream) {
-+                /* Do a table lookup from the final stream.
-+                 * This is interleaved with the reloading to reduce register
-+                 * pressure. This shouldn't be necessary, but compilers can
-+                 * struggle with codegen with high register pressure.
-+                 */
-+                {
-+                    int const index = (int)(bits[3] >> 53);
-+                    HUF_DEltX2 const entry = dtable[index];
-+                    MEM_write16(op[3], entry.sequence);
-+                    bits[3] <<= (entry.nbBits);
-+                    op[3] += (entry.length);
-+                }
-+                /* Reload the bistreams. The final bitstream must be reloaded
-+                 * after the 5th symbol was decoded.
-+                 */
-+                {
-+                    int const ctz = ZSTD_countTrailingZeros64(bits[stream]);
-+                    int const nbBits = ctz & 7;
-+                    int const nbBytes = ctz >> 3;
-+                    ip[stream] -= nbBytes;
-+                    bits[stream] = MEM_read64(ip[stream]) | 1;
-+                    bits[stream] <<= nbBits;
-+                }
-+            }
++            /* Decode 5 symbols from each of the first 3 streams.
++             * The final stream will be decoded during the reload phase
++             * to reduce register pressure.
++             */
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++
++            /* Decode one symbol from the final stream */
++            HUF_4X2_DECODE_SYMBOL(3, 1)
++
++            /* Decode 4 symbols from the final stream & reload bitstreams.
++             * The final stream is reloaded last, meaning that all 5 symbols
++             * are decoded from the final stream before it is reloaded.
++             */
++            HUF_4X_FOR_EACH_STREAM(HUF_4X2_RELOAD_STREAM)
 +        } while (op[3] < olimit);
 +    }
+ 
+-static HUF_ASM_X86_64_BMI2_ATTRS size_t
+-HUF_decompress4X2_usingDTable_internal_bmi2_asm(
++#undef HUF_4X2_DECODE_SYMBOL
++#undef HUF_4X2_RELOAD_STREAM
 +
 +_out:
 +
@@ -29495,7 +29623,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* note : op4 already verified within main loop */
      assert(args.ip[0] >= iend);
-@@ -1426,91 +1650,72 @@ HUF_decompress4X2_usingDTable_internal_bmi2_asm(
+@@ -1426,91 +1689,72 @@ HUF_decompress4X2_usingDTable_internal_bmi2_asm(
      /* decoded size */
      return dstSize;
  }
@@ -29536,7 +29664,7 @@ index 60958afebc41..d172e35fbd9a 100644
 +    }
  #endif
 +
-+    if (!(flags & HUF_flags_disableFast)) {
++    if (HUF_ENABLE_FAST_DECODE && !(flags & HUF_flags_disableFast)) {
 +        size_t const ret = HUF_decompress4X2_usingDTable_internal_fast(dst, dstSize, cSrc, cSrcSize, DTable, loopFn);
 +        if (ret != 0)
 +            return ret;
@@ -29571,8 +29699,9 @@ index 60958afebc41..d172e35fbd9a 100644
      ip += hSize; cSrcSize -= hSize;
  
 -    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, /* bmi2 */ 0);
--}
--
++    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, flags);
+ }
+ 
 -
 -size_t HUF_decompress4X2_usingDTable(
 -          void* dst,  size_t dstSize,
@@ -29582,9 +29711,8 @@ index 60958afebc41..d172e35fbd9a 100644
 -    DTableDesc dtd = HUF_getDTableDesc(DTable);
 -    if (dtd.tableType != 1) return ERROR(GENERIC);
 -    return HUF_decompress4X2_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
-+    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, flags);
- }
- 
+-}
+-
 -static size_t HUF_decompress4X2_DCtx_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t dstSize,
 +static size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
                                     const void* cSrc, size_t cSrcSize,
@@ -29615,7 +29743,7 @@ index 60958afebc41..d172e35fbd9a 100644
  #endif /* HUF_FORCE_DECOMPRESS_X1 */
  
  
-@@ -1518,44 +1723,6 @@ size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
+@@ -1518,44 +1762,6 @@ size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
  /* Universal decompression selectors */
  /* ***********************************/
  
@@ -29660,7 +29788,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
  #if !defined(HUF_FORCE_DECOMPRESS_X1) && !defined(HUF_FORCE_DECOMPRESS_X2)
  typedef struct { U32 tableTime; U32 decode256Time; } algo_time_t;
-@@ -1610,36 +1777,9 @@ U32 HUF_selectDecoder (size_t dstSize, size_t cSrcSize)
+@@ -1610,36 +1816,9 @@ U32 HUF_selectDecoder (size_t dstSize, size_t cSrcSize)
  #endif
  }
  
@@ -29698,7 +29826,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* validation checks */
      if (dstSize == 0) return ERROR(dstSize_tooSmall);
-@@ -1652,71 +1792,71 @@ size_t HUF_decompress1X_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
+@@ -1652,71 +1831,71 @@ size_t HUF_decompress1X_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
          (void)algoNb;
          assert(algoNb == 0);
          return HUF_decompress1X1_DCtx_wksp(dctx, dst, dstSize, cSrc,
@@ -29788,7 +29916,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* validation checks */
      if (dstSize == 0) return ERROR(dstSize_tooSmall);
-@@ -1726,15 +1866,14 @@ size_t HUF_decompress4X_hufOnly_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t ds
+@@ -1726,15 +1905,14 @@ size_t HUF_decompress4X_hufOnly_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t ds
  #if defined(HUF_FORCE_DECOMPRESS_X1)
          (void)algoNb;
          assert(algoNb == 0);
@@ -29809,7 +29937,7 @@ index 60958afebc41..d172e35fbd9a 100644
  }
 -
 diff --git a/lib/zstd/decompress/zstd_ddict.c b/lib/zstd/decompress/zstd_ddict.c
-index dbbc7919de53..30ef65e1ab5c 100644
+index dbbc7919de534..30ef65e1ab5ca 100644
 --- a/lib/zstd/decompress/zstd_ddict.c
 +++ b/lib/zstd/decompress/zstd_ddict.c
 @@ -1,5 +1,6 @@
@@ -29851,7 +29979,7 @@ index dbbc7919de53..30ef65e1ab5c 100644
 +    return ddict->dictID;
  }
 diff --git a/lib/zstd/decompress/zstd_ddict.h b/lib/zstd/decompress/zstd_ddict.h
-index 8c1a79d666f8..de459a0dacd1 100644
+index 8c1a79d666f89..de459a0dacd19 100644
 --- a/lib/zstd/decompress/zstd_ddict.h
 +++ b/lib/zstd/decompress/zstd_ddict.h
 @@ -1,5 +1,6 @@
@@ -29863,7 +29991,7 @@ index 8c1a79d666f8..de459a0dacd1 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/decompress/zstd_decompress.c b/lib/zstd/decompress/zstd_decompress.c
-index 6b3177c94711..03dbdf39109f 100644
+index 6b3177c947114..03dbdf39109f9 100644
 --- a/lib/zstd/decompress/zstd_decompress.c
 +++ b/lib/zstd/decompress/zstd_decompress.c
 @@ -1,5 +1,6 @@
@@ -30420,7 +30548,7 @@ index 6b3177c94711..03dbdf39109f 100644
 +    }
  }
 diff --git a/lib/zstd/decompress/zstd_decompress_block.c b/lib/zstd/decompress/zstd_decompress_block.c
-index c1913b8e7c89..9f5577e5bc19 100644
+index c1913b8e7c897..9f5577e5bc19d 100644
 --- a/lib/zstd/decompress/zstd_decompress_block.c
 +++ b/lib/zstd/decompress/zstd_decompress_block.c
 @@ -1,5 +1,6 @@
@@ -30957,7 +31085,7 @@ index c1913b8e7c89..9f5577e5bc19 100644
 +    return ZSTD_decompressBlock_deprecated(dctx, dst, dstCapacity, src, srcSize);
 +}
 diff --git a/lib/zstd/decompress/zstd_decompress_block.h b/lib/zstd/decompress/zstd_decompress_block.h
-index 3d2d57a5d25a..5888e6cc788b 100644
+index 3d2d57a5d25a7..5888e6cc788b5 100644
 --- a/lib/zstd/decompress/zstd_decompress_block.h
 +++ b/lib/zstd/decompress/zstd_decompress_block.h
 @@ -1,5 +1,6 @@
@@ -30980,7 +31108,7 @@ index 3d2d57a5d25a..5888e6cc788b 100644
  
  #endif /* ZSTD_DEC_BLOCK_H */
 diff --git a/lib/zstd/decompress/zstd_decompress_internal.h b/lib/zstd/decompress/zstd_decompress_internal.h
-index 98102edb6a83..32f79fb2873d 100644
+index 98102edb6a832..32f79fb2873df 100644
 --- a/lib/zstd/decompress/zstd_decompress_internal.h
 +++ b/lib/zstd/decompress/zstd_decompress_internal.h
 @@ -1,5 +1,6 @@
@@ -31015,7 +31143,7 @@ index 98102edb6a83..32f79fb2873d 100644
      /* streaming */
      ZSTD_dStreamStage streamStage;
 diff --git a/lib/zstd/decompress_sources.h b/lib/zstd/decompress_sources.h
-index a06ca187aab5..8a47eb2a4514 100644
+index a06ca187aab5f..8a47eb2a45145 100644
 --- a/lib/zstd/decompress_sources.h
 +++ b/lib/zstd/decompress_sources.h
 @@ -1,6 +1,6 @@
@@ -31027,7 +31155,7 @@ index a06ca187aab5..8a47eb2a4514 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/zstd_common_module.c b/lib/zstd/zstd_common_module.c
-index 22686e367e6f..466828e35752 100644
+index 22686e367e6f0..466828e357525 100644
 --- a/lib/zstd/zstd_common_module.c
 +++ b/lib/zstd/zstd_common_module.c
 @@ -1,6 +1,6 @@
@@ -31049,7 +31177,7 @@ index 22686e367e6f..466828e35752 100644
  MODULE_LICENSE("Dual BSD/GPL");
  MODULE_DESCRIPTION("Zstd Common");
 diff --git a/lib/zstd/zstd_compress_module.c b/lib/zstd/zstd_compress_module.c
-index 04e1b5c01d9b..8ecf43226af2 100644
+index 04e1b5c01d9b6..8ecf43226af2f 100644
 --- a/lib/zstd/zstd_compress_module.c
 +++ b/lib/zstd/zstd_compress_module.c
 @@ -1,6 +1,6 @@
@@ -31061,7 +31189,7 @@ index 04e1b5c01d9b..8ecf43226af2 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/zstd_decompress_module.c b/lib/zstd/zstd_decompress_module.c
-index f4ed952ed485..eb1c49e69722 100644
+index f4ed952ed4852..7d31518e9d5ab 100644
 --- a/lib/zstd/zstd_decompress_module.c
 +++ b/lib/zstd/zstd_decompress_module.c
 @@ -1,6 +1,6 @@
@@ -31072,6 +31200,15 @@ index f4ed952ed485..eb1c49e69722 100644
   * All rights reserved.
   *
   * This source code is licensed under both the BSD-style license (found in the
+@@ -77,7 +77,7 @@ EXPORT_SYMBOL(zstd_init_dstream);
+ 
+ size_t zstd_reset_dstream(zstd_dstream *dstream)
+ {
+-	return ZSTD_resetDStream(dstream);
++	return ZSTD_DCtx_reset(dstream, ZSTD_reset_session_only);
+ }
+ EXPORT_SYMBOL(zstd_reset_dstream);
+ 
 -- 
-2.43.0.rc2
+2.43.0
 

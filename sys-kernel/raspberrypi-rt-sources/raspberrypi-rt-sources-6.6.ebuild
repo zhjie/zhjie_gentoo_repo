@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="391d2a3a258e2d699b99c7a403a025b94051b779"
+EGIT_COMMIT="96ad42bb43f62a202a4ff02bc1850ac7f362696f"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="5"
 K_EXP_GENPATCHES_NOUSE="1"
 # K_NODRYRUN="1"
 
@@ -152,9 +152,8 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
 	# cachy patch
         if use cachy; then
-		eapply "${FILESDIR}/0003-bbr3.patch"
+		eapply "${FILESDIR}/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/0001-high-hz.patch"
-		eapply "${FILESDIR}/0002-high-hz-Kconfig.patch"
 		eapply "${FILESDIR}/0001-lrng.patch"
 	fi
 

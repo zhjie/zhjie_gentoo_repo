@@ -1,6 +1,6 @@
-From a2e3cec5e65fa673ac388d138ecdbac69be5282d Mon Sep 17 00:00:00 2001
+From 9ac45eafd05c07513489427b2e79214940eab4e2 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 16 Oct 2023 19:50:40 +0200
+Date: Wed, 29 Nov 2023 19:56:57 +0100
 Subject: [PATCH 7/7] zstd
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -14,7 +14,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/common/bitstream.h                   |   53 +-
  lib/zstd/common/compiler.h                    |   14 +-
  lib/zstd/common/cpu.h                         |    3 +-
- lib/zstd/common/debug.c                       |    3 +-
+ lib/zstd/common/debug.c                       |    5 +-
  lib/zstd/common/debug.h                       |    3 +-
  lib/zstd/common/entropy_common.c              |   42 +-
  lib/zstd/common/error_private.c               |   12 +-
@@ -25,7 +25,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/common/mem.h                         |    2 +-
  lib/zstd/common/portability_macros.h          |   26 +-
  lib/zstd/common/zstd_common.c                 |   38 +-
- lib/zstd/common/zstd_deps.h                   |   20 +-
+ lib/zstd/common/zstd_deps.h                   |   16 +-
  lib/zstd/common/zstd_internal.h               |   99 +-
  lib/zstd/compress/clevels.h                   |    3 +-
  lib/zstd/compress/fse_compress.c              |   59 +-
@@ -52,7 +52,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/compress/zstd_ldm_geartab.h          |    3 +-
  lib/zstd/compress/zstd_opt.c                  |  187 +-
  lib/zstd/compress/zstd_opt.h                  |    3 +-
- lib/zstd/decompress/huf_decompress.c          |  731 ++++---
+ lib/zstd/decompress/huf_decompress.c          |  770 ++++---
  lib/zstd/decompress/zstd_ddict.c              |    9 +-
  lib/zstd/decompress/zstd_ddict.h              |    3 +-
  lib/zstd/decompress/zstd_decompress.c         |  261 ++-
@@ -62,13 +62,13 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  lib/zstd/decompress_sources.h                 |    2 +-
  lib/zstd/zstd_common_module.c                 |    5 +-
  lib/zstd/zstd_compress_module.c               |    2 +-
- lib/zstd/zstd_decompress_module.c             |    2 +-
- 58 files changed, 4752 insertions(+), 2594 deletions(-)
+ lib/zstd/zstd_decompress_module.c             |    4 +-
+ 58 files changed, 4790 insertions(+), 2595 deletions(-)
  create mode 100644 lib/zstd/common/allocations.h
  create mode 100644 lib/zstd/common/bits.h
 
 diff --git a/include/linux/zstd.h b/include/linux/zstd.h
-index 113408eef6ec..f109d49f43f8 100644
+index 113408eef6ece..f109d49f43f80 100644
 --- a/include/linux/zstd.h
 +++ b/include/linux/zstd.h
 @@ -1,6 +1,6 @@
@@ -80,7 +80,7 @@ index 113408eef6ec..f109d49f43f8 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/include/linux/zstd_errors.h b/include/linux/zstd_errors.h
-index 58b6dd45a969..6d5cf55f0bf3 100644
+index 58b6dd45a969f..6d5cf55f0bf3e 100644
 --- a/include/linux/zstd_errors.h
 +++ b/include/linux/zstd_errors.h
 @@ -1,5 +1,6 @@
@@ -146,7 +146,7 @@ index 58b6dd45a969..6d5cf55f0bf3 100644
  } ZSTD_ErrorCode;
  
 diff --git a/include/linux/zstd_lib.h b/include/linux/zstd_lib.h
-index 79d55465d5c1..8b4ffe649df5 100644
+index 79d55465d5c1d..8b4ffe649df57 100644
 --- a/include/linux/zstd_lib.h
 +++ b/include/linux/zstd_lib.h
 @@ -1,5 +1,6 @@
@@ -1338,7 +1338,7 @@ index 79d55465d5c1..8b4ffe649df5 100644
  #endif   /* ZSTD_H_ZSTD_STATIC_LINKING_ONLY */
  
 diff --git a/lib/zstd/Makefile b/lib/zstd/Makefile
-index 20f08c644b71..464c410b2768 100644
+index 20f08c644b71a..464c410b2768c 100644
 --- a/lib/zstd/Makefile
 +++ b/lib/zstd/Makefile
 @@ -1,6 +1,6 @@
@@ -1351,7 +1351,7 @@ index 20f08c644b71..464c410b2768 100644
  # This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/allocations.h b/lib/zstd/common/allocations.h
 new file mode 100644
-index 000000000000..05adbbeccaa9
+index 0000000000000..05adbbeccaa9b
 --- /dev/null
 +++ b/lib/zstd/common/allocations.h
 @@ -0,0 +1,56 @@
@@ -1413,7 +1413,7 @@ index 000000000000..05adbbeccaa9
 +#endif /* ZSTD_ALLOCATIONS_H */
 diff --git a/lib/zstd/common/bits.h b/lib/zstd/common/bits.h
 new file mode 100644
-index 000000000000..aa3487ec4b6a
+index 0000000000000..aa3487ec4b6a7
 --- /dev/null
 +++ b/lib/zstd/common/bits.h
 @@ -0,0 +1,149 @@
@@ -1567,7 +1567,7 @@ index 000000000000..aa3487ec4b6a
 +
 +#endif /* ZSTD_BITS_H */
 diff --git a/lib/zstd/common/bitstream.h b/lib/zstd/common/bitstream.h
-index feef3a1b1d60..444dc4f85c64 100644
+index feef3a1b1d600..444dc4f85c649 100644
 --- a/lib/zstd/common/bitstream.h
 +++ b/lib/zstd/common/bitstream.h
 @@ -1,7 +1,8 @@
@@ -1694,7 +1694,7 @@ index feef3a1b1d60..444dc4f85c64 100644
      if (bitD->bitsConsumed > (sizeof(bitD->bitContainer)*8))  /* overflow detected, like end of stream */
          return BIT_DStream_overflow;
 diff --git a/lib/zstd/common/compiler.h b/lib/zstd/common/compiler.h
-index c42d39faf9bd..c437e0975575 100644
+index c42d39faf9bd8..c437e09755750 100644
 --- a/lib/zstd/common/compiler.h
 +++ b/lib/zstd/common/compiler.h
 @@ -1,5 +1,6 @@
@@ -1724,7 +1724,7 @@ index c42d39faf9bd..c437e0975575 100644
  
  #endif /* ZSTD_COMPILER_H */
 diff --git a/lib/zstd/common/cpu.h b/lib/zstd/common/cpu.h
-index 0db7b42407ee..d8319a2bef4c 100644
+index 0db7b42407eea..d8319a2bef4ce 100644
 --- a/lib/zstd/common/cpu.h
 +++ b/lib/zstd/common/cpu.h
 @@ -1,5 +1,6 @@
@@ -1736,7 +1736,7 @@ index 0db7b42407ee..d8319a2bef4c 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/debug.c b/lib/zstd/common/debug.c
-index bb863c9ea616..e56ff6464e91 100644
+index bb863c9ea6164..d77926cbad14b 100644
 --- a/lib/zstd/common/debug.c
 +++ b/lib/zstd/common/debug.c
 @@ -1,7 +1,8 @@
@@ -1749,8 +1749,15 @@ index bb863c9ea616..e56ff6464e91 100644
   *
   * You can contact the author at :
   * - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
+@@ -21,4 +22,6 @@
+ 
+ #include "debug.h"
+ 
++#if (DEBUGLEVEL>=2)
+ int g_debuglevel = DEBUGLEVEL;
++#endif
 diff --git a/lib/zstd/common/debug.h b/lib/zstd/common/debug.h
-index 6dd88d1fbd02..da0dbfc614b8 100644
+index 6dd88d1fbd02c..da0dbfc614b88 100644
 --- a/lib/zstd/common/debug.h
 +++ b/lib/zstd/common/debug.h
 @@ -1,7 +1,8 @@
@@ -1764,7 +1771,7 @@ index 6dd88d1fbd02..da0dbfc614b8 100644
   * You can contact the author at :
   * - Source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/common/entropy_common.c b/lib/zstd/common/entropy_common.c
-index fef67056f052..6cdd82233fb5 100644
+index fef67056f0524..6cdd82233fb59 100644
 --- a/lib/zstd/common/entropy_common.c
 +++ b/lib/zstd/common/entropy_common.c
 @@ -1,6 +1,7 @@
@@ -1882,7 +1889,7 @@ index fef67056f052..6cdd82233fb5 100644
      return HUF_readStats_body_default(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize);
  }
 diff --git a/lib/zstd/common/error_private.c b/lib/zstd/common/error_private.c
-index 6d1135f8c373..a4062d30d170 100644
+index 6d1135f8c3733..a4062d30d1703 100644
 --- a/lib/zstd/common/error_private.c
 +++ b/lib/zstd/common/error_private.c
 @@ -1,5 +1,6 @@
@@ -1930,7 +1937,7 @@ index 6d1135f8c373..a4062d30d170 100644
      default: return notErrorCode;
      }
 diff --git a/lib/zstd/common/error_private.h b/lib/zstd/common/error_private.h
-index ca5101e542fa..9a4699a38a88 100644
+index ca5101e542faa..9a4699a38a881 100644
 --- a/lib/zstd/common/error_private.h
 +++ b/lib/zstd/common/error_private.h
 @@ -1,5 +1,6 @@
@@ -1942,7 +1949,7 @@ index ca5101e542fa..9a4699a38a88 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/fse.h b/lib/zstd/common/fse.h
-index 4507043b2287..c4e25a219142 100644
+index 4507043b2287c..c4e25a2191429 100644
 --- a/lib/zstd/common/fse.h
 +++ b/lib/zstd/common/fse.h
 @@ -1,7 +1,8 @@
@@ -2094,7 +2101,7 @@ index 4507043b2287..c4e25a219142 100644
   * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
  MEM_STATIC U32 FSE_getMaxNbBits(const void* symbolTTPtr, U32 symbolValue)
 diff --git a/lib/zstd/common/fse_decompress.c b/lib/zstd/common/fse_decompress.c
-index a0d06095be83..99ce8fa54d08 100644
+index a0d06095be83d..99ce8fa54d084 100644
 --- a/lib/zstd/common/fse_decompress.c
 +++ b/lib/zstd/common/fse_decompress.c
 @@ -1,6 +1,7 @@
@@ -2258,7 +2265,7 @@ index a0d06095be83..99ce8fa54d08 100644
 -
  #endif   /* FSE_COMMONDEFS_ONLY */
 diff --git a/lib/zstd/common/huf.h b/lib/zstd/common/huf.h
-index 5042ff870308..8e7943092ed1 100644
+index 5042ff8703087..8e7943092ed1a 100644
 --- a/lib/zstd/common/huf.h
 +++ b/lib/zstd/common/huf.h
 @@ -1,7 +1,8 @@
@@ -2585,7 +2592,7 @@ index 5042ff870308..8e7943092ed1 100644
 +#endif   /* HUF_H_298734234 */
  
 diff --git a/lib/zstd/common/mem.h b/lib/zstd/common/mem.h
-index 1d9cc03924ca..a7231822b6e3 100644
+index 1d9cc03924ca9..a7231822b6e32 100644
 --- a/lib/zstd/common/mem.h
 +++ b/lib/zstd/common/mem.h
 @@ -1,6 +1,6 @@
@@ -2597,7 +2604,7 @@ index 1d9cc03924ca..a7231822b6e3 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/common/portability_macros.h b/lib/zstd/common/portability_macros.h
-index 0e3b2c0a527d..7ede8cf1ffe5 100644
+index 0e3b2c0a527db..7ede8cf1ffe57 100644
 --- a/lib/zstd/common/portability_macros.h
 +++ b/lib/zstd/common/portability_macros.h
 @@ -1,5 +1,6 @@
@@ -2651,7 +2658,7 @@ index 0e3b2c0a527d..7ede8cf1ffe5 100644
 +
  #endif /* ZSTD_PORTABILITY_MACROS_H */
 diff --git a/lib/zstd/common/zstd_common.c b/lib/zstd/common/zstd_common.c
-index 3d7e35b309b5..44b95b25344a 100644
+index 3d7e35b309b5d..44b95b25344a1 100644
 --- a/lib/zstd/common/zstd_common.c
 +++ b/lib/zstd/common/zstd_common.c
 @@ -1,5 +1,6 @@
@@ -2709,7 +2716,7 @@ index 3d7e35b309b5..44b95b25344a 100644
 -    }
 -}
 diff --git a/lib/zstd/common/zstd_deps.h b/lib/zstd/common/zstd_deps.h
-index 2c34e8a33a1c..670c5fa2a952 100644
+index 2c34e8a33a1c1..f931f7d0e2947 100644
 --- a/lib/zstd/common/zstd_deps.h
 +++ b/lib/zstd/common/zstd_deps.h
 @@ -1,6 +1,6 @@
@@ -2720,7 +2727,7 @@ index 2c34e8a33a1c..670c5fa2a952 100644
   * All rights reserved.
   *
   * This source code is licensed under both the BSD-style license (found in the
-@@ -105,3 +105,21 @@ static uint64_t ZSTD_div64(uint64_t dividend, uint32_t divisor) {
+@@ -105,3 +105,17 @@ static uint64_t ZSTD_div64(uint64_t dividend, uint32_t divisor) {
  
  #endif /* ZSTD_DEPS_IO */
  #endif /* ZSTD_DEPS_NEED_IO */
@@ -2734,16 +2741,12 @@ index 2c34e8a33a1c..670c5fa2a952 100644
 +#ifndef ZSTD_DEPS_STDINT
 +#define ZSTD_DEPS_STDINT
 +
-+/*
-+ * The Linux Kernel doesn't provide intptr_t, only uintptr_t, which
-+ * is an unsigned long.
-+ */
-+typedef long intptr_t;
++/* intptr_t already provided by ZSTD_DEPS_COMMON */
 +
 +#endif /* ZSTD_DEPS_STDINT */
 +#endif /* ZSTD_DEPS_NEED_STDINT */
 diff --git a/lib/zstd/common/zstd_internal.h b/lib/zstd/common/zstd_internal.h
-index 93305d9b41bb..7f023e4d4774 100644
+index 93305d9b41bba..7f023e4d47740 100644
 --- a/lib/zstd/common/zstd_internal.h
 +++ b/lib/zstd/common/zstd_internal.h
 @@ -1,5 +1,6 @@
@@ -2929,7 +2932,7 @@ index 93305d9b41bb..7f023e4d4774 100644
  
  /* ZSTD_invalidateRepCodes() :
 diff --git a/lib/zstd/compress/clevels.h b/lib/zstd/compress/clevels.h
-index d9a76112ec3a..6ab8be6532ef 100644
+index d9a76112ec3af..6ab8be6532efc 100644
 --- a/lib/zstd/compress/clevels.h
 +++ b/lib/zstd/compress/clevels.h
 @@ -1,5 +1,6 @@
@@ -2941,7 +2944,7 @@ index d9a76112ec3a..6ab8be6532ef 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/fse_compress.c b/lib/zstd/compress/fse_compress.c
-index ec5b1ca6d71a..e46ca6621b48 100644
+index ec5b1ca6d71af..e46ca6621b488 100644
 --- a/lib/zstd/compress/fse_compress.c
 +++ b/lib/zstd/compress/fse_compress.c
 @@ -1,6 +1,7 @@
@@ -3060,7 +3063,7 @@ index ec5b1ca6d71a..e46ca6621b48 100644
 -
  #endif   /* FSE_COMMONDEFS_ONLY */
 diff --git a/lib/zstd/compress/hist.c b/lib/zstd/compress/hist.c
-index 3ddc6dfb6894..0b12587cc14b 100644
+index 3ddc6dfb68948..0b12587cc14b1 100644
 --- a/lib/zstd/compress/hist.c
 +++ b/lib/zstd/compress/hist.c
 @@ -1,7 +1,8 @@
@@ -3074,7 +3077,7 @@ index 3ddc6dfb6894..0b12587cc14b 100644
   *  You can contact the author at :
   *  - FSE source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/compress/hist.h b/lib/zstd/compress/hist.h
-index fc1830abc9c6..f7687b0fc20a 100644
+index fc1830abc9c63..f7687b0fc20a0 100644
 --- a/lib/zstd/compress/hist.h
 +++ b/lib/zstd/compress/hist.h
 @@ -1,7 +1,8 @@
@@ -3088,7 +3091,7 @@ index fc1830abc9c6..f7687b0fc20a 100644
   *  You can contact the author at :
   *  - FSE source repository : https://github.com/Cyan4973/FiniteStateEntropy
 diff --git a/lib/zstd/compress/huf_compress.c b/lib/zstd/compress/huf_compress.c
-index 74ef0db47621..83241abafe35 100644
+index 74ef0db476210..83241abafe35e 100644
 --- a/lib/zstd/compress/huf_compress.c
 +++ b/lib/zstd/compress/huf_compress.c
 @@ -1,6 +1,7 @@
@@ -3845,7 +3848,7 @@ index 74ef0db47621..83241abafe35 100644
  }
 -
 diff --git a/lib/zstd/compress/zstd_compress.c b/lib/zstd/compress/zstd_compress.c
-index f620cafca633..c1c316e9e289 100644
+index f620cafca633b..c1c316e9e289f 100644
 --- a/lib/zstd/compress/zstd_compress.c
 +++ b/lib/zstd/compress/zstd_compress.c
 @@ -1,5 +1,6 @@
@@ -7227,7 +7230,7 @@ index f620cafca633..c1c316e9e289 100644
 +    }
 +}
 diff --git a/lib/zstd/compress/zstd_compress_internal.h b/lib/zstd/compress/zstd_compress_internal.h
-index 71697a11ae30..899f5e2de8e9 100644
+index 71697a11ae305..899f5e2de8e96 100644
 --- a/lib/zstd/compress/zstd_compress_internal.h
 +++ b/lib/zstd/compress/zstd_compress_internal.h
 @@ -1,5 +1,6 @@
@@ -7781,7 +7784,7 @@ index 71697a11ae30..899f5e2de8e9 100644
 +
  #endif /* ZSTD_COMPRESS_H */
 diff --git a/lib/zstd/compress/zstd_compress_literals.c b/lib/zstd/compress/zstd_compress_literals.c
-index 52b0a8059aba..3e9ea46a670a 100644
+index 52b0a8059aba9..3e9ea46a670a6 100644
 --- a/lib/zstd/compress/zstd_compress_literals.c
 +++ b/lib/zstd/compress/zstd_compress_literals.c
 @@ -1,5 +1,6 @@
@@ -8023,7 +8026,7 @@ index 52b0a8059aba..3e9ea46a670a 100644
              MEM_writeLE32(ostart, lhc);
              ostart[4] = (BYTE)(cLitSize >> 10);
 diff --git a/lib/zstd/compress/zstd_compress_literals.h b/lib/zstd/compress/zstd_compress_literals.h
-index 9775fb97cb70..a2a85d6b69e5 100644
+index 9775fb97cb702..a2a85d6b69e53 100644
 --- a/lib/zstd/compress/zstd_compress_literals.h
 +++ b/lib/zstd/compress/zstd_compress_literals.h
 @@ -1,5 +1,6 @@
@@ -8067,7 +8070,7 @@ index 9775fb97cb70..a2a85d6b69e5 100644
  
  #endif /* ZSTD_COMPRESS_LITERALS_H */
 diff --git a/lib/zstd/compress/zstd_compress_sequences.c b/lib/zstd/compress/zstd_compress_sequences.c
-index 21ddc1b37acf..5c028c78d889 100644
+index 21ddc1b37acf8..5c028c78d889b 100644
 --- a/lib/zstd/compress/zstd_compress_sequences.c
 +++ b/lib/zstd/compress/zstd_compress_sequences.c
 @@ -1,5 +1,6 @@
@@ -8097,7 +8100,7 @@ index 21ddc1b37acf..5c028c78d889 100644
               * If basic encoding isn't possible, always choose RLE.
               */
 diff --git a/lib/zstd/compress/zstd_compress_sequences.h b/lib/zstd/compress/zstd_compress_sequences.h
-index 7991364c2f71..7fe6f4ff5cf2 100644
+index 7991364c2f71f..7fe6f4ff5cf25 100644
 --- a/lib/zstd/compress/zstd_compress_sequences.h
 +++ b/lib/zstd/compress/zstd_compress_sequences.h
 @@ -1,5 +1,6 @@
@@ -8109,7 +8112,7 @@ index 7991364c2f71..7fe6f4ff5cf2 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_compress_superblock.c b/lib/zstd/compress/zstd_compress_superblock.c
-index 17d836cc84e8..dbacbaf72733 100644
+index 17d836cc84e8f..dbacbaf727338 100644
 --- a/lib/zstd/compress/zstd_compress_superblock.c
 +++ b/lib/zstd/compress/zstd_compress_superblock.c
 @@ -1,5 +1,6 @@
@@ -8208,7 +8211,7 @@ index 17d836cc84e8..dbacbaf72733 100644
              ZSTD_memcpy(nextCBlock->rep, &rep, sizeof(rep));
          }
 diff --git a/lib/zstd/compress/zstd_compress_superblock.h b/lib/zstd/compress/zstd_compress_superblock.h
-index 224ece79546e..826bbc9e029b 100644
+index 224ece79546eb..826bbc9e029b1 100644
 --- a/lib/zstd/compress/zstd_compress_superblock.h
 +++ b/lib/zstd/compress/zstd_compress_superblock.h
 @@ -1,5 +1,6 @@
@@ -8220,7 +8223,7 @@ index 224ece79546e..826bbc9e029b 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_cwksp.h b/lib/zstd/compress/zstd_cwksp.h
-index 349fc923c355..65ea53b62844 100644
+index 349fc923c355a..65ea53b628447 100644
 --- a/lib/zstd/compress/zstd_cwksp.h
 +++ b/lib/zstd/compress/zstd_cwksp.h
 @@ -1,5 +1,6 @@
@@ -8525,7 +8528,7 @@ index 349fc923c355..65ea53b62844 100644
  
  
 diff --git a/lib/zstd/compress/zstd_double_fast.c b/lib/zstd/compress/zstd_double_fast.c
-index 76933dea2624..ab9440a99603 100644
+index 76933dea2624e..ab9440a996039 100644
 --- a/lib/zstd/compress/zstd_double_fast.c
 +++ b/lib/zstd/compress/zstd_double_fast.c
 @@ -1,5 +1,6 @@
@@ -8838,7 +8841,7 @@ index 76933dea2624..ab9440a99603 100644
                      hashLong[ZSTD_hashPtr(ip, hBitsL, 8)] = current2;
                      ip += repLength2;
 diff --git a/lib/zstd/compress/zstd_double_fast.h b/lib/zstd/compress/zstd_double_fast.h
-index 6822bde65a1d..0204f12e4cf7 100644
+index 6822bde65a1d8..0204f12e4cf70 100644
 --- a/lib/zstd/compress/zstd_double_fast.h
 +++ b/lib/zstd/compress/zstd_double_fast.h
 @@ -1,5 +1,6 @@
@@ -8860,7 +8863,7 @@ index 6822bde65a1d..0204f12e4cf7 100644
          ZSTD_matchState_t* ms, seqStore_t* seqStore, U32 rep[ZSTD_REP_NUM],
          void const* src, size_t srcSize);
 diff --git a/lib/zstd/compress/zstd_fast.c b/lib/zstd/compress/zstd_fast.c
-index a752e6beab52..3399b39c5dbc 100644
+index a752e6beab52e..3399b39c5dbc5 100644
 --- a/lib/zstd/compress/zstd_fast.c
 +++ b/lib/zstd/compress/zstd_fast.c
 @@ -1,5 +1,6 @@
@@ -9643,7 +9646,7 @@ index a752e6beab52..3399b39c5dbc 100644
      {
      default: /* includes case 3 */
 diff --git a/lib/zstd/compress/zstd_fast.h b/lib/zstd/compress/zstd_fast.h
-index fddc2f532d21..e64d9e1b2d39 100644
+index fddc2f532d21d..e64d9e1b2d393 100644
 --- a/lib/zstd/compress/zstd_fast.h
 +++ b/lib/zstd/compress/zstd_fast.h
 @@ -1,5 +1,6 @@
@@ -9665,7 +9668,7 @@ index fddc2f532d21..e64d9e1b2d39 100644
          ZSTD_matchState_t* ms, seqStore_t* seqStore, U32 rep[ZSTD_REP_NUM],
          void const* src, size_t srcSize);
 diff --git a/lib/zstd/compress/zstd_lazy.c b/lib/zstd/compress/zstd_lazy.c
-index 0298a01a7504..f6b4978ceba7 100644
+index 0298a01a7504a..f6b4978ceba7f 100644
 --- a/lib/zstd/compress/zstd_lazy.c
 +++ b/lib/zstd/compress/zstd_lazy.c
 @@ -1,5 +1,6 @@
@@ -10728,7 +10731,7 @@ index 0298a01a7504..f6b4978ceba7 100644
      return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, search_rowHash, 2);
  }
 diff --git a/lib/zstd/compress/zstd_lazy.h b/lib/zstd/compress/zstd_lazy.h
-index e5bdf4df8dde..9505bed93c03 100644
+index e5bdf4df8dde0..9505bed93c031 100644
 --- a/lib/zstd/compress/zstd_lazy.h
 +++ b/lib/zstd/compress/zstd_lazy.h
 @@ -1,5 +1,6 @@
@@ -10758,7 +10761,7 @@ index e5bdf4df8dde..9505bed93c03 100644
  
  #endif /* ZSTD_LAZY_H */
 diff --git a/lib/zstd/compress/zstd_ldm.c b/lib/zstd/compress/zstd_ldm.c
-index dd86fc83e7dd..b7da76b0db7c 100644
+index dd86fc83e7dde..b7da76b0db7c4 100644
 --- a/lib/zstd/compress/zstd_ldm.c
 +++ b/lib/zstd/compress/zstd_ldm.c
 @@ -1,5 +1,6 @@
@@ -10802,7 +10805,7 @@ index dd86fc83e7dd..b7da76b0db7c 100644
              ip += sequence.matchLength;
          }
 diff --git a/lib/zstd/compress/zstd_ldm.h b/lib/zstd/compress/zstd_ldm.h
-index fbc6a5e88fd7..c540731abde7 100644
+index fbc6a5e88fd7a..c540731abde72 100644
 --- a/lib/zstd/compress/zstd_ldm.h
 +++ b/lib/zstd/compress/zstd_ldm.h
 @@ -1,5 +1,6 @@
@@ -10814,7 +10817,7 @@ index fbc6a5e88fd7..c540731abde7 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_ldm_geartab.h b/lib/zstd/compress/zstd_ldm_geartab.h
-index 647f865be290..cfccfc46f6f7 100644
+index 647f865be2903..cfccfc46f6f7b 100644
 --- a/lib/zstd/compress/zstd_ldm_geartab.h
 +++ b/lib/zstd/compress/zstd_ldm_geartab.h
 @@ -1,5 +1,6 @@
@@ -10826,7 +10829,7 @@ index 647f865be290..cfccfc46f6f7 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/compress/zstd_opt.c b/lib/zstd/compress/zstd_opt.c
-index fd82acfda62f..1e41cb04f482 100644
+index fd82acfda62f6..1e41cb04f4820 100644
 --- a/lib/zstd/compress/zstd_opt.c
 +++ b/lib/zstd/compress/zstd_opt.c
 @@ -1,5 +1,6 @@
@@ -11308,7 +11311,7 @@ index fd82acfda62f..1e41cb04f482 100644
          ZSTD_initStats_ultra(ms, seqStore, rep, src, srcSize);
      }
 diff --git a/lib/zstd/compress/zstd_opt.h b/lib/zstd/compress/zstd_opt.h
-index 22b862858ba7..faa73ff4b03d 100644
+index 22b862858ba7a..faa73ff4b03dc 100644
 --- a/lib/zstd/compress/zstd_opt.h
 +++ b/lib/zstd/compress/zstd_opt.h
 @@ -1,5 +1,6 @@
@@ -11320,7 +11323,7 @@ index 22b862858ba7..faa73ff4b03d 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/decompress/huf_decompress.c b/lib/zstd/decompress/huf_decompress.c
-index 60958afebc41..d172e35fbd9a 100644
+index 60958afebc415..db670d71fdab7 100644
 --- a/lib/zstd/decompress/huf_decompress.c
 +++ b/lib/zstd/decompress/huf_decompress.c
 @@ -1,7 +1,8 @@
@@ -11345,7 +11348,20 @@ index 60958afebc41..d172e35fbd9a 100644
  
  /* **************************************************************
  *  Constants
-@@ -43,27 +44,25 @@
+@@ -34,6 +35,12 @@
+ *  Macros
+ ****************************************************************/
+ 
++#ifdef HUF_DISABLE_FAST_DECODE
++# define HUF_ENABLE_FAST_DECODE 0
++#else
++# define HUF_ENABLE_FAST_DECODE 1
++#endif
++
+ /* These two optional macros force the use one way or another of the two
+  * Huffman decompression implementations. You can't force in both directions
+  * at the same time.
+@@ -43,27 +50,25 @@
  #error "Cannot force the use of the X1 and X2 decoders at the same time!"
  #endif
  
@@ -11381,7 +11397,7 @@ index 60958afebc41..d172e35fbd9a 100644
  /* **************************************************************
  *  Error Management
  ****************************************************************/
-@@ -80,6 +79,11 @@
+@@ -80,6 +85,11 @@
  /* **************************************************************
  *  BMI2 Variant Wrappers
  ****************************************************************/
@@ -11393,7 +11409,7 @@ index 60958afebc41..d172e35fbd9a 100644
  #if DYNAMIC_BMI2
  
  #define HUF_DGEN(fn)                                                        \
-@@ -101,9 +105,9 @@
+@@ -101,9 +111,9 @@
      }                                                                       \
                                                                              \
      static size_t fn(void* dst, size_t dstSize, void const* cSrc,           \
@@ -11405,7 +11421,7 @@ index 60958afebc41..d172e35fbd9a 100644
              return fn##_bmi2(dst, dstSize, cSrc, cSrcSize, DTable);         \
          }                                                                   \
          return fn##_default(dst, dstSize, cSrc, cSrcSize, DTable);          \
-@@ -113,9 +117,9 @@
+@@ -113,9 +123,9 @@
  
  #define HUF_DGEN(fn)                                                        \
      static size_t fn(void* dst, size_t dstSize, void const* cSrc,           \
@@ -11417,7 +11433,7 @@ index 60958afebc41..d172e35fbd9a 100644
          return fn##_body(dst, dstSize, cSrc, cSrcSize, DTable);             \
      }
  
-@@ -134,15 +138,28 @@ static DTableDesc HUF_getDTableDesc(const HUF_DTable* table)
+@@ -134,15 +144,28 @@ static DTableDesc HUF_getDTableDesc(const HUF_DTable* table)
      return dtd;
  }
  
@@ -11450,7 +11466,7 @@ index 60958afebc41..d172e35fbd9a 100644
  typedef struct {
      BYTE const* ip[4];
      BYTE* op[4];
-@@ -151,15 +168,17 @@ typedef struct {
+@@ -151,15 +174,17 @@ typedef struct {
      BYTE const* ilimit;
      BYTE* oend;
      BYTE const* iend[4];
@@ -11473,7 +11489,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      void const* dt = DTable + 1;
      U32 const dtLog = HUF_getDTableDesc(DTable).tableLog;
-@@ -168,9 +187,11 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -168,9 +193,11 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
  
      BYTE* const oend = (BYTE*)dst + dstSize;
  
@@ -11488,7 +11504,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* strict minimum : jump table + 1 byte per stream */
      if (srcSize < 10)
-@@ -181,7 +202,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -181,7 +208,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
       * On small inputs we don't have enough data to trigger the fast loop, so use the old decoder.
       */
      if (dtLog != HUF_DECODER_FAST_TABLELOG)
@@ -11497,7 +11513,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* Read the jump table. */
      {
-@@ -195,13 +216,13 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -195,13 +222,13 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
          args->iend[2] = args->iend[1] + length2;
          args->iend[3] = args->iend[2] + length3;
  
@@ -11513,7 +11529,7 @@ index 60958afebc41..d172e35fbd9a 100644
          if (length4 > srcSize) return ERROR(corruption_detected);   /* overflow */
      }
      /* ip[] contains the position that is currently loaded into bits[]. */
-@@ -218,7 +239,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -218,7 +245,7 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
  
      /* No point to call the ASM loop for tiny outputs. */
      if (args->op[3] >= oend)
@@ -11522,7 +11538,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* bits[] is the bit container.
          * It is read from the MSB down to the LSB.
-@@ -227,10 +248,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -227,10 +254,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
          * set, so that CountTrailingZeros(bits[]) can be used
          * to count how many bits we've consumed.
          */
@@ -11537,7 +11553,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* If ip[] >= ilimit, it is guaranteed to be safe to
          * reload bits[]. It may be beyond its section, but is
-@@ -241,10 +262,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
+@@ -241,10 +268,10 @@ static size_t HUF_DecompressAsmArgs_init(HUF_DecompressAsmArgs* args, void* dst,
      args->oend = oend;
      args->dt = dt;
  
@@ -11550,7 +11566,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* Validate that we haven't overwritten. */
      if (args->op[stream] > segmentEnd)
-@@ -258,15 +279,15 @@ static size_t HUF_initRemainingDStream(BIT_DStream_t* bit, HUF_DecompressAsmArgs
+@@ -258,15 +285,33 @@ static size_t HUF_initRemainingDStream(BIT_DStream_t* bit, HUF_DecompressAsmArgs
          return ERROR(corruption_detected);
  
      /* Construct the BIT_DStream_t. */
@@ -11566,10 +11582,28 @@ index 60958afebc41..d172e35fbd9a 100644
      return 0;
  }
 -#endif
++
++/* Calls X(N) for each stream 0, 1, 2, 3. */
++#define HUF_4X_FOR_EACH_STREAM(X) \
++    {                             \
++        X(0)                      \
++        X(1)                      \
++        X(2)                      \
++        X(3)                      \
++    }
++
++/* Calls X(N, var) for each stream 0, 1, 2, 3. */
++#define HUF_4X_FOR_EACH_STREAM_WITH_VAR(X, var) \
++    {                                           \
++        X(0, (var))                             \
++        X(1, (var))                             \
++        X(2, (var))                             \
++        X(3, (var))                             \
++    }
  
  
  #ifndef HUF_FORCE_DECOMPRESS_X2
-@@ -283,10 +304,11 @@ typedef struct { BYTE nbBits; BYTE byte; } HUF_DEltX1;   /* single-symbol decodi
+@@ -283,10 +328,11 @@ typedef struct { BYTE nbBits; BYTE byte; } HUF_DEltX1;   /* single-symbol decodi
  static U64 HUF_DEltX1_set4(BYTE symbol, BYTE nbBits) {
      U64 D4;
      if (MEM_isLittleEndian()) {
@@ -11583,7 +11617,7 @@ index 60958afebc41..d172e35fbd9a 100644
      D4 *= 0x0001000100010001ULL;
      return D4;
  }
-@@ -329,13 +351,7 @@ typedef struct {
+@@ -329,13 +375,7 @@ typedef struct {
          BYTE huffWeight[HUF_SYMBOLVALUE_MAX + 1];
  } HUF_ReadDTableX1_Workspace;
  
@@ -11598,7 +11632,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      U32 tableLog = 0;
      U32 nbSymbols = 0;
-@@ -350,7 +366,7 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -350,7 +390,7 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
      DEBUG_STATIC_ASSERT(sizeof(DTableDesc) == sizeof(HUF_DTable));
      /* ZSTD_memset(huffWeight, 0, sizeof(huffWeight)); */   /* is not necessary, even though some analyzer complain ... */
  
@@ -11607,7 +11641,7 @@ index 60958afebc41..d172e35fbd9a 100644
      if (HUF_isError(iSize)) return iSize;
  
  
-@@ -377,9 +393,8 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -377,9 +417,8 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
       * rankStart[0] is not filled because there are no entries in the table for
       * weight 0.
       */
@@ -11619,7 +11653,7 @@ index 60958afebc41..d172e35fbd9a 100644
          int const unroll = 4;
          int const nLimit = (int)nbSymbols - unroll + 1;
          for (n=0; n<(int)tableLog+1; n++) {
-@@ -406,10 +421,9 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
+@@ -406,10 +445,9 @@ size_t HUF_readDTableX1_wksp_bmi2(HUF_DTable* DTable, const void* src, size_t sr
       * We can switch based on the length to a different inner loop which is
       * optimized for that particular case.
       */
@@ -11633,7 +11667,7 @@ index 60958afebc41..d172e35fbd9a 100644
          for (w=1; w<tableLog+1; ++w) {
              int const symbolCount = wksp->rankVal[w];
              int const length = (1 << w) >> 1;
-@@ -519,7 +533,7 @@ HUF_decodeStreamX1(BYTE* p, BIT_DStream_t* const bitDPtr, BYTE* const pEnd, cons
+@@ -519,7 +557,7 @@ HUF_decodeStreamX1(BYTE* p, BIT_DStream_t* const bitDPtr, BYTE* const pEnd, cons
      while (p < pEnd)
          HUF_DECODE_SYMBOLX1_0(p, bitDPtr);
  
@@ -11642,7 +11676,7 @@ index 60958afebc41..d172e35fbd9a 100644
  }
  
  FORCE_INLINE_TEMPLATE size_t
-@@ -545,6 +559,10 @@ HUF_decompress1X1_usingDTable_internal_body(
+@@ -545,6 +583,10 @@ HUF_decompress1X1_usingDTable_internal_body(
      return dstSize;
  }
  
@@ -11653,7 +11687,7 @@ index 60958afebc41..d172e35fbd9a 100644
  FORCE_INLINE_TEMPLATE size_t
  HUF_decompress4X1_usingDTable_internal_body(
            void* dst,  size_t dstSize,
-@@ -588,6 +606,7 @@ HUF_decompress4X1_usingDTable_internal_body(
+@@ -588,6 +630,7 @@ HUF_decompress4X1_usingDTable_internal_body(
  
          if (length4 > cSrcSize) return ERROR(corruption_detected);   /* overflow */
          if (opStart4 > oend) return ERROR(corruption_detected);      /* overflow */
@@ -11661,7 +11695,7 @@ index 60958afebc41..d172e35fbd9a 100644
          CHECK_F( BIT_initDStream(&bitD1, istart1, length1) );
          CHECK_F( BIT_initDStream(&bitD2, istart2, length2) );
          CHECK_F( BIT_initDStream(&bitD3, istart3, length3) );
-@@ -650,38 +669,142 @@ size_t HUF_decompress4X1_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
+@@ -650,38 +693,156 @@ size_t HUF_decompress4X1_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
  }
  #endif
  
@@ -11701,7 +11735,6 @@ index 60958afebc41..d172e35fbd9a 100644
 +    for (;;) {
 +        BYTE* olimit;
 +        int stream;
-+        int symbol;
 +
 +        /* Assert loop preconditions */
 +#ifndef NDEBUG
@@ -11748,27 +11781,42 @@ index 60958afebc41..d172e35fbd9a 100644
 +        }
 +#endif
 +
++#define HUF_4X1_DECODE_SYMBOL(_stream, _symbol)                 \
++    {                                                           \
++        int const index = (int)(bits[(_stream)] >> 53);         \
++        int const entry = (int)dtable[index];                   \
++        bits[(_stream)] <<= (entry & 0x3F);                     \
++        op[(_stream)][(_symbol)] = (BYTE)((entry >> 8) & 0xFF); \
++    }
++
++#define HUF_4X1_RELOAD_STREAM(_stream)                              \
++    {                                                               \
++        int const ctz = ZSTD_countTrailingZeros64(bits[(_stream)]); \
++        int const nbBits = ctz & 7;                                 \
++        int const nbBytes = ctz >> 3;                               \
++        op[(_stream)] += 5;                                         \
++        ip[(_stream)] -= nbBytes;                                   \
++        bits[(_stream)] = MEM_read64(ip[(_stream)]) | 1;            \
++        bits[(_stream)] <<= nbBits;                                 \
++    }
++
++        /* Manually unroll the loop because compilers don't consistently
++         * unroll the inner loops, which destroys performance.
++         */
 +        do {
 +            /* Decode 5 symbols in each of the 4 streams */
-+            for (symbol = 0; symbol < 5; ++symbol) {
-+                for (stream = 0; stream < 4; ++stream) {
-+                    int const index = (int)(bits[stream] >> 53);
-+                    int const entry = (int)dtable[index];
-+                    bits[stream] <<= (entry & 63);
-+                    op[stream][symbol] = (BYTE)((entry >> 8) & 0xFF);
-+                }
-+            }
-+            /* Reload the bitstreams */
-+            for (stream = 0; stream < 4; ++stream) {
-+                int const ctz = ZSTD_countTrailingZeros64(bits[stream]);
-+                int const nbBits = ctz & 7;
-+                int const nbBytes = ctz >> 3;
-+                op[stream] += 5;
-+                ip[stream] -= nbBytes;
-+                bits[stream] = MEM_read64(ip[stream]) | 1;
-+                bits[stream] <<= nbBits;
-+            }
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 1)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 2)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 3)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X1_DECODE_SYMBOL, 4)
++
++            /* Reload each of the 4 the bitstreams */
++            HUF_4X_FOR_EACH_STREAM(HUF_4X1_RELOAD_STREAM)
 +        } while (op[3] < olimit);
++
++#undef HUF_4X1_DECODE_SYMBOL
++#undef HUF_4X1_RELOAD_STREAM
 +    }
 +
 +_out:
@@ -11817,7 +11865,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* Our loop guarantees that ip[] >= ilimit and that we haven't
      * overwritten any op[].
-@@ -694,8 +817,7 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
+@@ -694,8 +855,7 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
      (void)iend;
  
      /* finish bit streams one by one. */
@@ -11827,7 +11875,7 @@ index 60958afebc41..d172e35fbd9a 100644
          BYTE* segmentEnd = (BYTE*)dst;
          int i;
          for (i = 0; i < 4; ++i) {
-@@ -712,97 +834,59 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
+@@ -712,97 +872,59 @@ HUF_decompress4X1_usingDTable_internal_bmi2_asm(
      }
  
      /* decoded size */
@@ -11889,13 +11937,13 @@ index 60958afebc41..d172e35fbd9a 100644
 -    if (dtd.tableType != 0) return ERROR(GENERIC);
 -    return HUF_decompress1X1_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
 -}
- 
+-
 -size_t HUF_decompress1X1_DCtx_wksp(HUF_DTable* DCtx, void* dst, size_t dstSize,
 -                                   const void* cSrc, size_t cSrcSize,
 -                                   void* workSpace, size_t wkspSize)
 -{
 -    const BYTE* ip = (const BYTE*) cSrc;
--
+ 
 -    size_t const hSize = HUF_readDTableX1_wksp(DCtx, cSrc, cSrcSize, workSpace, wkspSize);
 -    if (HUF_isError(hSize)) return hSize;
 -    if (hSize >= cSrcSize) return ERROR(srcSize_wrong);
@@ -11913,7 +11961,7 @@ index 60958afebc41..d172e35fbd9a 100644
 -    DTableDesc dtd = HUF_getDTableDesc(DTable);
 -    if (dtd.tableType != 0) return ERROR(GENERIC);
 -    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
-+    if (!(flags & HUF_flags_disableFast)) {
++    if (HUF_ENABLE_FAST_DECODE && !(flags & HUF_flags_disableFast)) {
 +        size_t const ret = HUF_decompress4X1_usingDTable_internal_fast(dst, dstSize, cSrc, cSrcSize, DTable, loopFn);
 +        if (ret != 0)
 +            return ret;
@@ -11936,21 +11984,21 @@ index 60958afebc41..d172e35fbd9a 100644
      ip += hSize; cSrcSize -= hSize;
  
 -    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, bmi2);
-+    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
- }
- 
+-}
+-
 -size_t HUF_decompress4X1_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
 -                                   const void* cSrc, size_t cSrcSize,
 -                                   void* workSpace, size_t wkspSize)
 -{
 -    return HUF_decompress4X1_DCtx_wksp_bmi2(dctx, dst, dstSize, cSrc, cSrcSize, workSpace, wkspSize, 0);
--}
--
++    return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
+ }
+ 
 -
  #endif /* HUF_FORCE_DECOMPRESS_X2 */
  
  
-@@ -985,7 +1069,7 @@ static void HUF_fillDTableX2Level2(HUF_DEltX2* DTable, U32 targetLog, const U32
+@@ -985,7 +1107,7 @@ static void HUF_fillDTableX2Level2(HUF_DEltX2* DTable, U32 targetLog, const U32
  
  static void HUF_fillDTableX2(HUF_DEltX2* DTable, const U32 targetLog,
                             const sortedSymbol_t* sortedList,
@@ -11959,7 +12007,7 @@ index 60958afebc41..d172e35fbd9a 100644
                             const U32 nbBitsBaseline)
  {
      U32* const rankVal = rankValOrigin[0];
-@@ -1040,14 +1124,7 @@ typedef struct {
+@@ -1040,14 +1162,7 @@ typedef struct {
  
  size_t HUF_readDTableX2_wksp(HUF_DTable* DTable,
                         const void* src, size_t srcSize,
@@ -11975,7 +12023,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      U32 tableLog, maxW, nbSymbols;
      DTableDesc dtd = HUF_getDTableDesc(DTable);
-@@ -1069,7 +1146,7 @@ size_t HUF_readDTableX2_wksp_bmi2(HUF_DTable* DTable,
+@@ -1069,7 +1184,7 @@ size_t HUF_readDTableX2_wksp_bmi2(HUF_DTable* DTable,
      if (maxTableLog > HUF_TABLELOG_MAX) return ERROR(tableLog_tooLarge);
      /* ZSTD_memset(weightList, 0, sizeof(weightList)); */  /* is not necessary, even though some analyzer complain ... */
  
@@ -11984,7 +12032,7 @@ index 60958afebc41..d172e35fbd9a 100644
      if (HUF_isError(iSize)) return iSize;
  
      /* check result */
-@@ -1240,6 +1317,11 @@ HUF_decompress1X2_usingDTable_internal_body(
+@@ -1240,6 +1355,11 @@ HUF_decompress1X2_usingDTable_internal_body(
      /* decoded size */
      return dstSize;
  }
@@ -11996,7 +12044,7 @@ index 60958afebc41..d172e35fbd9a 100644
  FORCE_INLINE_TEMPLATE size_t
  HUF_decompress4X2_usingDTable_internal_body(
            void* dst,  size_t dstSize,
-@@ -1280,8 +1362,9 @@ HUF_decompress4X2_usingDTable_internal_body(
+@@ -1280,8 +1400,9 @@ HUF_decompress4X2_usingDTable_internal_body(
          DTableDesc const dtd = HUF_getDTableDesc(DTable);
          U32 const dtLog = dtd.tableLog;
  
@@ -12008,7 +12056,7 @@ index 60958afebc41..d172e35fbd9a 100644
          CHECK_F( BIT_initDStream(&bitD1, istart1, length1) );
          CHECK_F( BIT_initDStream(&bitD2, istart2, length2) );
          CHECK_F( BIT_initDStream(&bitD3, istart3, length3) );
-@@ -1366,36 +1449,177 @@ size_t HUF_decompress4X2_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
+@@ -1366,36 +1487,178 @@ size_t HUF_decompress4X2_usingDTable_internal_bmi2(void* dst, size_t dstSize, vo
  }
  #endif
  
@@ -12024,9 +12072,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
 -HUF_ASM_DECL void HUF_decompress4X2_usingDTable_internal_bmi2_asm_loop(HUF_DecompressAsmArgs* args) ZSTDLIB_HIDDEN;
 +HUF_ASM_DECL void HUF_decompress4X2_usingDTable_internal_fast_asm_loop(HUF_DecompressFastArgs* args) ZSTDLIB_HIDDEN;
- 
--static HUF_ASM_X86_64_BMI2_ATTRS size_t
--HUF_decompress4X2_usingDTable_internal_bmi2_asm(
++
 +#endif
 +
 +static HUF_FAST_BMI2_ATTRS
@@ -12055,7 +12101,6 @@ index 60958afebc41..d172e35fbd9a 100644
 +    for (;;) {
 +        BYTE* olimit;
 +        int stream;
-+        int symbol;
 +
 +        /* Assert loop preconditions */
 +#ifndef NDEBUG
@@ -12112,53 +12157,57 @@ index 60958afebc41..d172e35fbd9a 100644
 +        }
 +#endif
 +
++#define HUF_4X2_DECODE_SYMBOL(_stream, _decode3)        \
++    if ((_decode3) || (_stream) != 3) {                 \
++        int const index = (int)(bits[(_stream)] >> 53); \
++        HUF_DEltX2 const entry = dtable[index];         \
++        MEM_write16(op[(_stream)], entry.sequence);     \
++        bits[(_stream)] <<= (entry.nbBits) & 0x3F;      \
++        op[(_stream)] += (entry.length);                \
++    }
++
++#define HUF_4X2_RELOAD_STREAM(_stream)                                  \
++    {                                                                   \
++        HUF_4X2_DECODE_SYMBOL(3, 1)                                     \
++        {                                                               \
++            int const ctz = ZSTD_countTrailingZeros64(bits[(_stream)]); \
++            int const nbBits = ctz & 7;                                 \
++            int const nbBytes = ctz >> 3;                               \
++            ip[(_stream)] -= nbBytes;                                   \
++            bits[(_stream)] = MEM_read64(ip[(_stream)]) | 1;            \
++            bits[(_stream)] <<= nbBits;                                 \
++        }                                                               \
++    }
++
++        /* Manually unroll the loop because compilers don't consistently
++         * unroll the inner loops, which destroys performance.
++         */
 +        do {
-+            /* Do 5 table lookups for each of the first 3 streams */
-+            for (symbol = 0; symbol < 5; ++symbol) {
-+                for (stream = 0; stream < 3; ++stream) {
-+                    int const index = (int)(bits[stream] >> 53);
-+                    HUF_DEltX2 const entry = dtable[index];
-+                    MEM_write16(op[stream], entry.sequence);
-+                    bits[stream] <<= (entry.nbBits);
-+                    op[stream] += (entry.length);
-+                }
-+            }
-+            /* Do 1 table lookup from the final stream */
-+            {
-+                int const index = (int)(bits[3] >> 53);
-+                HUF_DEltX2 const entry = dtable[index];
-+                MEM_write16(op[3], entry.sequence);
-+                bits[3] <<= (entry.nbBits);
-+                op[3] += (entry.length);
-+            }
-+            /* Do 4 table lookups from the final stream & reload bitstreams */
-+            for (stream = 0; stream < 4; ++stream) {
-+                /* Do a table lookup from the final stream.
-+                 * This is interleaved with the reloading to reduce register
-+                 * pressure. This shouldn't be necessary, but compilers can
-+                 * struggle with codegen with high register pressure.
-+                 */
-+                {
-+                    int const index = (int)(bits[3] >> 53);
-+                    HUF_DEltX2 const entry = dtable[index];
-+                    MEM_write16(op[3], entry.sequence);
-+                    bits[3] <<= (entry.nbBits);
-+                    op[3] += (entry.length);
-+                }
-+                /* Reload the bistreams. The final bitstream must be reloaded
-+                 * after the 5th symbol was decoded.
-+                 */
-+                {
-+                    int const ctz = ZSTD_countTrailingZeros64(bits[stream]);
-+                    int const nbBits = ctz & 7;
-+                    int const nbBytes = ctz >> 3;
-+                    ip[stream] -= nbBytes;
-+                    bits[stream] = MEM_read64(ip[stream]) | 1;
-+                    bits[stream] <<= nbBits;
-+                }
-+            }
++            /* Decode 5 symbols from each of the first 3 streams.
++             * The final stream will be decoded during the reload phase
++             * to reduce register pressure.
++             */
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++            HUF_4X_FOR_EACH_STREAM_WITH_VAR(HUF_4X2_DECODE_SYMBOL, 0)
++
++            /* Decode one symbol from the final stream */
++            HUF_4X2_DECODE_SYMBOL(3, 1)
++
++            /* Decode 4 symbols from the final stream & reload bitstreams.
++             * The final stream is reloaded last, meaning that all 5 symbols
++             * are decoded from the final stream before it is reloaded.
++             */
++            HUF_4X_FOR_EACH_STREAM(HUF_4X2_RELOAD_STREAM)
 +        } while (op[3] < olimit);
 +    }
+ 
+-static HUF_ASM_X86_64_BMI2_ATTRS size_t
+-HUF_decompress4X2_usingDTable_internal_bmi2_asm(
++#undef HUF_4X2_DECODE_SYMBOL
++#undef HUF_4X2_RELOAD_STREAM
 +
 +_out:
 +
@@ -12197,7 +12246,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
      /* note : op4 already verified within main loop */
      assert(args.ip[0] >= iend);
-@@ -1426,91 +1650,72 @@ HUF_decompress4X2_usingDTable_internal_bmi2_asm(
+@@ -1426,91 +1689,72 @@ HUF_decompress4X2_usingDTable_internal_bmi2_asm(
      /* decoded size */
      return dstSize;
  }
@@ -12238,7 +12287,7 @@ index 60958afebc41..d172e35fbd9a 100644
 +    }
  #endif
 +
-+    if (!(flags & HUF_flags_disableFast)) {
++    if (HUF_ENABLE_FAST_DECODE && !(flags & HUF_flags_disableFast)) {
 +        size_t const ret = HUF_decompress4X2_usingDTable_internal_fast(dst, dstSize, cSrc, cSrcSize, DTable, loopFn);
 +        if (ret != 0)
 +            return ret;
@@ -12273,8 +12322,9 @@ index 60958afebc41..d172e35fbd9a 100644
      ip += hSize; cSrcSize -= hSize;
  
 -    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, /* bmi2 */ 0);
--}
--
++    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, flags);
+ }
+ 
 -
 -size_t HUF_decompress4X2_usingDTable(
 -          void* dst,  size_t dstSize,
@@ -12284,9 +12334,8 @@ index 60958afebc41..d172e35fbd9a 100644
 -    DTableDesc dtd = HUF_getDTableDesc(DTable);
 -    if (dtd.tableType != 1) return ERROR(GENERIC);
 -    return HUF_decompress4X2_usingDTable_internal(dst, dstSize, cSrc, cSrcSize, DTable, /* bmi2 */ 0);
-+    return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, flags);
- }
- 
+-}
+-
 -static size_t HUF_decompress4X2_DCtx_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t dstSize,
 +static size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
                                     const void* cSrc, size_t cSrcSize,
@@ -12317,7 +12366,7 @@ index 60958afebc41..d172e35fbd9a 100644
  #endif /* HUF_FORCE_DECOMPRESS_X1 */
  
  
-@@ -1518,44 +1723,6 @@ size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
+@@ -1518,44 +1762,6 @@ size_t HUF_decompress4X2_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
  /* Universal decompression selectors */
  /* ***********************************/
  
@@ -12362,7 +12411,7 @@ index 60958afebc41..d172e35fbd9a 100644
  
  #if !defined(HUF_FORCE_DECOMPRESS_X1) && !defined(HUF_FORCE_DECOMPRESS_X2)
  typedef struct { U32 tableTime; U32 decode256Time; } algo_time_t;
-@@ -1610,36 +1777,9 @@ U32 HUF_selectDecoder (size_t dstSize, size_t cSrcSize)
+@@ -1610,36 +1816,9 @@ U32 HUF_selectDecoder (size_t dstSize, size_t cSrcSize)
  #endif
  }
  
@@ -12400,7 +12449,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* validation checks */
      if (dstSize == 0) return ERROR(dstSize_tooSmall);
-@@ -1652,71 +1792,71 @@ size_t HUF_decompress1X_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
+@@ -1652,71 +1831,71 @@ size_t HUF_decompress1X_DCtx_wksp(HUF_DTable* dctx, void* dst, size_t dstSize,
          (void)algoNb;
          assert(algoNb == 0);
          return HUF_decompress1X1_DCtx_wksp(dctx, dst, dstSize, cSrc,
@@ -12490,7 +12539,7 @@ index 60958afebc41..d172e35fbd9a 100644
  {
      /* validation checks */
      if (dstSize == 0) return ERROR(dstSize_tooSmall);
-@@ -1726,15 +1866,14 @@ size_t HUF_decompress4X_hufOnly_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t ds
+@@ -1726,15 +1905,14 @@ size_t HUF_decompress4X_hufOnly_wksp_bmi2(HUF_DTable* dctx, void* dst, size_t ds
  #if defined(HUF_FORCE_DECOMPRESS_X1)
          (void)algoNb;
          assert(algoNb == 0);
@@ -12511,7 +12560,7 @@ index 60958afebc41..d172e35fbd9a 100644
  }
 -
 diff --git a/lib/zstd/decompress/zstd_ddict.c b/lib/zstd/decompress/zstd_ddict.c
-index dbbc7919de53..30ef65e1ab5c 100644
+index dbbc7919de534..30ef65e1ab5ca 100644
 --- a/lib/zstd/decompress/zstd_ddict.c
 +++ b/lib/zstd/decompress/zstd_ddict.c
 @@ -1,5 +1,6 @@
@@ -12553,7 +12602,7 @@ index dbbc7919de53..30ef65e1ab5c 100644
 +    return ddict->dictID;
  }
 diff --git a/lib/zstd/decompress/zstd_ddict.h b/lib/zstd/decompress/zstd_ddict.h
-index 8c1a79d666f8..de459a0dacd1 100644
+index 8c1a79d666f89..de459a0dacd19 100644
 --- a/lib/zstd/decompress/zstd_ddict.h
 +++ b/lib/zstd/decompress/zstd_ddict.h
 @@ -1,5 +1,6 @@
@@ -12565,7 +12614,7 @@ index 8c1a79d666f8..de459a0dacd1 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/decompress/zstd_decompress.c b/lib/zstd/decompress/zstd_decompress.c
-index 6b3177c94711..03dbdf39109f 100644
+index 6b3177c947114..03dbdf39109f9 100644
 --- a/lib/zstd/decompress/zstd_decompress.c
 +++ b/lib/zstd/decompress/zstd_decompress.c
 @@ -1,5 +1,6 @@
@@ -13122,7 +13171,7 @@ index 6b3177c94711..03dbdf39109f 100644
 +    }
  }
 diff --git a/lib/zstd/decompress/zstd_decompress_block.c b/lib/zstd/decompress/zstd_decompress_block.c
-index c1913b8e7c89..9f5577e5bc19 100644
+index c1913b8e7c897..9f5577e5bc19d 100644
 --- a/lib/zstd/decompress/zstd_decompress_block.c
 +++ b/lib/zstd/decompress/zstd_decompress_block.c
 @@ -1,5 +1,6 @@
@@ -13659,7 +13708,7 @@ index c1913b8e7c89..9f5577e5bc19 100644
 +    return ZSTD_decompressBlock_deprecated(dctx, dst, dstCapacity, src, srcSize);
 +}
 diff --git a/lib/zstd/decompress/zstd_decompress_block.h b/lib/zstd/decompress/zstd_decompress_block.h
-index 3d2d57a5d25a..5888e6cc788b 100644
+index 3d2d57a5d25a7..5888e6cc788b5 100644
 --- a/lib/zstd/decompress/zstd_decompress_block.h
 +++ b/lib/zstd/decompress/zstd_decompress_block.h
 @@ -1,5 +1,6 @@
@@ -13682,7 +13731,7 @@ index 3d2d57a5d25a..5888e6cc788b 100644
  
  #endif /* ZSTD_DEC_BLOCK_H */
 diff --git a/lib/zstd/decompress/zstd_decompress_internal.h b/lib/zstd/decompress/zstd_decompress_internal.h
-index 98102edb6a83..32f79fb2873d 100644
+index 98102edb6a832..32f79fb2873df 100644
 --- a/lib/zstd/decompress/zstd_decompress_internal.h
 +++ b/lib/zstd/decompress/zstd_decompress_internal.h
 @@ -1,5 +1,6 @@
@@ -13717,7 +13766,7 @@ index 98102edb6a83..32f79fb2873d 100644
      /* streaming */
      ZSTD_dStreamStage streamStage;
 diff --git a/lib/zstd/decompress_sources.h b/lib/zstd/decompress_sources.h
-index a06ca187aab5..8a47eb2a4514 100644
+index a06ca187aab5f..8a47eb2a45145 100644
 --- a/lib/zstd/decompress_sources.h
 +++ b/lib/zstd/decompress_sources.h
 @@ -1,6 +1,6 @@
@@ -13729,7 +13778,7 @@ index a06ca187aab5..8a47eb2a4514 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/zstd_common_module.c b/lib/zstd/zstd_common_module.c
-index 22686e367e6f..466828e35752 100644
+index 22686e367e6f0..466828e357525 100644
 --- a/lib/zstd/zstd_common_module.c
 +++ b/lib/zstd/zstd_common_module.c
 @@ -1,6 +1,6 @@
@@ -13751,7 +13800,7 @@ index 22686e367e6f..466828e35752 100644
  MODULE_LICENSE("Dual BSD/GPL");
  MODULE_DESCRIPTION("Zstd Common");
 diff --git a/lib/zstd/zstd_compress_module.c b/lib/zstd/zstd_compress_module.c
-index 04e1b5c01d9b..8ecf43226af2 100644
+index 04e1b5c01d9b6..8ecf43226af2f 100644
 --- a/lib/zstd/zstd_compress_module.c
 +++ b/lib/zstd/zstd_compress_module.c
 @@ -1,6 +1,6 @@
@@ -13763,7 +13812,7 @@ index 04e1b5c01d9b..8ecf43226af2 100644
   *
   * This source code is licensed under both the BSD-style license (found in the
 diff --git a/lib/zstd/zstd_decompress_module.c b/lib/zstd/zstd_decompress_module.c
-index f4ed952ed485..eb1c49e69722 100644
+index f4ed952ed4852..7d31518e9d5ab 100644
 --- a/lib/zstd/zstd_decompress_module.c
 +++ b/lib/zstd/zstd_decompress_module.c
 @@ -1,6 +1,6 @@
@@ -13774,6 +13823,15 @@ index f4ed952ed485..eb1c49e69722 100644
   * All rights reserved.
   *
   * This source code is licensed under both the BSD-style license (found in the
+@@ -77,7 +77,7 @@ EXPORT_SYMBOL(zstd_init_dstream);
+ 
+ size_t zstd_reset_dstream(zstd_dstream *dstream)
+ {
+-	return ZSTD_resetDStream(dstream);
++	return ZSTD_DCtx_reset(dstream, ZSTD_reset_session_only);
+ }
+ EXPORT_SYMBOL(zstd_reset_dstream);
+ 
 -- 
-2.43.0.rc2
+2.43.0
 
