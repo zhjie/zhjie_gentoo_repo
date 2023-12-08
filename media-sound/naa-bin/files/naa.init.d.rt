@@ -5,16 +5,19 @@
 
 description="Network Audio Daemon"
 
+export SSD_NICELEVEL="-10"
+export LD_BIND_NOW=1
+
 user="root:root"
 logfile="/tmp/networkaudiod.log"
+
 command="chrt"
 command_args="
-        -r 96 /usr/sbin/networkaudiod
+        -r 1 /usr/sbin/networkaudiod
 "
 pidfile="/run/networkaudiod.pid"
 start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user}"
 
-#need net
 depend() {
     use alsasound
     after bootmisc
