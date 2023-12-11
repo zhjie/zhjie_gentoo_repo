@@ -19,7 +19,7 @@ SRC_URI="
 
 LICENSE="Signalyst"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~arm64"
+KEYWORDS="amd64 arm arm64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd +rt"
