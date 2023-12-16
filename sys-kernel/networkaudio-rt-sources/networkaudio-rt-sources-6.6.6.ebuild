@@ -4,11 +4,11 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="7"
+K_GENPATCHES_VER="8"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="15"
-MINOR_VERSION="0"
+RT_VERSION="16"
+MINOR_VERSION="5"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
@@ -21,14 +21,14 @@ EXTRAVERSION="-networkaudio-rt"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
-        https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+        https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
 "
 
 KV_FULL="${KV_FULL}-rt"
 S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
-	unpack patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+	unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 
 	UNIPATCH_LIST_DEFAULT=""
@@ -278,6 +278,16 @@ ARM__Allow_to_enable_RT.patch
 ARM64__Allow_to_enable_RT.patch
 
 ###########################################################################
+# POWERPC
+###########################################################################
+powerpc__traps__Use_PREEMPT_RT.patch
+powerpc_pseries_iommu__Use_a_locallock_instead_local_irq_save.patch
+powerpc-pseries-Select-the-generic-memory-allocator.patch
+powerpc_kvm__Disable_in-kernel_MPIC_emulation_for_PREEMPT_RT.patch
+powerpc_stackprotector__work_around_stack-guard_init_from_atomic.patch
+POWERPC__Allow_to_enable_RT.patch
+
+###########################################################################
 # RISC-V
 ###########################################################################
 RISC-V-Probe-misaligned-access-speed-in-parallel.patch
@@ -290,7 +300,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-# Add_localversion_for_-RT_release.patch
+#Add_localversion_for_-RT_release.patch
 	)
 
 	for p in "${rt_patches[@]}"; do

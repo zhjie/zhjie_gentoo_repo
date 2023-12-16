@@ -4,9 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
-K_EXP_GENPATCHES_NOUSE="1"
-# K_NODRYRUN="1"
+K_GENPATCHES_VER="8"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
