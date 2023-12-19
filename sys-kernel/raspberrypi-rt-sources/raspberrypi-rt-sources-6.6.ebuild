@@ -13,8 +13,8 @@ K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="9"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="16"
-MINOR_VERSION="5"
+RT_VERSION="18"
+MINOR_VERSION="7"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
@@ -59,7 +59,7 @@ src_unpack() {
 
 src_prepare() {
 	cp -vf "${FILESDIR}/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
-	eapply "${FILESDIR}/Add-extra-version-networkaudio-rt.patch"
+	eapply "${FILESDIR}/add-extra-version-networkaudio-rt.patch"
 
 	local p rt_patches=(
 # Applied upstream
@@ -212,46 +212,56 @@ preempt-Put-preempt_enable-within-an-instrumentation.patch
 0082-printk-nbcon-Allow-drivers-to-mark-unsafe-regions-an.patch
 0083-printk-fix-illegal-pbufs-access-for-CONFIG_PRINTK.patch
 0084-printk-Reduce-pr_flush-pooling-time.patch
-0085-printk-ringbuffer-Do-not-skip-non-finalized-records-.patch
-0086-printk-ringbuffer-Clarify-special-lpos-values.patch
-0087-printk-For-suppress_panic_printk-check-for-other-CPU.patch
-0088-printk-Add-this_cpu_in_panic.patch
-0089-printk-ringbuffer-Cleanup-reader-terminology.patch
-0090-printk-Wait-for-all-reserved-records-with-pr_flush.patch
-0091-printk-Skip-non-finalized-records-in-panic.patch
-0092-printk-Disable-passing-console-lock-owner-completely.patch
-0093-printk-Avoid-non-panic-CPUs-flooding-ringbuffer.patch
-0094-printk-Add-sparse-notation-to-console_srcu-locking.patch
-0095-printk-nbcon-Explicitly-release-ownership-on-failed-.patch
-0096-printk-nbcon-Implement-processing-in-port-lock-wrapp.patch
-0097-printk-Make-console_is_usable-available-to-nbcon.patch
-0098-printk-Let-console_is_usable-handle-nbcon.patch
-0099-printk-Add-flags-argument-for-console_is_usable.patch
-0100-printk-nbcon-Provide-function-to-flush-using-write_a.patch
-0101-printk-Track-registered-boot-consoles.patch
-0102-printk-nbcon-Add-nbcon-console-flushing-using-write_.patch
-0103-printk-nbcon-Use-nbcon-consoles-in-console_flush_all.patch
-0104-printk-nbcon-Add-unsafe-flushing-on-panic.patch
-0105-printk-nbcon-Implement-emergency-sections.patch
-0106-panic-Mark-emergency-section-in-warn.patch
-0107-panic-Mark-emergency-section-in-oops.patch
-0108-rcu-Mark-emergency-section-in-rcu-stalls.patch
-0109-lockdep-Mark-emergency-section-in-lockdep-splats.patch
-0110-printk-nbcon-Introduce-printing-kthreads.patch
-0111-printk-nbcon-Add-context-to-console_is_usable.patch
-0112-printk-nbcon-Add-printer-thread-wakeups.patch
-0113-printk-nbcon-Stop-threads-on-shutdown-reboot.patch
-0114-atomic-print-in-printk-context-sometimes.patch
-0115-printk-Track-registration-of-console-types.patch
-0116-proc-Add-nbcon-support-for-proc-consoles.patch
-0117-tty-sysfs-Add-nbcon-support-for-active.patch
-0118-printk-nbcon-Provide-function-to-reacquire-ownership.patch
-0119-serial-8250-Implement-nbcon-console.patch
-0120-printk-Check-printk_deferred_enter-_exit-usage.patch
-0121-printk-Add-kthread-for-all-legacy-consoles.patch
-0122-serial-8250-revert-drop-lockdep-annotation-from-seri.patch
-
-printk-ringbuffer-Extend-the-sequence-number-properl.patch
+0085-printk-nbcon-Relocate-32bit-seq-macros.patch
+0086-printk-Adjust-mapping-for-32bit-seq-macros.patch
+0087-printk-Use-prb_first_seq-as-base-for-32bit-seq-macro.patch
+0088-printk-ringbuffer-Do-not-skip-non-finalized-records-.patch
+0089-printk-ringbuffer-Clarify-special-lpos-values.patch
+0090-printk-For-suppress_panic_printk-check-for-other-CPU.patch
+0091-printk-Add-this_cpu_in_panic.patch
+0092-printk-ringbuffer-Cleanup-reader-terminology.patch
+0093-printk-Wait-for-all-reserved-records-with-pr_flush.patch
+0094-printk-ringbuffer-Skip-non-finalized-records-in-pani.patch
+0095-printk-ringbuffer-Consider-committed-as-finalized-in.patch
+0096-printk-Disable-passing-console-lock-owner-completely.patch
+0097-printk-Avoid-non-panic-CPUs-writing-to-ringbuffer.patch
+0098-panic-Flush-kernel-log-buffer-at-the-end.patch
+0099-printk-Consider-nbcon-boot-consoles-on-seq-init.patch
+0100-printk-Add-sparse-notation-to-console_srcu-locking.patch
+0101-printk-nbcon-Ensure-ownership-release-on-failed-emit.patch
+0102-printk-Check-printk_deferred_enter-_exit-usage.patch
+0103-printk-nbcon-Implement-processing-in-port-lock-wrapp.patch
+0104-printk-nbcon-Add-driver_enter-driver_exit-console-ca.patch
+0105-printk-Make-console_is_usable-available-to-nbcon.patch
+0106-printk-Let-console_is_usable-handle-nbcon.patch
+0107-printk-Add-flags-argument-for-console_is_usable.patch
+0108-printk-nbcon-Provide-function-to-flush-using-write_a.patch
+0109-printk-Track-registered-boot-consoles.patch
+0110-printk-nbcon-Use-nbcon-consoles-in-console_flush_all.patch
+0111-printk-nbcon-Assign-priority-based-on-CPU-state.patch
+0112-printk-nbcon-Add-unsafe-flushing-on-panic.patch
+0113-printk-Avoid-console_lock-dance-if-no-legacy-or-boot.patch
+0114-printk-Track-nbcon-consoles.patch
+0115-printk-Coordinate-direct-printing-in-panic.patch
+0116-printk-nbcon-Implement-emergency-sections.patch
+0117-panic-Mark-emergency-section-in-warn.patch
+0118-panic-Mark-emergency-section-in-oops.patch
+0119-rcu-Mark-emergency-section-in-rcu-stalls.patch
+0120-lockdep-Mark-emergency-section-in-lockdep-splats.patch
+0121-printk-nbcon-Introduce-printing-kthreads.patch
+0122-printk-Atomic-print-in-printk-context-on-shutdown.patch
+0123-printk-nbcon-Add-context-to-console_is_usable.patch
+0124-printk-nbcon-Add-printer-thread-wakeups.patch
+0125-printk-nbcon-Stop-threads-on-shutdown-reboot.patch
+0126-printk-nbcon-Start-printing-threads.patch
+0127-proc-Add-nbcon-support-for-proc-consoles.patch
+0128-tty-sysfs-Add-nbcon-support-for-active.patch
+0129-printk-nbcon-Provide-function-to-reacquire-ownership.patch
+0130-serial-core-Provide-low-level-functions-to-port-lock.patch
+0131-serial-8250-Switch-to-nbcon-console.patch
+0132-printk-Add-kthread-for-all-legacy-consoles.patch
+0133-serial-8250-revert-drop-lockdep-annotation-from-seri.patch
+0134-printk-Avoid-false-positive-lockdep-report-for-legac.patch
 
 ###########################################################################
 # DRM:
@@ -311,7 +321,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-#Add_localversion_for_-RT_release.patch
+# Add_localversion_for_-RT_release.patch
         )
 
 	for p in "${rt_patches[@]}"; do
