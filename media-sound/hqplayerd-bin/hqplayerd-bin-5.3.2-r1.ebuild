@@ -37,7 +37,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	net-libs/libsoup:2.4
 	x11-libs/cairo
 	dev-libs/libusb-compat
-	media-sound/mpg123
+	media-sound/mpg123-base
 	media-sound/lame
 	>sys-devel/gcc-11.3.0
 	sys-libs/libomp
