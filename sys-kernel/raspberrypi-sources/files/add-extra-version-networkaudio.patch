@@ -5,7 +5,7 @@ index f4e38dc60903..881f357f9be7 100644
 @@ -2,7 +2,7 @@
  VERSION = 6
  PATCHLEVEL = 6
- SUBLEVEL = 9
+ SUBLEVEL = 10
 -EXTRAVERSION =
 +EXTRAVERSION = -networkaudio
  NAME = Hurr durr I'ma ninja sloth

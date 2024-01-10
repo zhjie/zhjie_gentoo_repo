@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="ea98b21fa07ed784721f1bd70aba1b6dfd56f912"
+EGIT_COMMIT="1e563891ae1481ad56a757a7e4aa58c8146e3a5c"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="11"
+K_GENPATCHES_VER="12"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
@@ -23,7 +23,7 @@ EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}"
 
 KEYWORDS="amd64 arm arm64"
-IUSE="+naa +cachy +xanmod bmq"
+IUSE="+naa +cachy +xanmod +bmq"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
@@ -58,7 +58,7 @@ src_prepare() {
 
 	# bmq patch
         if use bmq; then
-                eapply "${FILESDIR}/sched-prjc-v6.6-r1.patch"
+                eapply "${FILESDIR}/0001-prjc.patch"
         fi
 
 	# cachy patch

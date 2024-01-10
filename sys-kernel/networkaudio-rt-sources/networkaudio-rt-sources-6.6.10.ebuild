@@ -1,14 +1,8 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="8"
-K_BASE_VER="6.6"
-K_FROM_GIT="yes"
 ETYPE="sources"
-CKV="${PVR/-r/-git}"
-EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="1e563891ae1481ad56a757a7e4aa58c8146e3a5c"
-
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="12"
 
@@ -16,51 +10,39 @@ RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
 RT_VERSION="19"
 MINOR_VERSION="10"
 
-# only use this if it's not an _rc/_pre release
-[ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
+HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
+LICENSE+=" CDDL"
+KEYWORDS="amd64"
+IUSE="+naa"
 
-inherit kernel-2 git-r3
+inherit kernel-2
 detect_version
+EXTRAVERSION="-networkaudio-rt"
 
-DESCRIPTION="The very latest -git version of the Linux kernel"
-HOMEPAGE="https://www.kernel.org"
-EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
-SRC_URI="${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
+DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
+SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
+        https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
 "
 
-KEYWORDS="amd64 arm arm64"
-IUSE="+naa +cachy +xanmod"
-
-RDEPEND=""
-DEPEND="${RDEPEND}
-	>=sys-devel/patch-2.7.6-r4"
-
-EXTRAVERSION="-raspberrypi-rt"
-S="${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
+KV_FULL="${KV_FULL}-rt"
+S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
-	git-r3_src_unpack
-	mv "${WORKDIR}/${PF}" "${S}"
-
-	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
-        unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
-
-	rm -rfv "${WORKDIR}"/10*.patch
-	rm -rfv "${WORKDIR}"/1515_selinux-fix-handling-of-empty-opts.patch
-	rm -rfv "${S}/.git"
-	mkdir "${WORKDIR}"/genpatch
-	mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
-
-	unpack patches-${K_BASE_VER}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
-
+	unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
+
+	UNIPATCH_LIST_DEFAULT=""
+#        UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 5010_enable-cpu-optimizations-universal.patch"
+
+        if use naa; then
+	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
+        fi
+
+	kernel-2_src_unpack
 }
 
 src_prepare() {
-	cp -vf "${FILESDIR}/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
-	eapply "${FILESDIR}/add-extra-version-networkaudio-rt.patch"
-
+	# rt patch
 	local p rt_patches=(
 # Applied upstream
 
@@ -283,21 +265,6 @@ Revert-drm-i915-Depend-on-PREEMPT_RT.patch
 ###########################################################################
 PREEMPT_AUTO.patch
 
-###########################################################################
-# ARM/ARM64
-###########################################################################
-0001-arm-Disable-jump-label-on-PREEMPT_RT.patch
-ARM__enable_irq_in_translation_section_permission_fault_handlers.patch
-# arm64-signal-Use-ARCH_RT_DELAYS_SIGNAL_SEND.patch
-tty_serial_omap__Make_the_locking_RT_aware.patch
-tty_serial_pl011__Make_the_locking_work_on_RT.patch
-0001-ARM-vfp-Provide-vfp_lock-for-VFP-locking.patch
-0002-ARM-vfp-Use-vfp_lock-in-vfp_sync_hwstate.patch
-0003-ARM-vfp-Use-vfp_lock-in-vfp_support_entry.patch
-0004-ARM-vfp-Move-sending-signals-outside-of-vfp_lock-ed-.patch
-ARM__Allow_to_enable_RT.patch
-ARM64__Allow_to_enable_RT.patch
-
 # Sysfs file vs uname() -v
 sysfs__Add__sys_kernel_realtime_entry.patch
 
@@ -305,48 +272,46 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 # RT release version
 ###########################################################################
 # Add_localversion_for_-RT_release.patch
-        )
+	)
 
 	for p in "${rt_patches[@]}"; do
-		eapply "${WORKDIR}/rtpatch/${p}"
-        done
-
-	eapply "${FILESDIR}/automagic-arm64.patch"
-
-	# genpatch
-	eapply "${WORKDIR}"/genpatch/*.patch
-
-	# naa patch
-	if use naa; then
-		eapply "${FILESDIR}"/naa/*.patch
-	fi
+	eapply "${WORKDIR}/rtpatch/${p}"
+	done
 
 	# cachy patch
-        if use cachy; then
-		eapply "${FILESDIR}/0001-cachyos-base-all.patch"
-		eapply "${FILESDIR}/0001-high-hz.patch"
-		eapply "${FILESDIR}/0001-lrng.patch"
-	fi
+	eapply "${FILESDIR}/cachy/6.6/all/0001-cachyos-base-all.patch"
+	eapply "${FILESDIR}/cachy/6.6/misc/0001-lrng.patch"
+
+	eapply "${FILESDIR}/0001-high-hz.patch"
 
 	# xanmod patch
-	if use xanmod; then
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0004-locking-rwsem-spin-faster.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/intel/0004-locking-rwsem-spin-faster.patch"
 
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
-                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-                # eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
-		eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	fi
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+	# eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0012-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+	eapply "${FILESDIR}/xanmod/linux-6.6.y-xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
 
         eapply_user
+}
+
+pkg_postinst() {
+	elog "The XanMod team strongly suggests the use of updated CPU microcodes with its"
+	elog "kernels. For details, see https://wiki.gentoo.org/wiki/Microcode ."
+	kernel-2_pkg_postinst
 }
