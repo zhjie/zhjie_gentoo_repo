@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="2256ccc516f0e58b126a47851ed6f3f5fab13f83"
+EGIT_COMMIT="8f7263f13b8eeab5db17fcb013092257b284bfde"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="14"
+K_GENPATCHES_VER="15"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
