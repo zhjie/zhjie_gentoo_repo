@@ -58,11 +58,11 @@ multilib_src_configure() {
 		-Ddwrite=disabled
 		$(meson_feature fontconfig)
 		$(meson_feature fontconfig freetype)
-		$(meson_feature fontconfig png)
 		$(meson_feature aqua quartz)
 		$(meson_feature X tee)
 		$(meson_feature X xcb)
 		$(meson_feature X xlib)
+		-Dpng=enabled
 		-Dxlib-xcb=disabled
 		-Dzlib=enabled
 
