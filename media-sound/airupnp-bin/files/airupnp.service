@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target  
 
 [Service]  
-ExecStart=/usr/bin/airupnp -z -x /var/lib/airupnp/airupnp.xml   
+ExecStart=/usr/bin/airupnp -Z
 Restart=on-failure  
 RestartSec=30  
 
