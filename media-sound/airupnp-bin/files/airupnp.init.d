@@ -8,7 +8,7 @@ description="AirConnect: Send audio to UPnP players using AirPlay"
 user="root:root"
 logfile="/tmp/airupnp.log"
 command="/usr/bin/airupnp"
-command_args=""
+command_args="-Z"
 pidfile="/run/airupnp.pid"
 start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user}"
 
@@ -18,6 +18,5 @@ depend() {
 }
 
 start_pre() {
-    mkdir -p /var/lib/airupnp
     checkpath --file --owner $user --mode 0644 $logfile
 }
