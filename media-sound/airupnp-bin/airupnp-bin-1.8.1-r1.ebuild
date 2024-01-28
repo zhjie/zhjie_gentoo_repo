@@ -12,20 +12,24 @@ SRC_URI="https://github.com/philippe44/AirConnect/raw/f907d6414751530f36e78f2066
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="systemd"
+IUSE="systemd static"
 
 DEPEND="systemd? ( sys-apps/systemd )"
 
 src_unpack() {
 	ls "${WORKDIR}/"
-	mkdir "${WORKDIR}/${PF}"
-	cd "${WORKDIR}/${PF}"
+	mkdir "${WORKDIR}/${P}"
+	cd "${WORKDIR}/${P}"
 	unpack ${A}
 	ls "${WORKDIR}/"
 }
 
 src_install() {
-        newbin "$WORKDIR/${PF}"/airupnp-linux-x86_64 airupnp || die
+	if use static ; then
+		newbin "$WORKDIR/${P}"/airupnp-linux-x86_64-static airupnp || die
+	else
+	        newbin "$WORKDIR/${P}"/airupnp-linux-x86_64 airupnp || die
+	fi
 
         if use systemd ; then
 		systemd_dounit "${FILESDIR}"/airupnp.service
