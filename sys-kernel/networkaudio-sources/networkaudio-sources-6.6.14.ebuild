@@ -39,11 +39,11 @@ src_prepare() {
 	if use bmq; then
 		eapply "${FILESDIR}/bmq/sched-prjc-20231205-v6.6-r1.patch"
 		eapply "${FILESDIR}/bmq/sched-prjc-20231228-implement-missing-CPU-files-stubs-for-cgroups-v1-and-v2.patch"
-		eapply "${FILESDIR}/bmq/0001-BMQ-Priority-Squeeze.patch"
-		eapply "${FILESDIR}/bmq/0002-workqueue-Implement-non-strict-affinity-scope.patch"
-		eapply "${FILESDIR}/bmq/0003-add-WF_CURRENT_CPU-and-externise-ttwu.patch"
-		eapply "${FILESDIR}/bmq/0004-add-a-few-helpers-to-wake-up-tasks.patch"
-		eapply "${FILESDIR}/bmq/0005-Modify-initial-boot-task-idle-setup.patch"
+#		eapply "${FILESDIR}/bmq/0001-BMQ-Priority-Squeeze.patch"
+#		eapply "${FILESDIR}/bmq/0002-workqueue-Implement-non-strict-affinity-scope.patch"
+#		eapply "${FILESDIR}/bmq/0003-add-WF_CURRENT_CPU-and-externise-ttwu.patch"
+#		eapply "${FILESDIR}/bmq/0004-add-a-few-helpers-to-wake-up-tasks.patch"
+#		eapply "${FILESDIR}/bmq/0005-Modify-initial-boot-task-idle-setup.patch"
 	fi
 
 	# xanmod patch
