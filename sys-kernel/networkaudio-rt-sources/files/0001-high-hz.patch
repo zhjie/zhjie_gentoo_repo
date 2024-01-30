@@ -10,7 +10,6 @@ Subject: [PATCH] high-hz
  arch/arm/kernel/setup.c                       |   4 +-
  arch/arm/kernel/smp.c                         |   2 +-
  arch/arm64/kernel/cpuinfo.c                   |   2 +-
- arch/ia64/kernel/smpboot.c                    |   2 +-
  arch/m68k/kernel/setup_mm.c                   |   2 +-
  arch/microblaze/kernel/cpu/mb.c               |   2 +-
  arch/mips/kernel/proc.c                       |   2 +-
@@ -136,19 +135,6 @@ index eb4378c23b3c3e..6db6caa396e216 100644
  
  		/*
  		 * Dump out the common processor features in a single line.
-diff --git a/arch/ia64/kernel/smpboot.c b/arch/ia64/kernel/smpboot.c
-index d0e935cf2093af..515951842ab340 100644
---- a/arch/ia64/kernel/smpboot.c
-+++ b/arch/ia64/kernel/smpboot.c
-@@ -688,7 +688,7 @@ smp_cpus_done (unsigned int dummy)
- 	}
- 
- 	printk(KERN_INFO "Total of %d processors activated (%lu.%02lu BogoMIPS).\n",
--	       (int)num_online_cpus(), bogosum/(500000/HZ), (bogosum/(5000/HZ))%100);
-+	       (int)num_online_cpus(), bogosum/(500000/HZ), ((bogosum*HZ)/5000)%100);
- }
- 
- static inline void set_cpu_sibling_map(int cpu)
 diff --git a/arch/m68k/kernel/setup_mm.c b/arch/m68k/kernel/setup_mm.c
 index fbff1cea62caac..c9cbdab830d118 100644
 --- a/arch/m68k/kernel/setup_mm.c
