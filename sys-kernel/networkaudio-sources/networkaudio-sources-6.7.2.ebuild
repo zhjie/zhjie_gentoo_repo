@@ -35,6 +35,7 @@ src_prepare() {
 	eapply "${FILESDIR}/cachy/6.7/misc/0001-lrng.patch"
 
 	eapply "${FILESDIR}/0001-high-hz.patch"
+	eapply "${FILESDIR}/0001-high-hz-6.7.patch"
 
 	# xanmod patch
 	eapply "${FILESDIR}/xanmod/linux-6.7.y-xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"
