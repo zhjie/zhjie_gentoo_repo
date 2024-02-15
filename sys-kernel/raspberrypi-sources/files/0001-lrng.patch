@@ -1,6 +1,6 @@
-From 455862555af3f66f493ec10c996eb443ed3055e3 Mon Sep 17 00:00:00 2001
+From 334eaacb0bbafa882333adf3019428f6f4639b69 Mon Sep 17 00:00:00 2001
 From: Piotr Gorski <lucjan.lucjanov@gmail.com>
-Date: Mon, 4 Dec 2023 14:35:49 +0100
+Date: Tue, 23 Jan 2024 11:14:27 +0100
 Subject: [PATCH] lrng
 
 Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
@@ -60,14 +60,14 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  drivers/char/lrng/lrng_sha1.c                 |   88 ++
  drivers/char/lrng/lrng_sha256.c               |   72 ++
  drivers/char/lrng/lrng_switch.c               |  286 +++++
- drivers/char/lrng/lrng_sysctl.c               |  140 +++
+ drivers/char/lrng/lrng_sysctl.c               |  139 +++
  drivers/char/lrng/lrng_sysctl.h               |   15 +
  drivers/char/lrng/lrng_testing.c              |  901 +++++++++++++++
  drivers/char/lrng/lrng_testing.h              |   85 ++
  include/crypto/drbg.h                         |    7 +
  include/linux/lrng.h                          |  251 ++++
  kernel/sched/core.c                           |    3 +
- 62 files changed, 10549 insertions(+), 7 deletions(-)
+ 62 files changed, 10548 insertions(+), 7 deletions(-)
  create mode 100644 drivers/char/lrng/Kconfig
  create mode 100644 drivers/char/lrng/Makefile
  create mode 100644 drivers/char/lrng/lrng_definitions.h
@@ -126,10 +126,10 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  create mode 100644 include/linux/lrng.h
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index dd5de540ec0b..562d19807680 100644
+index a7c4cf8201e0..b185a56f5140 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -12185,6 +12185,13 @@ S:	Supported
+@@ -12296,6 +12296,13 @@ S:	Supported
  B:	mailto:linux-next@vger.kernel.org and the appropriate development tree
  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/
  
@@ -144,7 +144,7 @@ index dd5de540ec0b..562d19807680 100644
  M:	Eric Piel <eric.piel@tremplin-utc.net>
  S:	Maintained
 diff --git a/crypto/drbg.c b/crypto/drbg.c
-index ff4ebbc68efa..ed9c6d9e8f7d 100644
+index e01f8c7769d0..9bca7969b39c 100644
 --- a/crypto/drbg.c
 +++ b/crypto/drbg.c
 @@ -115,7 +115,7 @@
@@ -232,7 +232,7 @@ index ff4ebbc68efa..ed9c6d9e8f7d 100644
  static int drbg_kcapi_init(struct crypto_tfm *tfm)
  {
 diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
-index 625af75833fc..8f0e86459572 100644
+index 7c8dd0abcfdf..ffdd6ca797cd 100644
 --- a/drivers/char/Kconfig
 +++ b/drivers/char/Kconfig
 @@ -422,4 +422,6 @@ config ADI
@@ -243,7 +243,7 @@ index 625af75833fc..8f0e86459572 100644
 +
  endmenu
 diff --git a/drivers/char/Makefile b/drivers/char/Makefile
-index c5f532e412f1..571e3fe62bf5 100644
+index e9b360cdc99a..f00df53befb3 100644
 --- a/drivers/char/Makefile
 +++ b/drivers/char/Makefile
 @@ -3,7 +3,8 @@
@@ -256,7 +256,7 @@ index c5f532e412f1..571e3fe62bf5 100644
  obj-$(CONFIG_TTY_PRINTK)	+= ttyprintk.o
  obj-y				+= misc.o
  obj-$(CONFIG_ATARI_DSP56K)	+= dsp56k.o
-@@ -44,3 +45,5 @@ obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
+@@ -43,3 +44,5 @@ obj-$(CONFIG_PS3_FLASH)		+= ps3flash.o
  obj-$(CONFIG_ADI)		+= adi.o
  obj-$(CONFIG_BRCM_CHAR_DRIVERS) += broadcom/
  obj-$(CONFIG_RASPBERRYPI_GPIOMEM) += raspberrypi-gpiomem.o
@@ -9694,10 +9694,10 @@ index 000000000000..13c70797b193
 +EXPORT_SYMBOL(lrng_set_hash_cb);
 diff --git a/drivers/char/lrng/lrng_sysctl.c b/drivers/char/lrng/lrng_sysctl.c
 new file mode 100644
-index 000000000000..ecdd96a842b4
+index 000000000000..a9e744781b89
 --- /dev/null
 +++ b/drivers/char/lrng/lrng_sysctl.c
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,139 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/*
 + * LRNG sysctl interfaces
@@ -9829,7 +9829,6 @@ index 000000000000..ecdd96a842b4
 +		.proc_handler   = proc_dointvec,
 +		.extra1		= &lrng_drng_reseed_max_min,
 +	},
-+	{ }
 +};
 +
 +static int __init random_sysctls_init(void)
@@ -11131,7 +11130,7 @@ index 000000000000..c0d31a03d51f
 +
 +#endif /* _LRNG_H */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a854b71836dd..37e96c75ec8b 100644
+index a708d225c28e..68ab4ba99228 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -6,6 +6,7 @@
@@ -11142,7 +11141,7 @@ index a854b71836dd..37e96c75ec8b 100644
  #include <linux/highmem.h>
  #include <linux/hrtimer_api.h>
  #include <linux/ktime_api.h>
-@@ -3724,6 +3725,8 @@ ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
+@@ -3703,6 +3704,8 @@ ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
  {
  	struct rq *rq;
  
@@ -11152,5 +11151,5 @@ index a854b71836dd..37e96c75ec8b 100644
  		return;
  
 -- 
-2.43.0.rc2
+2.43.0.232.ge79552d197
 
