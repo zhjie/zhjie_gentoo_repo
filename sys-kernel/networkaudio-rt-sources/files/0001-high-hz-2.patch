@@ -1,0 +1,66 @@
+diff -urpN a/kernel/Kconfig.hz a-hz2k/kernel/Kconfig.hz
+--- a/kernel/Kconfig.hz	2024-02-16 02:05:07.406633172 +0800
++++ a-hz2k/kernel/Kconfig.hz	2024-02-16 02:11:11.029040653 +0800
+@@ -40,12 +40,48 @@ choice
+ 	 on SMP and NUMA systems and exactly dividing by both PAL and
+ 	 NTSC frame rates for video and multimedia work.
+ 
++	config HZ_500
++		bool "500 HZ"
++	help
++	 500 Hz is a balanced timer frequency. Provides fast interactivity
++	 on desktops with good smoothness without increasing CPU power
++	 consumption and sacrificing the battery life on laptops.
++
++	config HZ_600
++		bool "600 HZ"
++	help
++	 600 Hz is a balanced timer frequency. Provides fast interactivity
++	 on desktops with good smoothness without increasing CPU power
++	 consumption and sacrificing the battery life on laptops.
++
++	config HZ_750
++		bool "750 HZ"
++	help
++	 750 Hz is a balanced timer frequency. Provides fast interactivity
++	 on desktops with good smoothness without increasing CPU power
++	 consumption and sacrificing the battery life on laptops.
++
++	config HZ_833
++	bool "833 HZ"
++	help
++	 833 Hz
++
+ 	config HZ_1000
+ 		bool "1000 HZ"
+ 	help
+ 	 1000 Hz is the preferred choice for desktop systems and other
+ 	 systems requiring fast interactive responses to events.
+ 
++	config HZ_1666
++	bool "1666 HZ"
++	help
++	 1666 Hz
++
++	config HZ_2000
++	bool "2000 HZ"
++	help
++	 2000 Hz
++
+ endchoice
+ 
+ config HZ
+@@ -53,7 +89,13 @@ config HZ
+ 	default 100 if HZ_100
+ 	default 250 if HZ_250
+ 	default 300 if HZ_300
++	default 500 if HZ_500
++	default 600 if HZ_600
++	default 750 if HZ_750
++	default 833 if HZ_833
+ 	default 1000 if HZ_1000
++	default 1666 if HZ_1666
++	default 2000 if HZ_2000
+ 
+ config SCHED_HRTICK
+ 	def_bool HIGH_RES_TIMERS
