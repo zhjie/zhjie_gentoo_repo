@@ -206,6 +206,11 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${WORKDIR}/rtpatch/${p}"
 	done
 
+	# EEVDF fixes from 6.8
+        eapply "${FILESDIR}/sched-20231107-001-sort-the-rbtree-by-virtual-deadline.patch"
+        eapply "${FILESDIR}/sched-20231107-002-O1-fastpath-for-task-selection.patch"
+        eapply "${FILESDIR}/sched-20231122-avoid-underestimation-of-task-utilization.patch"
+
 	# cachy patch
 	eapply "${FILESDIR}/0001-cachyos-base-all.patch"
 	eapply "${FILESDIR}/0001-lrng.patch"

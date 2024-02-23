@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -8,7 +8,7 @@ inherit autotools dist-kernel-utils flag-o-matic linux-mod-r1 multiprocessing
 DESCRIPTION="Linux ZFS kernel module for sys-fs/zfs"
 HOMEPAGE="https://github.com/openzfs/zfs"
 
-MODULES_KERNEL_MAX=6.6
+MODULES_KERNEL_MAX=6.7
 MODULES_KERNEL_MIN=3.10
 
 if [[ ${PV} == 9999 ]] ; then
@@ -30,7 +30,7 @@ else
 	ZFS_KERNEL_DEP="${ZFS_KERNEL_DEP%%.*}.$(( ${ZFS_KERNEL_DEP##*.} + 1))"
 
 	if [[ ${PV} != *_rc* ]] ; then
-		KEYWORDS="~amd64 ~arm64 ~ppc64 ~riscv ~sparc"
+		KEYWORDS="~amd64 ~arm64 ~loong ~ppc64 ~riscv ~sparc"
 	fi
 fi
 
@@ -60,8 +60,8 @@ PDEPEND="dist-kernel? ( ~sys-fs/zfs-${PV}[dist-kernel] )"
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.1.11-gentoo.patch
-	"${FILESDIR}"/${PN}-2.2.1-Disable-zfs_dmu_offset_next_sync-tunable-by-default.patch
-	"${FILESDIR}"/clang.patch
+	"${FILESDIR}"/${PN}-2.2.2-arm64-neon.patch
+	"${FILESDIR}"/${PN}-2.2.2-autotrim.patch
 )
 
 pkg_pretend() {
