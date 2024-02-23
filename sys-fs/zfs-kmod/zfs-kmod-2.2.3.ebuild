@@ -30,7 +30,7 @@ else
 	ZFS_KERNEL_DEP="${ZFS_KERNEL_DEP%%.*}.$(( ${ZFS_KERNEL_DEP##*.} + 1))"
 
 	if [[ ${PV} != *_rc* ]] ; then
-		KEYWORDS="~amd64 ~arm64 ~loong ~ppc64 ~riscv ~sparc"
+		KEYWORDS="~amd64"
 	fi
 fi
 
@@ -60,8 +60,6 @@ PDEPEND="dist-kernel? ( ~sys-fs/zfs-${PV}[dist-kernel] )"
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.1.11-gentoo.patch
-	"${FILESDIR}"/${PN}-2.2.2-arm64-neon.patch
-	"${FILESDIR}"/${PN}-2.2.2-autotrim.patch
 )
 
 pkg_pretend() {
@@ -196,11 +194,6 @@ pkg_postinst() {
 
 	if [[ -z ${ROOT} ]] && use dist-kernel ; then
 		dist-kernel_reinstall_initramfs "${KV_DIR}" "${KV_FULL}"
-	fi
-
-	if use x86 || use arm ; then
-		ewarn "32-bit kernels will likely require increasing vmalloc to"
-		ewarn "at least 256M and decreasing zfs_arc_max to some value less than that."
 	fi
 
 	if has_version sys-boot/grub ; then
