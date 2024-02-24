@@ -1,11 +1,11 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
 DESCRIPTION="Virtual for Linux kernel sources"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
 IUSE="firmware"
 
 RDEPEND="
@@ -19,11 +19,14 @@ RDEPEND="
 		sys-kernel/rt-sources
 		sys-kernel/zen-sources
 		sys-kernel/raspberrypi-sources
+		sys-kernel/raspberrypi-rt-sources
 		sys-kernel/gentoo-kernel
 		sys-kernel/gentoo-kernel-bin
 		sys-kernel/vanilla-kernel
-		sys-kernel/xanmod-sources
-                sys-kernel/xanmod-rt-sources
-                sys-kernel/xanmod-tt-sources
+		sys-kernel/linux-next
+		sys-kernel/asahi-sources
 		sys-kernel/networkaudio-sources
+		sys-kernel/networkaudio-rt-sources
+		sys-kernel/xanmod-sources
+		sys-kernel/xanmod-rt-sources
 	)"
