@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="7e63f5a10fdf4adb28bcdb20e8e68a89678e89eb"
+EGIT_COMMIT="632341f955c56ac41df95a63fd3509d8b811a8a7"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="8"
+K_GENPATCHES_VER="10"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
 RT_VERSION="6"
@@ -21,6 +21,7 @@ MINOR_VERSION="0"
 
 inherit kernel-2 git-r3
 detect_version
+EXTRAVERSION="-networkaudio-rt${RT_VERSION}"
 
 DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
@@ -36,8 +37,7 @@ RDEPEND=""
 DEPEND="${RDEPEND}
 	>=sys-devel/patch-2.7.6-r4"
 
-EXTRAVERSION="-raspberrypi-rt"
-S="${WORKDIR}/linux-${K_BASE_VER}${EXTRAVERSION}"
+S="${WORKDIR}/linux-${K_BASE_VER}-raspberrypi-rt"
 
 src_unpack() {
 	git-r3_src_unpack
@@ -56,11 +56,12 @@ src_unpack() {
 	unpack patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
+	echo "${EXTRAVERSION}"
+	unpack_set_extraversion
 }
 
 src_prepare() {
 	cp -vf "${FILESDIR}/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
-	eapply "${FILESDIR}/add-extra-version-networkaudio-rt.patch"
 
 	local p rt_patches=(
 # Applied upstream
@@ -234,6 +235,12 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${FILESDIR}"/naa/*.patch
 	fi
 
+	# EEVDF fixes from 6.8
+	eapply "${FILESDIR}/sched-20231107-001-sort-the-rbtree-by-virtual-deadline.patch"
+	eapply "${FILESDIR}/sched-20231107-002-O1-fastpath-for-task-selection.patch"
+	eapply "${FILESDIR}/sched-20231122-avoid-underestimation-of-task-utilization.patch"
+	eapply "${FILESDIR}/sched-20240226-return-leftmost-entity-in-pick_eevdf.patch"
+
 	# high-hz patch
 	eapply "${FILESDIR}/0001-high-hz.patch"
 	eapply "${FILESDIR}/0001-high-hz-1.patch"
@@ -241,8 +248,8 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
 	# cachy patch
         if use cachy; then
-		eapply "${FILESDIR}/0001-cachyos-base-all.patch"
-		eapply "${FILESDIR}/0001-lrng.patch"
+		eapply "${FILESDIR}/0001-cachyos-base-all-rpi.patch"
+		eapply "${FILESDIR}/0001-lrng-rpi.patch"
 	fi
 
 	# xanmod patch

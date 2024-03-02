@@ -7,16 +7,17 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="7e63f5a10fdf4adb28bcdb20e8e68a89678e89eb"
+EGIT_COMMIT="632341f955c56ac41df95a63fd3509d8b811a8a7"
 
 K_WANT_GENPATCHES="base extras experimental"
-K_GENPATCHES_VER="8"
+K_GENPATCHES_VER="10"
 K_EXP_GENPATCHES_NOUSE="1"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
 inherit kernel-2 git-r3
 detect_version
+EXTRAVERSION="-networkaudio"
 
 DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
@@ -43,11 +44,11 @@ src_unpack() {
 	rm -rfv "${S}/.git"
 	mkdir "${WORKDIR}"/genpatch
 	mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
+	unpack_set_extraversion
 }
 
 src_prepare() {
 	cp -v "${FILESDIR}/${K_BASE_VER}-networkaudio" ${K_BASE_VER}-networkaudio
-	eapply "${FILESDIR}/add-extra-version-networkaudio.patch"
 
 	# genpatch
 	eapply "${WORKDIR}"/genpatch/*.patch
@@ -62,10 +63,16 @@ src_prepare() {
 		eapply "${FILESDIR}"/naa/*.patch
 	fi
 
+	# EEVDF fixes from 6.8
+	eapply "${FILESDIR}/sched-20231107-001-sort-the-rbtree-by-virtual-deadline.patch"
+	eapply "${FILESDIR}/sched-20231107-002-O1-fastpath-for-task-selection.patch"
+	eapply "${FILESDIR}/sched-20231122-avoid-underestimation-of-task-utilization.patch"
+	eapply "${FILESDIR}/sched-20240226-return-leftmost-entity-in-pick_eevdf.patch"
+
 	# cachy patch
 	if use cachy; then
-		eapply "${FILESDIR}/0001-cachyos-base-all.patch"
-		eapply "${FILESDIR}/0001-lrng.patch"
+		eapply "${FILESDIR}/0001-cachyos-base-all-rpi.patch"
+		eapply "${FILESDIR}/0001-lrng-rpi.patch"
 	fi
 
 	# xanmod patch
