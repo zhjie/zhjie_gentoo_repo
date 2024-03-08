@@ -60,8 +60,13 @@ src_prepare() {
 	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
 
 	if use arm64; then
-		patchelf --replace-needed libgupnp-1.2.so.0 libgupnp-1.2.so.1 usr/bin/hqplayerd || die
+		patchelf --replace-needed libgupnp-1.2.so.0 libgupnp-1.2.so.1 usr/bin/hqplayerd       || die
 		patchelf --replace-needed libgupnp-av-1.0.so.2 libgupnp-av-1.0.so.3 usr/bin/hqplayerd || die
+	fi
+
+	if !use upnp; then
+		patchelf --remove-needed librygel-renderer-2.6.so.2 hqplayerd || die
+		patchelf --remove-needed librygel-core-2.6.so.2 hqplayerd     || die
 	fi
 }
 
