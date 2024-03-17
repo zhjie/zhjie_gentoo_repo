@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="2"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
 RT_VERSION="8"
