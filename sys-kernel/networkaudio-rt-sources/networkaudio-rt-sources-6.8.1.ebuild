@@ -5,6 +5,7 @@ EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="2"
+K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
 RT_VERSION="8"
@@ -33,12 +34,7 @@ src_unpack() {
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 
 	UNIPATCH_LIST_DEFAULT=""
-#        UNIPATCH_EXCLUDE="${UNIPATCH_EXCLUDE} 5010_enable-cpu-optimizations-universal.patch"
-
-        if use naa; then
-	        UNIPATCH_LIST+=" ${FILESDIR}/naa/00*.patch"
-        fi
-
+	UNIPATCH_EXCLUDE=""
 	kernel-2_src_unpack
 }
 
@@ -236,43 +232,39 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${WORKDIR}/rtpatch/${p}"
 	done
 
-	# high-hz patch
-	eapply "${FILESDIR}/0001-high-hz.patch"
-	eapply "${FILESDIR}/0001-high-hz-1.patch"
-	eapply "${FILESDIR}/0001-high-hz-2.patch"
+	# naa patch
+	if use naa; then
+		eapply "${FILESDIR}"/naa/*.patch
+	fi
 
 	# cachy patch
-	eapply "${FILESDIR}/0001-cachyos-base-all-rev.patch"
-	eapply "${FILESDIR}/0001-lrng.patch"
+	eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
+
+	# highhz patch
+	eapply "${FILESDIR}"/highhz/*.patch
 
 	# xanmod patch
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/intel/0004-locking-rwsem-spin-faster.patch"
+	eapply "${FILESDIR}/xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"
+	eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
+	eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
 
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+	eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0012-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
-	eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	# eapply "${FILESDIR}/xanmod/linux-6.8.y-xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
 
         eapply_user
-}
-
-pkg_postinst() {
-	elog "The XanMod team strongly suggests the use of updated CPU microcodes with its"
-	elog "kernels. For details, see https://wiki.gentoo.org/wiki/Microcode ."
-	kernel-2_pkg_postinst
 }
