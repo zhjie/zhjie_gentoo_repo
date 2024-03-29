@@ -10,7 +10,7 @@ EGIT_BRANCH="rpi-${K_BASE_VER}.y"
 EGIT_COMMIT="a680ff47b46e7f99cb5c0e175516f1affde3e162"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
