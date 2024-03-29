@@ -22,9 +22,6 @@ SLOT="0"
 IUSE="unicode video_cards_intel video_cards_amdgpu video_cards_nvidia"
 
 RDEPEND="
-	video_cards_intel?  ( virtual/udev )
-	video_cards_amdgpu? ( x11-libs/libdrm[video_cards_amdgpu] )
-	video_cards_nvidia? ( x11-drivers/nvidia-drivers )
 	sys-libs/ncurses:0=
 "
 

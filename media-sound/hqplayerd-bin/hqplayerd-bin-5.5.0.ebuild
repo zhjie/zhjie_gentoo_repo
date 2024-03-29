@@ -38,7 +38,6 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	dev-libs/libusb-compat
 	media-sound/mpg123-base
 	media-sound/lame
-	>sys-devel/gcc-11.3.0
 	sys-libs/libomp
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
 	cuda? ( dev-util/nvidia-cuda-toolkit )
