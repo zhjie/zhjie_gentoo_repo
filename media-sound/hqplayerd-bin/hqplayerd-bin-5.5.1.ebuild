@@ -7,16 +7,15 @@ EAPI=7
 inherit systemd unpacker
 
 MY_PN=${PN/-bin/}
-HQV=9
+HQV=14
 
 DESCRIPTION="HQPlayer Embedded - upsampling multichannel audio player"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
-amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
-amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}avx2_amd64.deb ) )
+amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}intel_amd64.deb ) )
+amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/jammy/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
+arm64? ( https://www.signalyst.eu/bins/hqplayerd/bookworm/${MY_PN}_${PV}-${HQV}_arm64.deb )
 "
-# arm64? ( https://www.signalyst.eu/bins/hqplayerd/bookworm/${MY_PN}_${PV}-${HQV}_arm64.deb )
-# "
 
 LICENSE="Signalyst"
 SLOT="0"
@@ -39,7 +38,6 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	dev-libs/libusb-compat
 	media-sound/mpg123-base
 	media-sound/lame
-	>sys-devel/gcc-11.3.0
 	sys-libs/libomp
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
 	cuda? ( dev-util/nvidia-cuda-toolkit )
@@ -61,8 +59,13 @@ src_prepare() {
 	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
 
 	if use arm64; then
-		patchelf --replace-needed libgupnp-1.2.so.0 libgupnp-1.2.so.1 usr/bin/hqplayerd || die
+		patchelf --replace-needed libgupnp-1.2.so.0    libgupnp-1.2.so.1    usr/bin/hqplayerd || die
 		patchelf --replace-needed libgupnp-av-1.0.so.2 libgupnp-av-1.0.so.3 usr/bin/hqplayerd || die
+	fi
+
+	if ! use upnp; then
+		patchelf --remove-needed librygel-renderer-2.6.so.2 usr/bin/hqplayerd || die
+		patchelf --remove-needed librygel-core-2.6.so.2     usr/bin/hqplayerd || die
 	fi
 }
 
