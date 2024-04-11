@@ -26,6 +26,9 @@ SRC_URI="${GENPATCHES_URI}"
 
 KEYWORDS="amd64 arm arm64"
 IUSE="+naa +cachy +xanmod bmq +bore"
+REQUIRED_USE="
+        bore? ( !bmq )
+"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
