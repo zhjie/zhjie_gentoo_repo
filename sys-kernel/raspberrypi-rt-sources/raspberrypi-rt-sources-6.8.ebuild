@@ -7,14 +7,14 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="8757f7031b123ffdb8f9c65f26c17ecc94c6e4d4"
+EGIT_COMMIT="cb958648f566e4915047ce708721cd8361009471"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_GENPATCHES_VER="7"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="10"
+RT_VERSION="11"
 MINOR_VERSION="2"
 
 # only use this if it's not an _rc/_pre release
@@ -140,54 +140,54 @@ zram-Replace-bit-spinlocks-with-spinlock_t-for-PREEM.patch
 ###########################################################################
 # John's printk queue
 ###########################################################################
-0005-printk-ringbuffer-Clarify-special-lpos-values.patch
-0006-printk-For-suppress_panic_printk-check-for-other-CPU.patch
-0012-printk-Avoid-non-panic-CPUs-writing-to-ringbuffer.patch
-0013-panic-Flush-kernel-log-buffer-at-the-end.patch
-0014-dump_stack-Do-not-get-cpu_sync-for-panic-CPU.patch
-0015-printk-Add-notation-to-console_srcu-locking.patch
-0016-printk-Properly-deal-with-nbcon-consoles-on-seq-init.patch
-0017-printk-nbcon-Remove-return-value-for-write_atomic.patch
-0018-printk-Check-printk_deferred_enter-_exit-usage.patch
-0019-serial-core-Provide-low-level-functions-to-port-lock.patch
-0020-printk-nbcon-Add-detailed-doc-for-write_atomic.patch
-0021-printk-nbcon-Add-callbacks-to-synchronize-with-drive.patch
-0022-printk-nbcon-Add-consoles-with-driver-synchronizatio.patch
-0023-printk-nbcon-Implement-processing-in-port-lock-wrapp.patch
-0024-printk-nbcon-Do-not-rely-on-proxy-headers.patch
-0025-printk-nbcon-Fix-kerneldoc-for-enums.patch
-0026-printk-Make-console_is_usable-available-to-nbcon.patch
-0027-printk-Let-console_is_usable-handle-nbcon.patch
-0028-printk-Add-flags-argument-for-console_is_usable.patch
-0029-printk-nbcon-Provide-function-to-flush-using-write_a.patch
-0030-printk-Track-registered-boot-consoles.patch
-0031-printk-nbcon-Use-nbcon-consoles-in-console_flush_all.patch
-0032-printk-nbcon-Assign-priority-based-on-CPU-state.patch
-0033-printk-nbcon-Add-unsafe-flushing-on-panic.patch
-0034-printk-Avoid-console_lock-dance-if-no-legacy-or-boot.patch
-0035-printk-Track-nbcon-consoles.patch
-0036-printk-Coordinate-direct-printing-in-panic.patch
-0037-printk-nbcon-Implement-emergency-sections.patch
-0038-printk-Provide-helper-for-message-prepending.patch
-0039-printk-nbcon-show-replay-message-on-takeover.patch
-0040-panic-Mark-emergency-section-in-warn.patch
-0041-panic-Mark-emergency-section-in-oops.patch
-0042-rcu-Mark-emergency-section-in-rcu-stalls.patch
-0043-lockdep-Mark-emergency-sections-in-lockdep-splats.patch
-0044-printk-nbcon-Introduce-printing-kthreads.patch
-0045-printk-Atomic-print-in-printk-context-on-shutdown.patch
-0046-printk-nbcon-Add-context-to-console_is_usable.patch
-0047-printk-nbcon-Add-printer-thread-wakeups.patch
-0048-printk-nbcon-Stop-threads-on-shutdown-reboot.patch
-0049-printk-nbcon-Start-printing-threads.patch
-0050-proc-Add-nbcon-support-for-proc-consoles.patch
-0051-tty-sysfs-Add-nbcon-support-for-active.patch
-0052-printk-nbcon-Provide-function-to-reacquire-ownership.patch
-0053-serial-8250-Switch-to-nbcon-console.patch
-0054-serial-8250-Revert-drop-lockdep-annotation-from-seri.patch
-0055-printk-Add-kthread-for-all-legacy-consoles.patch
-0056-printk-Provide-threadprintk-boot-argument.patch
-0057-printk-Avoid-false-positive-lockdep-report-for-legac.patch
+0001-printk-ringbuffer-Clarify-special-lpos-values.patch
+0002-printk-For-suppress_panic_printk-check-for-other-CPU.patch
+0003-printk-Avoid-non-panic-CPUs-writing-to-ringbuffer.patch
+0004-panic-Flush-kernel-log-buffer-at-the-end.patch
+0005-dump_stack-Do-not-get-cpu_sync-for-panic-CPU.patch
+0006-printk-Add-notation-to-console_srcu-locking.patch
+0007-printk-Properly-deal-with-nbcon-consoles-on-seq-init.patch
+0008-printk-nbcon-Remove-return-value-for-write_atomic.patch
+0009-printk-Check-printk_deferred_enter-_exit-usage.patch
+0010-printk-nbcon-Add-detailed-doc-for-write_atomic.patch
+0011-printk-nbcon-Add-callbacks-to-synchronize-with-drive.patch
+0012-printk-nbcon-Use-driver-synchronization-while-regist.patch
+0013-serial-core-Provide-low-level-functions-to-lock-port.patch
+0014-printk-nbcon-Implement-processing-in-port-lock-wrapp.patch
+0015-printk-nbcon-Do-not-rely-on-proxy-headers.patch
+0016-printk-nbcon-Fix-kerneldoc-for-enums.patch
+0017-printk-Make-console_is_usable-available-to-nbcon.patch
+0018-printk-Let-console_is_usable-handle-nbcon.patch
+0019-printk-Add-flags-argument-for-console_is_usable.patch
+0020-printk-nbcon-Provide-function-to-flush-using-write_a.patch
+0021-printk-Track-registered-boot-consoles.patch
+0022-printk-nbcon-Use-nbcon-consoles-in-console_flush_all.patch
+0023-printk-nbcon-Assign-priority-based-on-CPU-state.patch
+0024-printk-nbcon-Add-unsafe-flushing-on-panic.patch
+0025-printk-Avoid-console_lock-dance-if-no-legacy-or-boot.patch
+0026-printk-Track-nbcon-consoles.patch
+0027-printk-Coordinate-direct-printing-in-panic.patch
+0028-printk-nbcon-Implement-emergency-sections.patch
+0029-panic-Mark-emergency-section-in-warn.patch
+0030-panic-Mark-emergency-section-in-oops.patch
+0031-rcu-Mark-emergency-sections-in-rcu-stalls.patch
+0032-lockdep-Mark-emergency-sections-in-lockdep-splats.patch
+0033-printk-nbcon-Introduce-printing-kthreads.patch
+0034-printk-Atomic-print-in-printk-context-on-shutdown.patch
+0035-printk-nbcon-Add-context-to-console_is_usable.patch
+0036-printk-nbcon-Add-printer-thread-wakeups.patch
+0037-printk-nbcon-Stop-threads-on-shutdown-reboot.patch
+0038-printk-nbcon-Start-printing-threads.patch
+0039-printk-Provide-helper-for-message-prepending.patch
+0040-printk-nbcon-Show-replay-message-on-takeover.patch
+0041-proc-Add-nbcon-support-for-proc-consoles.patch
+0042-tty-sysfs-Add-nbcon-support-for-active.patch
+0043-printk-nbcon-Provide-function-to-reacquire-ownership.patch
+0044-serial-8250-Switch-to-nbcon-console.patch
+0045-serial-8250-Revert-drop-lockdep-annotation-from-seri.patch
+0046-printk-Add-kthread-for-all-legacy-consoles.patch
+0047-printk-Provide-threadprintk-boot-argument.patch
+0048-printk-Avoid-false-positive-lockdep-report-for-legac.patch
 
 ###########################################################################
 # DRM:
@@ -244,7 +244,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-#Add_localversion_for_-RT_release.patch
+# Add_localversion_for_-RT_release.patch
         )
 
 	for p in "${rt_patches[@]}"; do

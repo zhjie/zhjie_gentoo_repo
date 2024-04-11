@@ -1,6 +1,6 @@
-From 5d047fd5f831d25c9699c7cdf32f813bd4ad4661 Mon Sep 17 00:00:00 2001
+From 6c259f57d0c94d7ff931b6f5b981ec790c18f1c7 Mon Sep 17 00:00:00 2001
 From: Piotr Gorski <lucjan.lucjanov@gmail.com>
-Date: Fri, 29 Mar 2024 10:09:30 +0100
+Date: Mon, 8 Apr 2024 13:20:20 +0200
 Subject: [PATCH] echo-cachy
 
 Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
@@ -20,7 +20,8 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  kernel/sched/idle.c           |    1 +
  kernel/sched/nohz.h           |  511 ++++++++
  kernel/sched/sched.h          |   13 +-
- 15 files changed, 5615 insertions(+), 7 deletions(-)
+ kernel/time/Kconfig           |    2 +-
+ 16 files changed, 5616 insertions(+), 8 deletions(-)
  create mode 100644 kernel/sched/balancer.h
  create mode 100644 kernel/sched/bs.c
  create mode 100644 kernel/sched/fair_debug.h
@@ -1070,7 +1071,7 @@ index 000000000..852faad1f
 +#endif /* CONFIG_SMP */
 diff --git a/kernel/sched/bs.c b/kernel/sched/bs.c
 new file mode 100644
-index 000000000..7760327e5
+index 000000000..6b3d51b43
 --- /dev/null
 +++ b/kernel/sched/bs.c
 @@ -0,0 +1,888 @@
@@ -1090,8 +1091,8 @@ index 000000000..7760327e5
 +#include "sched.h"
 +#include "pelt.h"
 +
-+unsigned int sysctl_sched_base_slice	= 7000ULL;
-+unsigned int bs_shared_quota		= 105000ULL; // 105us
++unsigned int sysctl_sched_base_slice	= 4200ULL;
++unsigned int bs_shared_quota		= 35000ULL; // 35us
 +u32 alpha				= 500U;
 +
 +struct lb_env {
@@ -1963,7 +1964,7 @@ index 000000000..7760327e5
 +
 +}
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9116bcc90..49df55bb0 100644
+index 9116bcc90..f8f5ad0d2 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -4525,6 +4525,12 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
@@ -2000,7 +2001,7 @@ index 9116bcc90..49df55bb0 100644
  	wait_bit_init();
  
 +#ifdef CONFIG_ECHO_SCHED
-+	printk(KERN_INFO "ECHO CPU scheduler v6.7 by Hamad Al Marri.");
++	printk(KERN_INFO "ECHO CPU scheduler v6.8 by Hamad Al Marri.");
 +#endif
 +
  #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -5867,6 +5868,19 @@ index ed5c758c7..2724b1d25 100644
  extern struct static_key_false sched_asym_cpucapacity;
  extern struct static_key_false sched_cluster_active;
  
+diff --git a/kernel/time/Kconfig b/kernel/time/Kconfig
+index bae8f1107..93caca5d2 100644
+--- a/kernel/time/Kconfig
++++ b/kernel/time/Kconfig
+@@ -119,7 +119,7 @@ config NO_HZ_FULL
+ 	bool "Full dynticks system (tickless)"
+ 	# NO_HZ_COMMON dependency
+ 	# We need at least one periodic CPU for timekeeping
+-	depends on SMP
++	depends on SMP && !ECHO_SCHED
+ 	depends on HAVE_CONTEXT_TRACKING_USER
+ 	# VIRT_CPU_ACCOUNTING_GEN dependency
+ 	depends on HAVE_VIRT_CPU_ACCOUNTING_GEN
 -- 
 2.44.0.325.g11c821f2f2
 

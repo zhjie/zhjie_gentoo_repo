@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="8757f7031b123ffdb8f9c65f26c17ecc94c6e4d4"
+EGIT_COMMIT="cb958648f566e4915047ce708721cd8361009471"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_GENPATCHES_VER="7"
 K_EXP_GENPATCHES_NOUSE="1"
 
 # only use this if it's not an _rc/_pre release
@@ -70,7 +70,7 @@ src_prepare() {
 
 	# bmq scheduler
 	if use bmq; then
-		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.8-r0.patch"
+		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.8-r4.patch"
 	fi
 
 	# bore scheduler
