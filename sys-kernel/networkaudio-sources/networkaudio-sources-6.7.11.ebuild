@@ -11,7 +11,9 @@ HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
 IUSE="naa bmq +bore"
-
+REQUIRED_USE="
+        bmq? ( !bore )
+"
 inherit kernel-2
 detect_version
 

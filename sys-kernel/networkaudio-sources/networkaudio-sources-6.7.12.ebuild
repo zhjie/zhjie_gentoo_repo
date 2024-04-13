@@ -4,14 +4,16 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="14"
+K_GENPATCHES_VER="16"
 K_EXP_GENPATCHES_NOUSE="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
 IUSE="naa bmq +bore"
-
+REQUIRED_USE="
+        bmq? ( !bore )
+"
 inherit kernel-2
 detect_version
 
