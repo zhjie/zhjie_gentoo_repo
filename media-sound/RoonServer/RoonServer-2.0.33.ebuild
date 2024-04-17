@@ -8,7 +8,7 @@ inherit systemd
 
 DESCRIPTION="THE ULTIMATE MUSIC PLAYER FOR MUSIC FANATICS"
 HOMEPAGE="https://roonlabs.com"
-SRC_URI="http://download.roonlabs.net/updates/production/RoonServer_linuxx64_200001392.tar.bz2 -> ${PF}.tar.bz2"
+SRC_URI="http://download.roonlabs.net/updates/production/RoonServer_linuxx64_200001401.tar.bz2 -> ${PF}.tar.bz2"
 
 LICENSE="roonlabs"
 
