@@ -1,21 +1,19 @@
-From fd5aef4f741b729f40ac6ae450e4632c403f535d Mon Sep 17 00:00:00 2001
-From: Piotr Gorski <lucjan.lucjanov@gmail.com>
-Date: Mon, 26 Feb 2024 21:52:51 +0100
+From 3c4f08ebebc3e724d6f75390bfe6dc24770be742 Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Sat, 13 Apr 2024 13:56:34 +0200
 Subject: [PATCH] sched-ext
 
-Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  Documentation/scheduler/index.rst             |    1 +
  Documentation/scheduler/sched-ext.rst         |  294 +
  MAINTAINERS                                   |    3 +
  Makefile                                      |    8 +-
  drivers/tty/sysrq.c                           |    1 +
- fs/kernfs/dir.c                               |   31 +-
- fs/kernfs/kernfs-internal.h                   |    2 +
  include/asm-generic/vmlinux.lds.h             |    1 +
  include/linux/cgroup-defs.h                   |    8 +
  include/linux/cgroup.h                        |    5 +-
- include/linux/kernfs.h                        |    7 +-
+ include/linux/kernfs.h                        |    5 +-
  include/linux/sched.h                         |    5 +
  include/linux/sched/ext.h                     |  756 +++
  include/linux/sched/task.h                    |    3 +-
@@ -24,15 +22,14 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  init/init_task.c                              |   15 +
  kernel/Kconfig.preempt                        |   24 +-
  kernel/bpf/bpf_struct_ops_types.h             |    4 +
- kernel/bpf/verifier.c                         |  744 +--
  kernel/cgroup/cgroup.c                        |   97 +-
  kernel/fork.c                                 |   17 +-
  kernel/sched/build_policy.c                   |    8 +
  kernel/sched/core.c                           |  318 +-
  kernel/sched/deadline.c                       |    4 +-
  kernel/sched/debug.c                          |    3 +
- kernel/sched/ext.c                            | 5187 +++++++++++++++++
- kernel/sched/ext.h                            |  278 +
+ kernel/sched/ext.c                            | 5374 +++++++++++++++++
+ kernel/sched/ext.h                            |  277 +
  kernel/sched/fair.c                           |    9 +-
  kernel/sched/idle.c                           |    2 +
  kernel/sched/rt.c                             |    4 +-
@@ -40,7 +37,6 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  kernel/sched/topology.c                       |    4 +-
  lib/dump_stack.c                              |    1 +
  tools/Makefile                                |   10 +-
- tools/bpf/bpftool/Documentation/bpftool.rst   |    2 +-
  tools/sched_ext/.gitignore                    |   10 +
  tools/sched_ext/Kconfig                       |    9 +
  tools/sched_ext/Makefile                      |  251 +
@@ -56,15 +52,6 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  tools/sched_ext/scx_show_state.py             |   39 +
  tools/sched_ext/scx_simple.bpf.c              |  155 +
  tools/sched_ext/scx_simple.c                  |   99 +
- tools/testing/selftests/bpf/config.aarch64    |   17 +-
- tools/testing/selftests/bpf/config.s390x      |    9 -
- tools/testing/selftests/bpf/config.vm         |   12 +
- tools/testing/selftests/bpf/config.x86_64     |   12 -
- .../bpf/map_tests/map_percpu_stats.c          |   39 +-
- .../selftests/bpf/prog_tests/bpf_iter.c       |   85 +-
- tools/testing/selftests/bpf/test_maps.c       |   17 +-
- tools/testing/selftests/bpf/test_maps.h       |    5 +
- tools/testing/selftests/bpf/vmtest.sh         |    4 +-
  tools/testing/selftests/scx/.gitignore        |    6 +
  tools/testing/selftests/scx/Makefile          |  210 +
  tools/testing/selftests/scx/config            |    5 +
@@ -101,7 +88,7 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  .../selftests/scx/select_cpu_vtime.bpf.c      |   94 +
  .../testing/selftests/scx/select_cpu_vtime.c  |   59 +
  tools/testing/selftests/scx/test_example.c    |   49 +
- 96 files changed, 12219 insertions(+), 555 deletions(-)
+ 83 files changed, 11872 insertions(+), 107 deletions(-)
  create mode 100644 Documentation/scheduler/sched-ext.rst
  create mode 100644 include/linux/sched/ext.h
  create mode 100644 kernel/sched/ext.c
@@ -121,7 +108,6 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  create mode 100644 tools/sched_ext/scx_show_state.py
  create mode 100644 tools/sched_ext/scx_simple.bpf.c
  create mode 100644 tools/sched_ext/scx_simple.c
- create mode 100644 tools/testing/selftests/bpf/config.vm
  create mode 100644 tools/testing/selftests/scx/.gitignore
  create mode 100644 tools/testing/selftests/scx/Makefile
  create mode 100644 tools/testing/selftests/scx/config
@@ -160,7 +146,7 @@ Signed-off-by: Piotr Gorski <lucjan.lucjanov@gmail.com>
  create mode 100644 tools/testing/selftests/scx/test_example.c
 
 diff --git a/Documentation/scheduler/index.rst b/Documentation/scheduler/index.rst
-index 317074722..0b650bb55 100644
+index 3170747226f6..0b650bb550e6 100644
 --- a/Documentation/scheduler/index.rst
 +++ b/Documentation/scheduler/index.rst
 @@ -19,6 +19,7 @@ Scheduler
@@ -173,7 +159,7 @@ index 317074722..0b650bb55 100644
      text_files
 diff --git a/Documentation/scheduler/sched-ext.rst b/Documentation/scheduler/sched-ext.rst
 new file mode 100644
-index 000000000..e3847b44e
+index 000000000000..e3847b44e17c
 --- /dev/null
 +++ b/Documentation/scheduler/sched-ext.rst
 @@ -0,0 +1,294 @@
@@ -472,10 +458,10 @@ index 000000000..e3847b44e
 +possible, they are subject to change without warning between kernel
 +versions.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index a7c4cf820..484555326 100644
+index 1aabf1c15bb3..7c9643ba9f1b 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -19222,6 +19222,8 @@ R:	Ben Segall <bsegall@google.com> (CONFIG_CFS_BANDWIDTH)
+@@ -19486,6 +19486,8 @@ R:	Ben Segall <bsegall@google.com> (CONFIG_CFS_BANDWIDTH)
  R:	Mel Gorman <mgorman@suse.de> (CONFIG_NUMA_BALANCING)
  R:	Daniel Bristot de Oliveira <bristot@redhat.com> (SCHED_DEADLINE)
  R:	Valentin Schneider <vschneid@redhat.com> (TOPOLOGY)
@@ -484,7 +470,7 @@ index a7c4cf820..484555326 100644
  L:	linux-kernel@vger.kernel.org
  S:	Maintained
  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git sched/core
-@@ -19230,6 +19232,7 @@ F:	include/linux/sched.h
+@@ -19494,6 +19496,7 @@ F:	include/linux/sched.h
  F:	include/linux/wait.h
  F:	include/uapi/linux/sched.h
  F:	kernel/sched/
@@ -493,10 +479,10 @@ index a7c4cf820..484555326 100644
  SCSI LIBSAS SUBSYSTEM
  R:	John Garry <john.g.garry@oracle.com>
 diff --git a/Makefile b/Makefile
-index d65f192db..765cab325 100644
+index c426d47f4b7b..e7648abbe793 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1496,6 +1496,12 @@ ifneq ($(wildcard $(resolve_btfids_O)),)
+@@ -1346,6 +1346,12 @@ ifneq ($(wildcard $(resolve_btfids_O)),)
  	$(Q)$(MAKE) -sC $(srctree)/tools/bpf/resolve_btfids O=$(resolve_btfids_O) clean
  endif
  
@@ -509,7 +495,7 @@ index d65f192db..765cab325 100644
  # Clear a bunch of variables before executing the submake
  ifeq ($(quiet),silent_)
  tools_silent=s
-@@ -1665,7 +1671,7 @@ PHONY += $(mrproper-dirs) mrproper
+@@ -1515,7 +1521,7 @@ PHONY += $(mrproper-dirs) mrproper
  $(mrproper-dirs):
  	$(Q)$(MAKE) $(clean)=$(patsubst _mrproper_%,%,$@)
  
@@ -519,7 +505,7 @@ index d65f192db..765cab325 100644
  	@find . $(RCS_FIND_IGNORE) \
  		\( -name '*.rmeta' \) \
 diff --git a/drivers/tty/sysrq.c b/drivers/tty/sysrq.c
-index 6b4a28bcf..6ec15c131 100644
+index 02217e3c916b..1ce3535cba6d 100644
 --- a/drivers/tty/sysrq.c
 +++ b/drivers/tty/sysrq.c
 @@ -520,6 +520,7 @@ static const struct sysrq_key_op *sysrq_key_table[62] = {
@@ -530,96 +516,8 @@ index 6b4a28bcf..6ec15c131 100644
  	NULL,				/* S */
  	NULL,				/* T */
  	NULL,				/* U */
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 62d39ecf0..2405aeb39 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -529,6 +529,20 @@ void kernfs_get(struct kernfs_node *kn)
- }
- EXPORT_SYMBOL_GPL(kernfs_get);
- 
-+static void kernfs_free_rcu(struct rcu_head *rcu)
-+{
-+	struct kernfs_node *kn = container_of(rcu, struct kernfs_node, rcu);
-+
-+	kfree_const(kn->name);
-+
-+	if (kn->iattr) {
-+		simple_xattrs_free(&kn->iattr->xattrs, NULL);
-+		kmem_cache_free(kernfs_iattrs_cache, kn->iattr);
-+	}
-+
-+	kmem_cache_free(kernfs_node_cache, kn);
-+}
-+
- /**
-  * kernfs_put - put a reference count on a kernfs_node
-  * @kn: the target kernfs_node
-@@ -557,16 +571,11 @@ void kernfs_put(struct kernfs_node *kn)
- 	if (kernfs_type(kn) == KERNFS_LINK)
- 		kernfs_put(kn->symlink.target_kn);
- 
--	kfree_const(kn->name);
--
--	if (kn->iattr) {
--		simple_xattrs_free(&kn->iattr->xattrs, NULL);
--		kmem_cache_free(kernfs_iattrs_cache, kn->iattr);
--	}
- 	spin_lock(&kernfs_idr_lock);
- 	idr_remove(&root->ino_idr, (u32)kernfs_ino(kn));
- 	spin_unlock(&kernfs_idr_lock);
--	kmem_cache_free(kernfs_node_cache, kn);
-+
-+	call_rcu(&kn->rcu, kernfs_free_rcu);
- 
- 	kn = parent;
- 	if (kn) {
-@@ -575,7 +584,7 @@ void kernfs_put(struct kernfs_node *kn)
- 	} else {
- 		/* just released the root kn, free @root too */
- 		idr_destroy(&root->ino_idr);
--		kfree(root);
-+		kfree_rcu(root, rcu);
- 	}
- }
- EXPORT_SYMBOL_GPL(kernfs_put);
-@@ -715,7 +724,7 @@ struct kernfs_node *kernfs_find_and_get_node_by_id(struct kernfs_root *root,
- 	ino_t ino = kernfs_id_ino(id);
- 	u32 gen = kernfs_id_gen(id);
- 
--	spin_lock(&kernfs_idr_lock);
-+	rcu_read_lock();
- 
- 	kn = idr_find(&root->ino_idr, (u32)ino);
- 	if (!kn)
-@@ -739,10 +748,10 @@ struct kernfs_node *kernfs_find_and_get_node_by_id(struct kernfs_root *root,
- 	if (unlikely(!__kernfs_active(kn) || !atomic_inc_not_zero(&kn->count)))
- 		goto err_unlock;
- 
--	spin_unlock(&kernfs_idr_lock);
-+	rcu_read_unlock();
- 	return kn;
- err_unlock:
--	spin_unlock(&kernfs_idr_lock);
-+	rcu_read_unlock();
- 	return NULL;
- }
- 
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index 237f2764b..b42ee6547 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -49,6 +49,8 @@ struct kernfs_root {
- 	struct rw_semaphore	kernfs_rwsem;
- 	struct rw_semaphore	kernfs_iattr_rwsem;
- 	struct rw_semaphore	kernfs_supers_rwsem;
-+
-+	struct rcu_head		rcu;
- };
- 
- /* +1 to avoid triggering overflow warning when negating it */
 diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index bae0fe4d4..b4c51e798 100644
+index 5dd3a61d673d..b84816895440 100644
 --- a/include/asm-generic/vmlinux.lds.h
 +++ b/include/asm-generic/vmlinux.lds.h
 @@ -131,6 +131,7 @@
@@ -631,7 +529,7 @@ index bae0fe4d4..b4c51e798 100644
  	__sched_class_lowest = .;
  
 diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 4a6b6b77c..516bb663e 100644
+index ea48c861cd36..bfc027311950 100644
 --- a/include/linux/cgroup-defs.h
 +++ b/include/linux/cgroup-defs.h
 @@ -132,12 +132,18 @@ enum {
@@ -664,7 +562,7 @@ index 4a6b6b77c..516bb663e 100644
  	struct timer_list notify_timer;
  };
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 0ef0af660..53040f746 100644
+index 34aaf0e87def..32679fcff0a7 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
 @@ -29,8 +29,6 @@
@@ -685,7 +583,7 @@ index 0ef0af660..53040f746 100644
  enum {
  	CSS_TASK_ITER_PROCS    = (1U << 0),  /* walk only threadgroup leaders */
  	CSS_TASK_ITER_THREADED = (1U << 1),  /* walk all threaded css_sets in the domain */
-@@ -113,6 +113,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
+@@ -114,6 +114,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
  int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
  int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
  int cgroup_rm_cftypes(struct cftype *cfts);
@@ -694,7 +592,7 @@ index 0ef0af660..53040f746 100644
  void cgroup_file_show(struct cgroup_file *cfile, bool show);
  
 diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 99aaa050c..05dcbae7e 100644
+index e857a150babc..05dcbae7ecbf 100644
 --- a/include/linux/kernfs.h
 +++ b/include/linux/kernfs.h
 @@ -206,6 +206,9 @@ struct kernfs_node {
@@ -707,24 +605,21 @@ index 99aaa050c..05dcbae7e 100644
  	union {
  		struct kernfs_elem_dir		dir;
  		struct kernfs_elem_symlink	symlink;
-@@ -220,9 +223,9 @@ struct kernfs_node {
+@@ -220,8 +223,6 @@ struct kernfs_node {
  	 */
  	u64			id;
  
 -	unsigned short		flags;
 -	umode_t			mode;
  	struct kernfs_iattrs	*iattr;
-+
-+	struct rcu_head		rcu;
- };
  
- /*
+ 	struct rcu_head		rcu;
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 292c31697..e5530c97f 100644
+index ffe8f618ab86..fbdf57f323b0 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -70,6 +70,8 @@ struct task_delay_info;
- struct task_group;
+@@ -80,6 +80,8 @@ struct task_group;
+ struct task_struct;
  struct user_event_mm;
  
 +#include <linux/sched/ext.h>
@@ -732,10 +627,10 @@ index 292c31697..e5530c97f 100644
  /*
   * Task state bitmask. NOTE! These bits are also
   * encoded in fs/proc/array.c: get_task_state().
-@@ -795,6 +797,9 @@ struct task_struct {
- 	struct sched_entity		se;
+@@ -798,6 +800,9 @@ struct task_struct {
  	struct sched_rt_entity		rt;
  	struct sched_dl_entity		dl;
+ 	struct sched_dl_entity		*dl_server;
 +#ifdef CONFIG_SCHED_CLASS_EXT
 +	struct sched_ext_entity		scx;
 +#endif
@@ -744,7 +639,7 @@ index 292c31697..e5530c97f 100644
  #ifdef CONFIG_SCHED_CORE
 diff --git a/include/linux/sched/ext.h b/include/linux/sched/ext.h
 new file mode 100644
-index 000000000..474131a20
+index 000000000000..474131a209a4
 --- /dev/null
 +++ b/include/linux/sched/ext.h
 @@ -0,0 +1,756 @@
@@ -1505,10 +1400,10 @@ index 000000000..474131a20
 +#endif	/* CONFIG_SCHED_CLASS_EXT */
 +#endif	/* _LINUX_SCHED_EXT_H */
 diff --git a/include/linux/sched/task.h b/include/linux/sched/task.h
-index a23af225c..03d35e3ed 100644
+index d362aacf9f89..4df2f9055587 100644
 --- a/include/linux/sched/task.h
 +++ b/include/linux/sched/task.h
-@@ -61,7 +61,8 @@ extern asmlinkage void schedule_tail(struct task_struct *prev);
+@@ -63,7 +63,8 @@ extern asmlinkage void schedule_tail(struct task_struct *prev);
  extern void init_idle(struct task_struct *idle, int cpu);
  
  extern int sched_fork(unsigned long clone_flags, struct task_struct *p);
@@ -1519,7 +1414,7 @@ index a23af225c..03d35e3ed 100644
  extern void sched_dead(struct task_struct *p);
  
 diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
-index 3bac0a8ce..359a14cc7 100644
+index 3bac0a8ceab2..359a14cc76a4 100644
 --- a/include/uapi/linux/sched.h
 +++ b/include/uapi/linux/sched.h
 @@ -118,6 +118,7 @@ struct clone_args {
@@ -1531,10 +1426,10 @@ index 3bac0a8ce..359a14cc7 100644
  /* Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork */
  #define SCHED_RESET_ON_FORK     0x40000000
 diff --git a/init/Kconfig b/init/Kconfig
-index 36a0a8fc9..b498a8e7b 100644
+index bee58f7468c3..eadcdced26b2 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
-@@ -1025,6 +1025,11 @@ config RT_GROUP_SCHED
+@@ -1033,6 +1033,11 @@ config RT_GROUP_SCHED
  	  realtime bandwidth for them.
  	  See Documentation/scheduler/sched-rt-group.rst for more information.
  
@@ -1547,7 +1442,7 @@ index 36a0a8fc9..b498a8e7b 100644
  
  config SCHED_MM_CID
 diff --git a/init/init_task.c b/init/init_task.c
-index 5727d4214..54c9244ef 100644
+index 7ecb458eb3da..10a1df7dfb7f 100644
 --- a/init/init_task.c
 +++ b/init/init_task.c
 @@ -6,6 +6,7 @@
@@ -1558,7 +1453,7 @@ index 5727d4214..54c9244ef 100644
  #include <linux/init.h>
  #include <linux/fs.h>
  #include <linux/mm.h>
-@@ -102,6 +103,20 @@ struct task_struct init_task
+@@ -97,6 +98,20 @@ struct task_struct init_task __aligned(L1_CACHE_BYTES) = {
  #endif
  #ifdef CONFIG_CGROUP_SCHED
  	.sched_task_group = &root_task_group,
@@ -1580,7 +1475,7 @@ index 5727d4214..54c9244ef 100644
  	.ptraced	= LIST_HEAD_INIT(init_task.ptraced),
  	.ptrace_entry	= LIST_HEAD_INIT(init_task.ptrace_entry),
 diff --git a/kernel/Kconfig.preempt b/kernel/Kconfig.preempt
-index c2f1fd95a..bae49b743 100644
+index c2f1fd95a821..bae49b743834 100644
 --- a/kernel/Kconfig.preempt
 +++ b/kernel/Kconfig.preempt
 @@ -133,4 +133,26 @@ config SCHED_CORE
@@ -1612,7 +1507,7 @@ index c2f1fd95a..bae49b743 100644
 +
 +	  See Documentation/scheduler/sched-ext.rst for more details.
 diff --git a/kernel/bpf/bpf_struct_ops_types.h b/kernel/bpf/bpf_struct_ops_types.h
-index 5678a9ddf..3618769d8 100644
+index 5678a9ddf817..3618769d853d 100644
 --- a/kernel/bpf/bpf_struct_ops_types.h
 +++ b/kernel/bpf/bpf_struct_ops_types.h
 @@ -9,4 +9,8 @@ BPF_STRUCT_OPS_TYPE(bpf_dummy_ops)
@@ -1624,991 +1519,13 @@ index 5678a9ddf..3618769d8 100644
 +BPF_STRUCT_OPS_TYPE(sched_ext_ops)
 +#endif
  #endif
-diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-index e215413c7..f45507ce9 100644
---- a/kernel/bpf/verifier.c
-+++ b/kernel/bpf/verifier.c
-@@ -2349,6 +2349,81 @@ static void __update_reg_bounds(struct bpf_reg_state *reg)
- /* Uses signed min/max values to inform unsigned, and vice-versa */
- static void __reg32_deduce_bounds(struct bpf_reg_state *reg)
- {
-+	/* If upper 32 bits of u64/s64 range don't change, we can use lower 32
-+	 * bits to improve our u32/s32 boundaries.
-+	 *
-+	 * E.g., the case where we have upper 32 bits as zero ([10, 20] in
-+	 * u64) is pretty trivial, it's obvious that in u32 we'll also have
-+	 * [10, 20] range. But this property holds for any 64-bit range as
-+	 * long as upper 32 bits in that entire range of values stay the same.
-+	 *
-+	 * E.g., u64 range [0x10000000A, 0x10000000F] ([4294967306, 4294967311]
-+	 * in decimal) has the same upper 32 bits throughout all the values in
-+	 * that range. As such, lower 32 bits form a valid [0xA, 0xF] ([10, 15])
-+	 * range.
-+	 *
-+	 * Note also, that [0xA, 0xF] is a valid range both in u32 and in s32,
-+	 * following the rules outlined below about u64/s64 correspondence
-+	 * (which equally applies to u32 vs s32 correspondence). In general it
-+	 * depends on actual hexadecimal values of 32-bit range. They can form
-+	 * only valid u32, or only valid s32 ranges in some cases.
-+	 *
-+	 * So we use all these insights to derive bounds for subregisters here.
-+	 */
-+	if ((reg->umin_value >> 32) == (reg->umax_value >> 32)) {
-+		/* u64 to u32 casting preserves validity of low 32 bits as
-+		 * a range, if upper 32 bits are the same
-+		 */
-+		reg->u32_min_value = max_t(u32, reg->u32_min_value, (u32)reg->umin_value);
-+		reg->u32_max_value = min_t(u32, reg->u32_max_value, (u32)reg->umax_value);
-+
-+		if ((s32)reg->umin_value <= (s32)reg->umax_value) {
-+			reg->s32_min_value = max_t(s32, reg->s32_min_value, (s32)reg->umin_value);
-+			reg->s32_max_value = min_t(s32, reg->s32_max_value, (s32)reg->umax_value);
-+		}
-+	}
-+	if ((reg->smin_value >> 32) == (reg->smax_value >> 32)) {
-+		/* low 32 bits should form a proper u32 range */
-+		if ((u32)reg->smin_value <= (u32)reg->smax_value) {
-+			reg->u32_min_value = max_t(u32, reg->u32_min_value, (u32)reg->smin_value);
-+			reg->u32_max_value = min_t(u32, reg->u32_max_value, (u32)reg->smax_value);
-+		}
-+		/* low 32 bits should form a proper s32 range */
-+		if ((s32)reg->smin_value <= (s32)reg->smax_value) {
-+			reg->s32_min_value = max_t(s32, reg->s32_min_value, (s32)reg->smin_value);
-+			reg->s32_max_value = min_t(s32, reg->s32_max_value, (s32)reg->smax_value);
-+		}
-+	}
-+	/* Special case where upper bits form a small sequence of two
-+	 * sequential numbers (in 32-bit unsigned space, so 0xffffffff to
-+	 * 0x00000000 is also valid), while lower bits form a proper s32 range
-+	 * going from negative numbers to positive numbers. E.g., let's say we
-+	 * have s64 range [-1, 1] ([0xffffffffffffffff, 0x0000000000000001]).
-+	 * Possible s64 values are {-1, 0, 1} ({0xffffffffffffffff,
-+	 * 0x0000000000000000, 0x00000000000001}). Ignoring upper 32 bits,
-+	 * we still get a valid s32 range [-1, 1] ([0xffffffff, 0x00000001]).
-+	 * Note that it doesn't have to be 0xffffffff going to 0x00000000 in
-+	 * upper 32 bits. As a random example, s64 range
-+	 * [0xfffffff0fffffff0; 0xfffffff100000010], forms a valid s32 range
-+	 * [-16, 16] ([0xfffffff0; 0x00000010]) in its 32 bit subregister.
-+	 */
-+	if ((u32)(reg->umin_value >> 32) + 1 == (u32)(reg->umax_value >> 32) &&
-+	    (s32)reg->umin_value < 0 && (s32)reg->umax_value >= 0) {
-+		reg->s32_min_value = max_t(s32, reg->s32_min_value, (s32)reg->umin_value);
-+		reg->s32_max_value = min_t(s32, reg->s32_max_value, (s32)reg->umax_value);
-+	}
-+	if ((u32)(reg->smin_value >> 32) + 1 == (u32)(reg->smax_value >> 32) &&
-+	    (s32)reg->smin_value < 0 && (s32)reg->smax_value >= 0) {
-+		reg->s32_min_value = max_t(s32, reg->s32_min_value, (s32)reg->smin_value);
-+		reg->s32_max_value = min_t(s32, reg->s32_max_value, (s32)reg->smax_value);
-+	}
-+	/* if u32 range forms a valid s32 range (due to matching sign bit),
-+	 * try to learn from that
-+	 */
-+	if ((s32)reg->u32_min_value <= (s32)reg->u32_max_value) {
-+		reg->s32_min_value = max_t(s32, reg->s32_min_value, reg->u32_min_value);
-+		reg->s32_max_value = min_t(s32, reg->s32_max_value, reg->u32_max_value);
-+	}
- 	/* Learn sign from signed bounds.
- 	 * If we cannot cross the sign boundary, then signed and unsigned bounds
- 	 * are the same, so combine.  This works even in the negative case, e.g.
-@@ -2383,6 +2458,77 @@ static void __reg32_deduce_bounds(struct bpf_reg_state *reg)
- 
- static void __reg64_deduce_bounds(struct bpf_reg_state *reg)
- {
-+	/* If u64 range forms a valid s64 range (due to matching sign bit),
-+	 * try to learn from that. Let's do a bit of ASCII art to see when
-+	 * this is happening. Let's take u64 range first:
-+	 *
-+	 * 0             0x7fffffffffffffff 0x8000000000000000        U64_MAX
-+	 * |-------------------------------|--------------------------------|
-+	 *
-+	 * Valid u64 range is formed when umin and umax are anywhere in the
-+	 * range [0, U64_MAX], and umin <= umax. u64 case is simple and
-+	 * straightforward. Let's see how s64 range maps onto the same range
-+	 * of values, annotated below the line for comparison:
-+	 *
-+	 * 0             0x7fffffffffffffff 0x8000000000000000        U64_MAX
-+	 * |-------------------------------|--------------------------------|
-+	 * 0                        S64_MAX S64_MIN                        -1
-+	 *
-+	 * So s64 values basically start in the middle and they are logically
-+	 * contiguous to the right of it, wrapping around from -1 to 0, and
-+	 * then finishing as S64_MAX (0x7fffffffffffffff) right before
-+	 * S64_MIN. We can try drawing the continuity of u64 vs s64 values
-+	 * more visually as mapped to sign-agnostic range of hex values.
-+	 *
-+	 *  u64 start                                               u64 end
-+	 *  _______________________________________________________________
-+	 * /                                                               \
-+	 * 0             0x7fffffffffffffff 0x8000000000000000        U64_MAX
-+	 * |-------------------------------|--------------------------------|
-+	 * 0                        S64_MAX S64_MIN                        -1
-+	 *                                / \
-+	 * >------------------------------   ------------------------------->
-+	 * s64 continues...        s64 end   s64 start          s64 "midpoint"
-+	 *
-+	 * What this means is that, in general, we can't always derive
-+	 * something new about u64 from any random s64 range, and vice versa.
-+	 *
-+	 * But we can do that in two particular cases. One is when entire
-+	 * u64/s64 range is *entirely* contained within left half of the above
-+	 * diagram or when it is *entirely* contained in the right half. I.e.:
-+	 *
-+	 * |-------------------------------|--------------------------------|
-+	 *     ^                   ^            ^                 ^
-+	 *     A                   B            C                 D
-+	 *
-+	 * [A, B] and [C, D] are contained entirely in their respective halves
-+	 * and form valid contiguous ranges as both u64 and s64 values. [A, B]
-+	 * will be non-negative both as u64 and s64 (and in fact it will be
-+	 * identical ranges no matter the signedness). [C, D] treated as s64
-+	 * will be a range of negative values, while in u64 it will be
-+	 * non-negative range of values larger than 0x8000000000000000.
-+	 *
-+	 * Now, any other range here can't be represented in both u64 and s64
-+	 * simultaneously. E.g., [A, C], [A, D], [B, C], [B, D] are valid
-+	 * contiguous u64 ranges, but they are discontinuous in s64. [B, C]
-+	 * in s64 would be properly presented as [S64_MIN, C] and [B, S64_MAX],
-+	 * for example. Similarly, valid s64 range [D, A] (going from negative
-+	 * to positive values), would be two separate [D, U64_MAX] and [0, A]
-+	 * ranges as u64. Currently reg_state can't represent two segments per
-+	 * numeric domain, so in such situations we can only derive maximal
-+	 * possible range ([0, U64_MAX] for u64, and [S64_MIN, S64_MAX] for s64).
-+	 *
-+	 * So we use these facts to derive umin/umax from smin/smax and vice
-+	 * versa only if they stay within the same "half". This is equivalent
-+	 * to checking sign bit: lower half will have sign bit as zero, upper
-+	 * half have sign bit 1. Below in code we simplify this by just
-+	 * casting umin/umax as smin/smax and checking if they form valid
-+	 * range, and vice versa. Those are equivalent checks.
-+	 */
-+	if ((s64)reg->umin_value <= (s64)reg->umax_value) {
-+		reg->smin_value = max_t(s64, reg->smin_value, reg->umin_value);
-+		reg->smax_value = min_t(s64, reg->smax_value, reg->umax_value);
-+	}
- 	/* Learn sign from signed bounds.
- 	 * If we cannot cross the sign boundary, then signed and unsigned bounds
- 	 * are the same, so combine.  This works even in the negative case, e.g.
-@@ -2415,10 +2561,54 @@ static void __reg64_deduce_bounds(struct bpf_reg_state *reg)
- 	}
- }
- 
-+static void __reg_deduce_mixed_bounds(struct bpf_reg_state *reg)
-+{
-+	/* Try to tighten 64-bit bounds from 32-bit knowledge, using 32-bit
-+	 * values on both sides of 64-bit range in hope to have tigher range.
-+	 * E.g., if r1 is [0x1'00000000, 0x3'80000000], and we learn from
-+	 * 32-bit signed > 0 operation that s32 bounds are now [1; 0x7fffffff].
-+	 * With this, we can substitute 1 as low 32-bits of _low_ 64-bit bound
-+	 * (0x100000000 -> 0x100000001) and 0x7fffffff as low 32-bits of
-+	 * _high_ 64-bit bound (0x380000000 -> 0x37fffffff) and arrive at a
-+	 * better overall bounds for r1 as [0x1'000000001; 0x3'7fffffff].
-+	 * We just need to make sure that derived bounds we are intersecting
-+	 * with are well-formed ranges in respecitve s64 or u64 domain, just
-+	 * like we do with similar kinds of 32-to-64 or 64-to-32 adjustments.
-+	 */
-+	__u64 new_umin, new_umax;
-+	__s64 new_smin, new_smax;
-+
-+	/* u32 -> u64 tightening, it's always well-formed */
-+	new_umin = (reg->umin_value & ~0xffffffffULL) | reg->u32_min_value;
-+	new_umax = (reg->umax_value & ~0xffffffffULL) | reg->u32_max_value;
-+	reg->umin_value = max_t(u64, reg->umin_value, new_umin);
-+	reg->umax_value = min_t(u64, reg->umax_value, new_umax);
-+	/* u32 -> s64 tightening, u32 range embedded into s64 preserves range validity */
-+	new_smin = (reg->smin_value & ~0xffffffffULL) | reg->u32_min_value;
-+	new_smax = (reg->smax_value & ~0xffffffffULL) | reg->u32_max_value;
-+	reg->smin_value = max_t(s64, reg->smin_value, new_smin);
-+	reg->smax_value = min_t(s64, reg->smax_value, new_smax);
-+
-+	/* if s32 can be treated as valid u32 range, we can use it as well */
-+	if ((u32)reg->s32_min_value <= (u32)reg->s32_max_value) {
-+		/* s32 -> u64 tightening */
-+		new_umin = (reg->umin_value & ~0xffffffffULL) | (u32)reg->s32_min_value;
-+		new_umax = (reg->umax_value & ~0xffffffffULL) | (u32)reg->s32_max_value;
-+		reg->umin_value = max_t(u64, reg->umin_value, new_umin);
-+		reg->umax_value = min_t(u64, reg->umax_value, new_umax);
-+		/* s32 -> s64 tightening */
-+		new_smin = (reg->smin_value & ~0xffffffffULL) | (u32)reg->s32_min_value;
-+		new_smax = (reg->smax_value & ~0xffffffffULL) | (u32)reg->s32_max_value;
-+		reg->smin_value = max_t(s64, reg->smin_value, new_smin);
-+		reg->smax_value = min_t(s64, reg->smax_value, new_smax);
-+	}
-+}
-+
- static void __reg_deduce_bounds(struct bpf_reg_state *reg)
- {
- 	__reg32_deduce_bounds(reg);
- 	__reg64_deduce_bounds(reg);
-+	__reg_deduce_mixed_bounds(reg);
- }
- 
- /* Attempts to improve var_off based on unsigned min/max information */
-@@ -2440,6 +2630,7 @@ static void reg_bounds_sync(struct bpf_reg_state *reg)
- 	__update_reg_bounds(reg);
- 	/* We might have learned something about the sign bit. */
- 	__reg_deduce_bounds(reg);
-+	__reg_deduce_bounds(reg);
- 	/* We might have learned some bits from the bounds. */
- 	__reg_bound_offset(reg);
- 	/* Intersecting with the old var_off might have improved our bounds
-@@ -2473,51 +2664,6 @@ static void __reg_assign_32_into_64(struct bpf_reg_state *reg)
- 	}
- }
- 
--static void __reg_combine_32_into_64(struct bpf_reg_state *reg)
--{
--	/* special case when 64-bit register has upper 32-bit register
--	 * zeroed. Typically happens after zext or <<32, >>32 sequence
--	 * allowing us to use 32-bit bounds directly,
--	 */
--	if (tnum_equals_const(tnum_clear_subreg(reg->var_off), 0)) {
--		__reg_assign_32_into_64(reg);
--	} else {
--		/* Otherwise the best we can do is push lower 32bit known and
--		 * unknown bits into register (var_off set from jmp logic)
--		 * then learn as much as possible from the 64-bit tnum
--		 * known and unknown bits. The previous smin/smax bounds are
--		 * invalid here because of jmp32 compare so mark them unknown
--		 * so they do not impact tnum bounds calculation.
--		 */
--		__mark_reg64_unbounded(reg);
--	}
--	reg_bounds_sync(reg);
--}
--
--static bool __reg64_bound_s32(s64 a)
--{
--	return a >= S32_MIN && a <= S32_MAX;
--}
--
--static bool __reg64_bound_u32(u64 a)
--{
--	return a >= U32_MIN && a <= U32_MAX;
--}
--
--static void __reg_combine_64_into_32(struct bpf_reg_state *reg)
--{
--	__mark_reg32_unbounded(reg);
--	if (__reg64_bound_s32(reg->smin_value) && __reg64_bound_s32(reg->smax_value)) {
--		reg->s32_min_value = (s32)reg->smin_value;
--		reg->s32_max_value = (s32)reg->smax_value;
--	}
--	if (__reg64_bound_u32(reg->umin_value) && __reg64_bound_u32(reg->umax_value)) {
--		reg->u32_min_value = (u32)reg->umin_value;
--		reg->u32_max_value = (u32)reg->umax_value;
--	}
--	reg_bounds_sync(reg);
--}
--
- /* Mark a register as having a completely unknown (scalar) value. */
- static void __mark_reg_unknown(const struct bpf_verifier_env *env,
- 			       struct bpf_reg_state *reg)
-@@ -6231,9 +6377,10 @@ static void coerce_reg_to_size(struct bpf_reg_state *reg, int size)
- 	 * values are also truncated so we push 64-bit bounds into
- 	 * 32-bit bounds. Above were truncated < 32-bits already.
- 	 */
--	if (size >= 4)
--		return;
--	__reg_combine_64_into_32(reg);
-+	if (size < 4) {
-+		__mark_reg32_unbounded(reg);
-+		reg_bounds_sync(reg);
-+	}
- }
- 
- static void set_sext64_default_val(struct bpf_reg_state *reg, int size)
-@@ -14166,161 +14313,102 @@ static void find_good_pkt_pointers(struct bpf_verifier_state *vstate,
- 	}));
- }
- 
--static int is_branch32_taken(struct bpf_reg_state *reg, u32 val, u8 opcode)
-+/* check if register is a constant scalar value */
-+static bool is_reg_const(struct bpf_reg_state *reg, bool subreg32)
- {
--	struct tnum subreg = tnum_subreg(reg->var_off);
--	s32 sval = (s32)val;
--
--	switch (opcode) {
--	case BPF_JEQ:
--		if (tnum_is_const(subreg))
--			return !!tnum_equals_const(subreg, val);
--		else if (val < reg->u32_min_value || val > reg->u32_max_value)
--			return 0;
--		else if (sval < reg->s32_min_value || sval > reg->s32_max_value)
--			return 0;
--		break;
--	case BPF_JNE:
--		if (tnum_is_const(subreg))
--			return !tnum_equals_const(subreg, val);
--		else if (val < reg->u32_min_value || val > reg->u32_max_value)
--			return 1;
--		else if (sval < reg->s32_min_value || sval > reg->s32_max_value)
--			return 1;
--		break;
--	case BPF_JSET:
--		if ((~subreg.mask & subreg.value) & val)
--			return 1;
--		if (!((subreg.mask | subreg.value) & val))
--			return 0;
--		break;
--	case BPF_JGT:
--		if (reg->u32_min_value > val)
--			return 1;
--		else if (reg->u32_max_value <= val)
--			return 0;
--		break;
--	case BPF_JSGT:
--		if (reg->s32_min_value > sval)
--			return 1;
--		else if (reg->s32_max_value <= sval)
--			return 0;
--		break;
--	case BPF_JLT:
--		if (reg->u32_max_value < val)
--			return 1;
--		else if (reg->u32_min_value >= val)
--			return 0;
--		break;
--	case BPF_JSLT:
--		if (reg->s32_max_value < sval)
--			return 1;
--		else if (reg->s32_min_value >= sval)
--			return 0;
--		break;
--	case BPF_JGE:
--		if (reg->u32_min_value >= val)
--			return 1;
--		else if (reg->u32_max_value < val)
--			return 0;
--		break;
--	case BPF_JSGE:
--		if (reg->s32_min_value >= sval)
--			return 1;
--		else if (reg->s32_max_value < sval)
--			return 0;
--		break;
--	case BPF_JLE:
--		if (reg->u32_max_value <= val)
--			return 1;
--		else if (reg->u32_min_value > val)
--			return 0;
--		break;
--	case BPF_JSLE:
--		if (reg->s32_max_value <= sval)
--			return 1;
--		else if (reg->s32_min_value > sval)
--			return 0;
--		break;
--	}
--
--	return -1;
-+	return reg->type == SCALAR_VALUE &&
-+	       tnum_is_const(subreg32 ? tnum_subreg(reg->var_off) : reg->var_off);
- }
- 
-+/* assuming is_reg_const() is true, return constant value of a register */
-+static u64 reg_const_value(struct bpf_reg_state *reg, bool subreg32)
-+{
-+	return subreg32 ? tnum_subreg(reg->var_off).value : reg->var_off.value;
-+}
- 
--static int is_branch64_taken(struct bpf_reg_state *reg, u64 val, u8 opcode)
-+/*
-+ * <reg1> <op> <reg2>, currently assuming reg2 is a constant
-+ */
-+static int is_scalar_branch_taken(struct bpf_reg_state *reg1, struct bpf_reg_state *reg2,
-+				  u8 opcode, bool is_jmp32)
- {
--	s64 sval = (s64)val;
-+	struct tnum t1 = is_jmp32 ? tnum_subreg(reg1->var_off) : reg1->var_off;
-+	u64 umin1 = is_jmp32 ? (u64)reg1->u32_min_value : reg1->umin_value;
-+	u64 umax1 = is_jmp32 ? (u64)reg1->u32_max_value : reg1->umax_value;
-+	s64 smin1 = is_jmp32 ? (s64)reg1->s32_min_value : reg1->smin_value;
-+	s64 smax1 = is_jmp32 ? (s64)reg1->s32_max_value : reg1->smax_value;
-+	u64 uval = is_jmp32 ? (u32)tnum_subreg(reg2->var_off).value : reg2->var_off.value;
-+	s64 sval = is_jmp32 ? (s32)uval : (s64)uval;
- 
- 	switch (opcode) {
- 	case BPF_JEQ:
--		if (tnum_is_const(reg->var_off))
--			return !!tnum_equals_const(reg->var_off, val);
--		else if (val < reg->umin_value || val > reg->umax_value)
-+		if (tnum_is_const(t1))
-+			return !!tnum_equals_const(t1, uval);
-+		else if (uval < umin1 || uval > umax1)
- 			return 0;
--		else if (sval < reg->smin_value || sval > reg->smax_value)
-+		else if (sval < smin1 || sval > smax1)
- 			return 0;
- 		break;
- 	case BPF_JNE:
--		if (tnum_is_const(reg->var_off))
--			return !tnum_equals_const(reg->var_off, val);
--		else if (val < reg->umin_value || val > reg->umax_value)
-+		if (tnum_is_const(t1))
-+			return !tnum_equals_const(t1, uval);
-+		else if (uval < umin1 || uval > umax1)
- 			return 1;
--		else if (sval < reg->smin_value || sval > reg->smax_value)
-+		else if (sval < smin1 || sval > smax1)
- 			return 1;
- 		break;
- 	case BPF_JSET:
--		if ((~reg->var_off.mask & reg->var_off.value) & val)
-+		if ((~t1.mask & t1.value) & uval)
- 			return 1;
--		if (!((reg->var_off.mask | reg->var_off.value) & val))
-+		if (!((t1.mask | t1.value) & uval))
- 			return 0;
- 		break;
- 	case BPF_JGT:
--		if (reg->umin_value > val)
-+		if (umin1 > uval )
- 			return 1;
--		else if (reg->umax_value <= val)
-+		else if (umax1 <= uval)
- 			return 0;
- 		break;
- 	case BPF_JSGT:
--		if (reg->smin_value > sval)
-+		if (smin1 > sval)
- 			return 1;
--		else if (reg->smax_value <= sval)
-+		else if (smax1 <= sval)
- 			return 0;
- 		break;
- 	case BPF_JLT:
--		if (reg->umax_value < val)
-+		if (umax1 < uval)
- 			return 1;
--		else if (reg->umin_value >= val)
-+		else if (umin1 >= uval)
- 			return 0;
- 		break;
- 	case BPF_JSLT:
--		if (reg->smax_value < sval)
-+		if (smax1 < sval)
- 			return 1;
--		else if (reg->smin_value >= sval)
-+		else if (smin1 >= sval)
- 			return 0;
- 		break;
- 	case BPF_JGE:
--		if (reg->umin_value >= val)
-+		if (umin1 >= uval)
- 			return 1;
--		else if (reg->umax_value < val)
-+		else if (umax1 < uval)
- 			return 0;
- 		break;
- 	case BPF_JSGE:
--		if (reg->smin_value >= sval)
-+		if (smin1 >= sval)
- 			return 1;
--		else if (reg->smax_value < sval)
-+		else if (smax1 < sval)
- 			return 0;
- 		break;
- 	case BPF_JLE:
--		if (reg->umax_value <= val)
-+		if (umax1 <= uval)
- 			return 1;
--		else if (reg->umin_value > val)
-+		else if (umin1 > uval)
- 			return 0;
- 		break;
- 	case BPF_JSLE:
--		if (reg->smax_value <= sval)
-+		if (smax1 <= sval)
- 			return 1;
--		else if (reg->smin_value > sval)
-+		else if (smin1 > sval)
- 			return 0;
- 		break;
- 	}
-@@ -14328,41 +14416,6 @@ static int is_branch64_taken(struct bpf_reg_state *reg, u64 val, u8 opcode)
- 	return -1;
- }
- 
--/* compute branch direction of the expression "if (reg opcode val) goto target;"
-- * and return:
-- *  1 - branch will be taken and "goto target" will be executed
-- *  0 - branch will not be taken and fall-through to next insn
-- * -1 - unknown. Example: "if (reg < 5)" is unknown when register value
-- *      range [0,10]
-- */
--static int is_branch_taken(struct bpf_reg_state *reg, u64 val, u8 opcode,
--			   bool is_jmp32)
--{
--	if (__is_pointer_value(false, reg)) {
--		if (!reg_not_null(reg))
--			return -1;
--
--		/* If pointer is valid tests against zero will fail so we can
--		 * use this to direct branch taken.
--		 */
--		if (val != 0)
--			return -1;
--
--		switch (opcode) {
--		case BPF_JEQ:
--			return 0;
--		case BPF_JNE:
--			return 1;
--		default:
--			return -1;
--		}
--	}
--
--	if (is_jmp32)
--		return is_branch32_taken(reg, val, opcode);
--	return is_branch64_taken(reg, val, opcode);
--}
--
- static int flip_opcode(u32 opcode)
- {
- 	/* How can we transform "a <op> b" into "b <op> a"? */
-@@ -14424,32 +14477,98 @@ static int is_pkt_ptr_branch_taken(struct bpf_reg_state *dst_reg,
- 	return -1;
- }
- 
--/* Adjusts the register min/max values in the case that the dst_reg is the
-- * variable register that we are working on, and src_reg is a constant or we're
-- * simply doing a BPF_K check.
-- * In JEQ/JNE cases we also adjust the var_off values.
-+/* compute branch direction of the expression "if (<reg1> opcode <reg2>) goto target;"
-+ * and return:
-+ *  1 - branch will be taken and "goto target" will be executed
-+ *  0 - branch will not be taken and fall-through to next insn
-+ * -1 - unknown. Example: "if (reg1 < 5)" is unknown when register value
-+ *      range [0,10]
-+ */
-+static int is_branch_taken(struct bpf_reg_state *reg1, struct bpf_reg_state *reg2,
-+			   u8 opcode, bool is_jmp32)
-+{
-+	u64 val;
-+
-+	if (reg_is_pkt_pointer_any(reg1) && reg_is_pkt_pointer_any(reg2) && !is_jmp32)
-+		return is_pkt_ptr_branch_taken(reg1, reg2, opcode);
-+
-+	/* try to make sure reg2 is a constant SCALAR_VALUE */
-+	if (!is_reg_const(reg2, is_jmp32)) {
-+		opcode = flip_opcode(opcode);
-+		swap(reg1, reg2);
-+	}
-+	/* for now we expect reg2 to be a constant to make any useful decisions */
-+	if (!is_reg_const(reg2, is_jmp32))
-+		return -1;
-+	val = reg_const_value(reg2, is_jmp32);
-+
-+	if (__is_pointer_value(false, reg1)) {
-+		if (!reg_not_null(reg1))
-+			return -1;
-+
-+		/* If pointer is valid tests against zero will fail so we can
-+		 * use this to direct branch taken.
-+		 */
-+		if (val != 0)
-+			return -1;
-+
-+		switch (opcode) {
-+		case BPF_JEQ:
-+			return 0;
-+		case BPF_JNE:
-+			return 1;
-+		default:
-+			return -1;
-+		}
-+	}
-+
-+	return is_scalar_branch_taken(reg1, reg2, opcode, is_jmp32);
-+}
-+
-+/* Adjusts the register min/max values in the case that the dst_reg and
-+ * src_reg are both SCALAR_VALUE registers (or we are simply doing a BPF_K
-+ * check, in which case we havea fake SCALAR_VALUE representing insn->imm).
-+ * Technically we can do similar adjustments for pointers to the same object,
-+ * but we don't support that right now.
-  */
--static void reg_set_min_max(struct bpf_reg_state *true_reg,
--			    struct bpf_reg_state *false_reg,
--			    u64 val, u32 val32,
-+static void reg_set_min_max(struct bpf_reg_state *true_reg1,
-+			    struct bpf_reg_state *true_reg2,
-+			    struct bpf_reg_state *false_reg1,
-+			    struct bpf_reg_state *false_reg2,
- 			    u8 opcode, bool is_jmp32)
- {
--	struct tnum false_32off = tnum_subreg(false_reg->var_off);
--	struct tnum false_64off = false_reg->var_off;
--	struct tnum true_32off = tnum_subreg(true_reg->var_off);
--	struct tnum true_64off = true_reg->var_off;
--	s64 sval = (s64)val;
--	s32 sval32 = (s32)val32;
--
--	/* If the dst_reg is a pointer, we can't learn anything about its
--	 * variable offset from the compare (unless src_reg were a pointer into
--	 * the same object, but we don't bother with that.
--	 * Since false_reg and true_reg have the same type by construction, we
--	 * only need to check one of them for pointerness.
-+	struct tnum false_32off, false_64off;
-+	struct tnum true_32off, true_64off;
-+	u64 uval;
-+	u32 uval32;
-+	s64 sval;
-+	s32 sval32;
-+
-+	/* If either register is a pointer, we can't learn anything about its
-+	 * variable offset from the compare (unless they were a pointer into
-+	 * the same object, but we don't bother with that).
- 	 */
--	if (__is_pointer_value(false, false_reg))
-+	if (false_reg1->type != SCALAR_VALUE || false_reg2->type != SCALAR_VALUE)
- 		return;
- 
-+	/* we expect right-hand registers (src ones) to be constants, for now */
-+	if (!is_reg_const(false_reg2, is_jmp32)) {
-+		opcode = flip_opcode(opcode);
-+		swap(true_reg1, true_reg2);
-+		swap(false_reg1, false_reg2);
-+	}
-+	if (!is_reg_const(false_reg2, is_jmp32))
-+		return;
-+
-+	false_32off = tnum_subreg(false_reg1->var_off);
-+	false_64off = false_reg1->var_off;
-+	true_32off = tnum_subreg(true_reg1->var_off);
-+	true_64off = true_reg1->var_off;
-+	uval = false_reg2->var_off.value;
-+	uval32 = (u32)tnum_subreg(false_reg2->var_off).value;
-+	sval = (s64)uval;
-+	sval32 = (s32)uval32;
-+
- 	switch (opcode) {
- 	/* JEQ/JNE comparison doesn't change the register equivalence.
- 	 *
-@@ -14462,52 +14581,52 @@ static void reg_set_min_max(struct bpf_reg_state *true_reg,
- 	 */
- 	case BPF_JEQ:
- 		if (is_jmp32) {
--			__mark_reg32_known(true_reg, val32);
--			true_32off = tnum_subreg(true_reg->var_off);
-+			__mark_reg32_known(true_reg1, uval32);
-+			true_32off = tnum_subreg(true_reg1->var_off);
- 		} else {
--			___mark_reg_known(true_reg, val);
--			true_64off = true_reg->var_off;
-+			___mark_reg_known(true_reg1, uval);
-+			true_64off = true_reg1->var_off;
- 		}
- 		break;
- 	case BPF_JNE:
- 		if (is_jmp32) {
--			__mark_reg32_known(false_reg, val32);
--			false_32off = tnum_subreg(false_reg->var_off);
-+			__mark_reg32_known(false_reg1, uval32);
-+			false_32off = tnum_subreg(false_reg1->var_off);
- 		} else {
--			___mark_reg_known(false_reg, val);
--			false_64off = false_reg->var_off;
-+			___mark_reg_known(false_reg1, uval);
-+			false_64off = false_reg1->var_off;
- 		}
- 		break;
- 	case BPF_JSET:
- 		if (is_jmp32) {
--			false_32off = tnum_and(false_32off, tnum_const(~val32));
--			if (is_power_of_2(val32))
-+			false_32off = tnum_and(false_32off, tnum_const(~uval32));
-+			if (is_power_of_2(uval32))
- 				true_32off = tnum_or(true_32off,
--						     tnum_const(val32));
-+						     tnum_const(uval32));
- 		} else {
--			false_64off = tnum_and(false_64off, tnum_const(~val));
--			if (is_power_of_2(val))
-+			false_64off = tnum_and(false_64off, tnum_const(~uval));
-+			if (is_power_of_2(uval))
- 				true_64off = tnum_or(true_64off,
--						     tnum_const(val));
-+						     tnum_const(uval));
- 		}
- 		break;
- 	case BPF_JGE:
- 	case BPF_JGT:
- 	{
- 		if (is_jmp32) {
--			u32 false_umax = opcode == BPF_JGT ? val32  : val32 - 1;
--			u32 true_umin = opcode == BPF_JGT ? val32 + 1 : val32;
-+			u32 false_umax = opcode == BPF_JGT ? uval32  : uval32 - 1;
-+			u32 true_umin = opcode == BPF_JGT ? uval32 + 1 : uval32;
- 
--			false_reg->u32_max_value = min(false_reg->u32_max_value,
-+			false_reg1->u32_max_value = min(false_reg1->u32_max_value,
- 						       false_umax);
--			true_reg->u32_min_value = max(true_reg->u32_min_value,
-+			true_reg1->u32_min_value = max(true_reg1->u32_min_value,
- 						      true_umin);
- 		} else {
--			u64 false_umax = opcode == BPF_JGT ? val    : val - 1;
--			u64 true_umin = opcode == BPF_JGT ? val + 1 : val;
-+			u64 false_umax = opcode == BPF_JGT ? uval    : uval - 1;
-+			u64 true_umin = opcode == BPF_JGT ? uval + 1 : uval;
- 
--			false_reg->umax_value = min(false_reg->umax_value, false_umax);
--			true_reg->umin_value = max(true_reg->umin_value, true_umin);
-+			false_reg1->umax_value = min(false_reg1->umax_value, false_umax);
-+			true_reg1->umin_value = max(true_reg1->umin_value, true_umin);
- 		}
- 		break;
- 	}
-@@ -14518,14 +14637,14 @@ static void reg_set_min_max(struct bpf_reg_state *true_reg,
- 			s32 false_smax = opcode == BPF_JSGT ? sval32    : sval32 - 1;
- 			s32 true_smin = opcode == BPF_JSGT ? sval32 + 1 : sval32;
- 
--			false_reg->s32_max_value = min(false_reg->s32_max_value, false_smax);
--			true_reg->s32_min_value = max(true_reg->s32_min_value, true_smin);
-+			false_reg1->s32_max_value = min(false_reg1->s32_max_value, false_smax);
-+			true_reg1->s32_min_value = max(true_reg1->s32_min_value, true_smin);
- 		} else {
- 			s64 false_smax = opcode == BPF_JSGT ? sval    : sval - 1;
- 			s64 true_smin = opcode == BPF_JSGT ? sval + 1 : sval;
- 
--			false_reg->smax_value = min(false_reg->smax_value, false_smax);
--			true_reg->smin_value = max(true_reg->smin_value, true_smin);
-+			false_reg1->smax_value = min(false_reg1->smax_value, false_smax);
-+			true_reg1->smin_value = max(true_reg1->smin_value, true_smin);
- 		}
- 		break;
- 	}
-@@ -14533,19 +14652,19 @@ static void reg_set_min_max(struct bpf_reg_state *true_reg,
- 	case BPF_JLT:
- 	{
- 		if (is_jmp32) {
--			u32 false_umin = opcode == BPF_JLT ? val32  : val32 + 1;
--			u32 true_umax = opcode == BPF_JLT ? val32 - 1 : val32;
-+			u32 false_umin = opcode == BPF_JLT ? uval32  : uval32 + 1;
-+			u32 true_umax = opcode == BPF_JLT ? uval32 - 1 : uval32;
- 
--			false_reg->u32_min_value = max(false_reg->u32_min_value,
-+			false_reg1->u32_min_value = max(false_reg1->u32_min_value,
- 						       false_umin);
--			true_reg->u32_max_value = min(true_reg->u32_max_value,
-+			true_reg1->u32_max_value = min(true_reg1->u32_max_value,
- 						      true_umax);
- 		} else {
--			u64 false_umin = opcode == BPF_JLT ? val    : val + 1;
--			u64 true_umax = opcode == BPF_JLT ? val - 1 : val;
-+			u64 false_umin = opcode == BPF_JLT ? uval    : uval + 1;
-+			u64 true_umax = opcode == BPF_JLT ? uval - 1 : uval;
- 
--			false_reg->umin_value = max(false_reg->umin_value, false_umin);
--			true_reg->umax_value = min(true_reg->umax_value, true_umax);
-+			false_reg1->umin_value = max(false_reg1->umin_value, false_umin);
-+			true_reg1->umax_value = min(true_reg1->umax_value, true_umax);
- 		}
- 		break;
- 	}
-@@ -14556,14 +14675,14 @@ static void reg_set_min_max(struct bpf_reg_state *true_reg,
- 			s32 false_smin = opcode == BPF_JSLT ? sval32    : sval32 + 1;
- 			s32 true_smax = opcode == BPF_JSLT ? sval32 - 1 : sval32;
- 
--			false_reg->s32_min_value = max(false_reg->s32_min_value, false_smin);
--			true_reg->s32_max_value = min(true_reg->s32_max_value, true_smax);
-+			false_reg1->s32_min_value = max(false_reg1->s32_min_value, false_smin);
-+			true_reg1->s32_max_value = min(true_reg1->s32_max_value, true_smax);
- 		} else {
- 			s64 false_smin = opcode == BPF_JSLT ? sval    : sval + 1;
- 			s64 true_smax = opcode == BPF_JSLT ? sval - 1 : sval;
- 
--			false_reg->smin_value = max(false_reg->smin_value, false_smin);
--			true_reg->smax_value = min(true_reg->smax_value, true_smax);
-+			false_reg1->smin_value = max(false_reg1->smin_value, false_smin);
-+			true_reg1->smax_value = min(true_reg1->smax_value, true_smax);
- 		}
- 		break;
- 	}
-@@ -14572,36 +14691,20 @@ static void reg_set_min_max(struct bpf_reg_state *true_reg,
- 	}
- 
- 	if (is_jmp32) {
--		false_reg->var_off = tnum_or(tnum_clear_subreg(false_64off),
-+		false_reg1->var_off = tnum_or(tnum_clear_subreg(false_64off),
- 					     tnum_subreg(false_32off));
--		true_reg->var_off = tnum_or(tnum_clear_subreg(true_64off),
-+		true_reg1->var_off = tnum_or(tnum_clear_subreg(true_64off),
- 					    tnum_subreg(true_32off));
--		__reg_combine_32_into_64(false_reg);
--		__reg_combine_32_into_64(true_reg);
-+		reg_bounds_sync(false_reg1);
-+		reg_bounds_sync(true_reg1);
- 	} else {
--		false_reg->var_off = false_64off;
--		true_reg->var_off = true_64off;
--		__reg_combine_64_into_32(false_reg);
--		__reg_combine_64_into_32(true_reg);
-+		false_reg1->var_off = false_64off;
-+		true_reg1->var_off = true_64off;
-+		reg_bounds_sync(false_reg1);
-+		reg_bounds_sync(true_reg1);
- 	}
- }
- 
--/* Same as above, but for the case that dst_reg holds a constant and src_reg is
-- * the variable reg.
-- */
--static void reg_set_min_max_inv(struct bpf_reg_state *true_reg,
--				struct bpf_reg_state *false_reg,
--				u64 val, u32 val32,
--				u8 opcode, bool is_jmp32)
--{
--	opcode = flip_opcode(opcode);
--	/* This uses zero as "not present in table"; luckily the zero opcode,
--	 * BPF_JA, can't get here.
--	 */
--	if (opcode)
--		reg_set_min_max(true_reg, false_reg, val, val32, opcode, is_jmp32);
--}
--
- /* Regs are known to be equal, so intersect their min/max/var_off */
- static void __reg_combine_min_max(struct bpf_reg_state *src_reg,
- 				  struct bpf_reg_state *dst_reg)
-@@ -14831,6 +14934,7 @@ static int check_cond_jmp_op(struct bpf_verifier_env *env,
- 	struct bpf_reg_state *regs = this_branch->frame[this_branch->curframe]->regs;
- 	struct bpf_reg_state *dst_reg, *other_branch_regs, *src_reg = NULL;
- 	struct bpf_reg_state *eq_branch_regs;
-+	struct bpf_reg_state fake_reg = {};
- 	u8 opcode = BPF_OP(insn->code);
- 	bool is_jmp32;
- 	int pred = -1;
-@@ -14871,42 +14975,13 @@ static int check_cond_jmp_op(struct bpf_verifier_env *env,
- 			verbose(env, "BPF_JMP/JMP32 uses reserved fields\n");
- 			return -EINVAL;
- 		}
-+		src_reg = &fake_reg;
-+		src_reg->type = SCALAR_VALUE;
-+		__mark_reg_known(src_reg, insn->imm);
- 	}
- 
- 	is_jmp32 = BPF_CLASS(insn->code) == BPF_JMP32;
--
--	if (BPF_SRC(insn->code) == BPF_K) {
--		pred = is_branch_taken(dst_reg, insn->imm, opcode, is_jmp32);
--	} else if (src_reg->type == SCALAR_VALUE &&
--		   is_jmp32 && tnum_is_const(tnum_subreg(src_reg->var_off))) {
--		pred = is_branch_taken(dst_reg,
--				       tnum_subreg(src_reg->var_off).value,
--				       opcode,
--				       is_jmp32);
--	} else if (src_reg->type == SCALAR_VALUE &&
--		   !is_jmp32 && tnum_is_const(src_reg->var_off)) {
--		pred = is_branch_taken(dst_reg,
--				       src_reg->var_off.value,
--				       opcode,
--				       is_jmp32);
--	} else if (dst_reg->type == SCALAR_VALUE &&
--		   is_jmp32 && tnum_is_const(tnum_subreg(dst_reg->var_off))) {
--		pred = is_branch_taken(src_reg,
--				       tnum_subreg(dst_reg->var_off).value,
--				       flip_opcode(opcode),
--				       is_jmp32);
--	} else if (dst_reg->type == SCALAR_VALUE &&
--		   !is_jmp32 && tnum_is_const(dst_reg->var_off)) {
--		pred = is_branch_taken(src_reg,
--				       dst_reg->var_off.value,
--				       flip_opcode(opcode),
--				       is_jmp32);
--	} else if (reg_is_pkt_pointer_any(dst_reg) &&
--		   reg_is_pkt_pointer_any(src_reg) &&
--		   !is_jmp32) {
--		pred = is_pkt_ptr_branch_taken(dst_reg, src_reg, opcode);
--	}
--
-+	pred = is_branch_taken(dst_reg, src_reg, opcode, is_jmp32);
- 	if (pred >= 0) {
- 		/* If we get here with a dst_reg pointer type it is because
- 		 * above is_branch_taken() special cased the 0 comparison.
-@@ -14954,53 +15029,32 @@ static int check_cond_jmp_op(struct bpf_verifier_env *env,
- 		return -EFAULT;
- 	other_branch_regs = other_branch->frame[other_branch->curframe]->regs;
- 
--	/* detect if we are comparing against a constant value so we can adjust
--	 * our min/max values for our dst register.
--	 * this is only legit if both are scalars (or pointers to the same
--	 * object, I suppose, see the PTR_MAYBE_NULL related if block below),
--	 * because otherwise the different base pointers mean the offsets aren't
--	 * comparable.
--	 */
- 	if (BPF_SRC(insn->code) == BPF_X) {
--		struct bpf_reg_state *src_reg = &regs[insn->src_reg];
-+		reg_set_min_max(&other_branch_regs[insn->dst_reg],
-+				&other_branch_regs[insn->src_reg],
-+				dst_reg, src_reg, opcode, is_jmp32);
- 
- 		if (dst_reg->type == SCALAR_VALUE &&
--		    src_reg->type == SCALAR_VALUE) {
--			if (tnum_is_const(src_reg->var_off) ||
--			    (is_jmp32 &&
--			     tnum_is_const(tnum_subreg(src_reg->var_off))))
--				reg_set_min_max(&other_branch_regs[insn->dst_reg],
--						dst_reg,
--						src_reg->var_off.value,
--						tnum_subreg(src_reg->var_off).value,
--						opcode, is_jmp32);
--			else if (tnum_is_const(dst_reg->var_off) ||
--				 (is_jmp32 &&
--				  tnum_is_const(tnum_subreg(dst_reg->var_off))))
--				reg_set_min_max_inv(&other_branch_regs[insn->src_reg],
--						    src_reg,
--						    dst_reg->var_off.value,
--						    tnum_subreg(dst_reg->var_off).value,
--						    opcode, is_jmp32);
--			else if (!is_jmp32 &&
--				 (opcode == BPF_JEQ || opcode == BPF_JNE))
--				/* Comparing for equality, we can combine knowledge */
--				reg_combine_min_max(&other_branch_regs[insn->src_reg],
--						    &other_branch_regs[insn->dst_reg],
--						    src_reg, dst_reg, opcode);
--			if (src_reg->id &&
--			    !WARN_ON_ONCE(src_reg->id != other_branch_regs[insn->src_reg].id)) {
--				find_equal_scalars(this_branch, src_reg);
--				find_equal_scalars(other_branch, &other_branch_regs[insn->src_reg]);
--			}
--
--		}
--	} else if (dst_reg->type == SCALAR_VALUE) {
-+		    src_reg->type == SCALAR_VALUE &&
-+		    !is_jmp32 && (opcode == BPF_JEQ || opcode == BPF_JNE)) {
-+			/* Comparing for equality, we can combine knowledge */
-+			reg_combine_min_max(&other_branch_regs[insn->src_reg],
-+					    &other_branch_regs[insn->dst_reg],
-+					    src_reg, dst_reg, opcode);
-+		}
-+	} else /* BPF_SRC(insn->code) == BPF_K */ {
- 		reg_set_min_max(&other_branch_regs[insn->dst_reg],
--					dst_reg, insn->imm, (u32)insn->imm,
--					opcode, is_jmp32);
-+				src_reg /* fake one */,
-+				dst_reg, src_reg /* same fake one */,
-+				opcode, is_jmp32);
- 	}
- 
-+	if (BPF_SRC(insn->code) == BPF_X &&
-+	    src_reg->type == SCALAR_VALUE && src_reg->id &&
-+	    !WARN_ON_ONCE(src_reg->id != other_branch_regs[insn->src_reg].id)) {
-+		find_equal_scalars(this_branch, src_reg);
-+		find_equal_scalars(other_branch, &other_branch_regs[insn->src_reg]);
-+	}
- 	if (dst_reg->type == SCALAR_VALUE && dst_reg->id &&
- 	    !WARN_ON_ONCE(dst_reg->id != other_branch_regs[insn->dst_reg].id)) {
- 		find_equal_scalars(this_branch, dst_reg);
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 4b9ff41ca..455cc1291 100644
+index a66c088c851c..b316d3b7ffe7 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -4214,10 +4214,13 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
- 		return ret;
- 	}
+@@ -4206,10 +4206,13 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
+ 	if (IS_ERR(kn))
+ 		return PTR_ERR(kn);
  
 +	kernfs_show(kn, !(cft->flags & CFTYPE_HIDDEN));
 +
@@ -2620,7 +1537,7 @@ index 4b9ff41ca..455cc1291 100644
  
  		spin_lock_irq(&cgroup_file_kn_lock);
  		cfile->kn = kn;
-@@ -4493,6 +4496,24 @@ void cgroup_file_notify(struct cgroup_file *cfile)
+@@ -4485,6 +4488,24 @@ void cgroup_file_notify(struct cgroup_file *cfile)
  	spin_unlock_irqrestore(&cgroup_file_kn_lock, flags);
  }
  
@@ -2645,7 +1562,7 @@ index 4b9ff41ca..455cc1291 100644
  /**
   * cgroup_file_show - show or hide a hidden cgroup file
   * @cfile: target cgroup_file obtained by setting cftype->file_offset
-@@ -4502,15 +4523,20 @@ void cgroup_file_show(struct cgroup_file *cfile, bool show)
+@@ -4494,15 +4515,20 @@ void cgroup_file_show(struct cgroup_file *cfile, bool show)
  {
  	struct kernfs_node *kn;
  
@@ -2673,7 +1590,7 @@ index 4b9ff41ca..455cc1291 100644
  }
  
  /**
-@@ -5534,6 +5560,63 @@ static void offline_css(struct cgroup_subsys_state *css)
+@@ -5526,6 +5552,63 @@ static void offline_css(struct cgroup_subsys_state *css)
  	wake_up_all(&css->cgroup->offline_waitq);
  }
  
@@ -2738,7 +1655,7 @@ index 4b9ff41ca..455cc1291 100644
   * css_create - create a cgroup_subsys_state
   * @cgrp: the cgroup new css will be associated with
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 458360cf9..4da03be2b 100644
+index 0d944e92a43f..7f4fc1d095fd 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -23,6 +23,7 @@
@@ -2749,7 +1666,7 @@ index 458360cf9..4da03be2b 100644
  #include <linux/seq_file.h>
  #include <linux/rtmutex.h>
  #include <linux/init.h>
-@@ -974,6 +975,7 @@ void __put_task_struct(struct task_struct *tsk)
+@@ -968,6 +969,7 @@ void __put_task_struct(struct task_struct *tsk)
  	WARN_ON(refcount_read(&tsk->usage));
  	WARN_ON(tsk == current);
  
@@ -2757,7 +1674,7 @@ index 458360cf9..4da03be2b 100644
  	io_uring_free(tsk);
  	cgroup_free(tsk);
  	task_numa_free(tsk, true);
-@@ -2483,7 +2485,7 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2470,7 +2472,7 @@ __latent_entropy struct task_struct *copy_process(
  
  	retval = perf_event_init_task(p, clone_flags);
  	if (retval)
@@ -2766,7 +1683,7 @@ index 458360cf9..4da03be2b 100644
  	retval = audit_alloc(p);
  	if (retval)
  		goto bad_fork_cleanup_perf;
-@@ -2614,7 +2616,9 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2601,7 +2603,9 @@ __latent_entropy struct task_struct *copy_process(
  	 * cgroup specific, it unconditionally needs to place the task on a
  	 * runqueue.
  	 */
@@ -2777,7 +1694,7 @@ index 458360cf9..4da03be2b 100644
  
  	/*
  	 * From this point on we must avoid any synchronous user-space
-@@ -2660,13 +2664,13 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2647,13 +2651,13 @@ __latent_entropy struct task_struct *copy_process(
  	/* Don't start children in a dying pid namespace */
  	if (unlikely(!(ns_of_pid(pid)->pid_allocated & PIDNS_ADDING))) {
  		retval = -ENOMEM;
@@ -2793,7 +1710,7 @@ index 458360cf9..4da03be2b 100644
  	}
  
  	/* No more failure paths after this point. */
-@@ -2740,10 +2744,11 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2727,10 +2731,11 @@ __latent_entropy struct task_struct *copy_process(
  
  	return p;
  
@@ -2806,7 +1723,7 @@ index 458360cf9..4da03be2b 100644
  	cgroup_cancel_fork(p, args);
  bad_fork_put_pidfd:
  	if (clone_flags & CLONE_PIDFD) {
-@@ -2782,6 +2787,8 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2769,6 +2774,8 @@ __latent_entropy struct task_struct *copy_process(
  	audit_free(p);
  bad_fork_cleanup_perf:
  	perf_event_free_task(p);
@@ -2816,7 +1733,7 @@ index 458360cf9..4da03be2b 100644
  	lockdep_free_task(p);
  #ifdef CONFIG_NUMA
 diff --git a/kernel/sched/build_policy.c b/kernel/sched/build_policy.c
-index d9dc9ab37..e0e73b44a 100644
+index d9dc9ab3773f..e0e73b44afe9 100644
 --- a/kernel/sched/build_policy.c
 +++ b/kernel/sched/build_policy.c
 @@ -21,13 +21,18 @@
@@ -2846,10 +1763,10 @@ index d9dc9ab37..e0e73b44a 100644
 +# include "ext.c"
 +#endif
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a708d225c..937ef9353 100644
+index 9116bcc90346..a80d257b4321 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -167,7 +167,10 @@ static inline int __task_prio(const struct task_struct *p)
+@@ -168,7 +168,10 @@ static inline int __task_prio(const struct task_struct *p)
  	if (p->sched_class == &idle_sched_class)
  		return MAX_RT_PRIO + NICE_WIDTH; /* 140 */
  
@@ -2861,7 +1778,7 @@ index a708d225c..937ef9353 100644
  }
  
  /*
-@@ -196,6 +199,11 @@ static inline bool prio_less(const struct task_struct *a,
+@@ -197,6 +200,11 @@ static inline bool prio_less(const struct task_struct *a,
  	if (pa == MAX_RT_PRIO + MAX_NICE)	/* fair */
  		return cfs_prio_less(a, b, in_fi);
  
@@ -2873,7 +1790,7 @@ index a708d225c..937ef9353 100644
  	return false;
  }
  
-@@ -1232,11 +1240,14 @@ bool sched_can_stop_tick(struct rq *rq)
+@@ -1255,11 +1263,14 @@ bool sched_can_stop_tick(struct rq *rq)
  		return true;
  
  	/*
@@ -2892,7 +1809,7 @@ index a708d225c..937ef9353 100644
  		return false;
  
  	/*
-@@ -1319,8 +1330,8 @@ static void set_load_weight(struct task_struct *p, bool update_load)
+@@ -1342,8 +1353,8 @@ static void set_load_weight(struct task_struct *p, bool update_load)
  	 * SCHED_OTHER tasks have to update their load when changing their
  	 * weight
  	 */
@@ -2903,7 +1820,7 @@ index a708d225c..937ef9353 100644
  	} else {
  		load->weight = scale_load(sched_prio_to_weight[prio]);
  		load->inv_weight = sched_prio_to_wmult[prio];
-@@ -2191,6 +2202,17 @@ inline int task_curr(const struct task_struct *p)
+@@ -2216,6 +2227,17 @@ inline int task_curr(const struct task_struct *p)
  	return cpu_curr(task_cpu(p)) == p;
  }
  
@@ -2921,7 +1838,7 @@ index a708d225c..937ef9353 100644
  /*
   * switched_from, switched_to and prio_changed must _NOT_ drop rq->lock,
   * use the balance_callback list if you want balancing.
-@@ -2198,9 +2220,9 @@ inline int task_curr(const struct task_struct *p)
+@@ -2223,9 +2245,9 @@ inline int task_curr(const struct task_struct *p)
   * this means any call to check_class_changed() must be followed by a call to
   * balance_callback().
   */
@@ -2934,7 +1851,7 @@ index a708d225c..937ef9353 100644
  {
  	if (prev_class != p->sched_class) {
  		if (prev_class->switched_from)
-@@ -3950,6 +3972,15 @@ bool cpus_share_resources(int this_cpu, int that_cpu)
+@@ -3977,6 +3999,15 @@ bool cpus_share_resources(int this_cpu, int that_cpu)
  
  static inline bool ttwu_queue_cond(struct task_struct *p, int cpu)
  {
@@ -2950,7 +1867,7 @@ index a708d225c..937ef9353 100644
  	/*
  	 * Do not complicate things with the async wake_list while the CPU is
  	 * in hotplug state.
-@@ -4520,6 +4551,23 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
+@@ -4544,6 +4575,23 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
  	p->rt.on_rq		= 0;
  	p->rt.on_list		= 0;
  
@@ -2974,7 +1891,7 @@ index a708d225c..937ef9353 100644
  #ifdef CONFIG_PREEMPT_NOTIFIERS
  	INIT_HLIST_HEAD(&p->preempt_notifiers);
  #endif
-@@ -4723,6 +4771,8 @@ late_initcall(sched_core_sysctl_init);
+@@ -4747,6 +4795,8 @@ late_initcall(sched_core_sysctl_init);
   */
  int sched_fork(unsigned long clone_flags, struct task_struct *p)
  {
@@ -2983,7 +1900,7 @@ index a708d225c..937ef9353 100644
  	__sched_fork(clone_flags, p);
  	/*
  	 * We mark the process as NEW here. This guarantees that
-@@ -4759,12 +4809,20 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+@@ -4783,12 +4833,20 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
  		p->sched_reset_on_fork = 0;
  	}
  
@@ -3008,7 +1925,7 @@ index a708d225c..937ef9353 100644
  
  	init_entity_runnable_average(&p->se);
  
-@@ -4782,9 +4840,13 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+@@ -4806,9 +4864,13 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
  	RB_CLEAR_NODE(&p->pushable_dl_tasks);
  #endif
  	return 0;
@@ -3023,7 +1940,7 @@ index a708d225c..937ef9353 100644
  {
  	unsigned long flags;
  
-@@ -4811,11 +4873,19 @@ void sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
+@@ -4835,11 +4897,19 @@ void sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
  	if (p->sched_class->task_fork)
  		p->sched_class->task_fork(p);
  	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
@@ -3043,7 +1960,7 @@ index a708d225c..937ef9353 100644
  }
  
  unsigned long to_ratio(u64 period, u64 runtime)
-@@ -5660,14 +5730,17 @@ void scheduler_tick(void)
+@@ -5684,14 +5754,17 @@ void scheduler_tick(void)
  	if (sched_feat(LATENCY_WARN) && resched_latency)
  		resched_latency_warn(cpu, resched_latency);
  
@@ -3063,7 +1980,7 @@ index a708d225c..937ef9353 100644
  #endif
  }
  
-@@ -5967,7 +6040,7 @@ static void put_prev_task_balance(struct rq *rq, struct task_struct *prev,
+@@ -5991,7 +6064,7 @@ static void put_prev_task_balance(struct rq *rq, struct task_struct *prev,
  	 * We can terminate the balance pass as soon as we know there is
  	 * a runnable task of @class priority or higher.
  	 */
@@ -3072,7 +1989,7 @@ index a708d225c..937ef9353 100644
  		if (class->balance(rq, prev, rf))
  			break;
  	}
-@@ -5985,6 +6058,9 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+@@ -6009,6 +6082,9 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
  	const struct sched_class *class;
  	struct task_struct *p;
  
@@ -3082,9 +1999,9 @@ index a708d225c..937ef9353 100644
  	/*
  	 * Optimization: we know that if all tasks are in the fair class we can
  	 * call that function directly, but only if the @prev task wasn't of a
-@@ -6010,10 +6086,12 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
- restart:
- 	put_prev_task_balance(rq, prev, rf);
+@@ -6049,10 +6125,12 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+ 	if (prev->dl_server)
+ 		prev->dl_server = NULL;
  
 -	for_each_class(class) {
 +	for_each_active_class(class) {
@@ -3097,7 +2014,7 @@ index a708d225c..937ef9353 100644
  	}
  
  	BUG(); /* The idle class should always have a runnable task. */
-@@ -6043,7 +6121,7 @@ static inline struct task_struct *pick_task(struct rq *rq)
+@@ -6082,7 +6160,7 @@ static inline struct task_struct *pick_task(struct rq *rq)
  	const struct sched_class *class;
  	struct task_struct *p;
  
@@ -3106,7 +2023,7 @@ index a708d225c..937ef9353 100644
  		p = class->pick_task(rq);
  		if (p)
  			return p;
-@@ -7021,12 +7099,16 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
+@@ -7060,12 +7138,16 @@ int default_wake_function(wait_queue_entry_t *curr, unsigned mode, int wake_flag
  }
  EXPORT_SYMBOL(default_wake_function);
  
@@ -3124,7 +2041,7 @@ index a708d225c..937ef9353 100644
  	else
  		p->sched_class = &fair_sched_class;
  
-@@ -7187,6 +7269,7 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+@@ -7226,6 +7308,7 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
  	}
  
  	__setscheduler_prio(p, prio);
@@ -3132,7 +2049,7 @@ index a708d225c..937ef9353 100644
  
  	if (queued)
  		enqueue_task(rq, p, queue_flag);
-@@ -7744,6 +7827,10 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -7769,6 +7852,10 @@ static int __sched_setscheduler(struct task_struct *p,
  		goto unlock;
  	}
  
@@ -3143,7 +2060,7 @@ index a708d225c..937ef9353 100644
  	/*
  	 * If not changing anything there's no need to proceed further,
  	 * but store a possible modification of reset_on_fork.
-@@ -7846,6 +7933,7 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -7871,6 +7958,7 @@ static int __sched_setscheduler(struct task_struct *p,
  		__setscheduler_prio(p, newprio);
  	}
  	__setscheduler_uclamp(p, attr);
@@ -3151,7 +2068,7 @@ index a708d225c..937ef9353 100644
  
  	if (queued) {
  		/*
-@@ -9021,6 +9109,7 @@ SYSCALL_DEFINE1(sched_get_priority_max, int, policy)
+@@ -9046,6 +9134,7 @@ SYSCALL_DEFINE1(sched_get_priority_max, int, policy)
  	case SCHED_NORMAL:
  	case SCHED_BATCH:
  	case SCHED_IDLE:
@@ -3159,7 +2076,7 @@ index a708d225c..937ef9353 100644
  		ret = 0;
  		break;
  	}
-@@ -9048,6 +9137,7 @@ SYSCALL_DEFINE1(sched_get_priority_min, int, policy)
+@@ -9073,6 +9162,7 @@ SYSCALL_DEFINE1(sched_get_priority_min, int, policy)
  	case SCHED_NORMAL:
  	case SCHED_BATCH:
  	case SCHED_IDLE:
@@ -3167,7 +2084,7 @@ index a708d225c..937ef9353 100644
  		ret = 0;
  	}
  	return ret;
-@@ -9143,6 +9233,7 @@ void sched_show_task(struct task_struct *p)
+@@ -9168,6 +9258,7 @@ void sched_show_task(struct task_struct *p)
  
  	print_worker_info(KERN_INFO, p);
  	print_stop_info(KERN_INFO, p);
@@ -3175,7 +2092,7 @@ index a708d225c..937ef9353 100644
  	show_stack(p, NULL, KERN_INFO);
  	put_task_stack(p);
  }
-@@ -9528,7 +9619,7 @@ static inline void balance_hotplug_wait(void)
+@@ -9553,7 +9644,7 @@ static inline void balance_hotplug_wait(void)
  
  #endif /* CONFIG_HOTPLUG_CPU */
  
@@ -3184,7 +2101,7 @@ index a708d225c..937ef9353 100644
  {
  	if (!rq->online) {
  		const struct sched_class *class;
-@@ -9538,12 +9629,12 @@ void set_rq_online(struct rq *rq)
+@@ -9563,12 +9654,12 @@ void set_rq_online(struct rq *rq)
  
  		for_each_class(class) {
  			if (class->rq_online)
@@ -3199,7 +2116,7 @@ index a708d225c..937ef9353 100644
  {
  	if (rq->online) {
  		const struct sched_class *class;
-@@ -9551,7 +9642,7 @@ void set_rq_offline(struct rq *rq)
+@@ -9576,7 +9667,7 @@ void set_rq_offline(struct rq *rq)
  		update_rq_clock(rq);
  		for_each_class(class) {
  			if (class->rq_offline)
@@ -3208,7 +2125,7 @@ index a708d225c..937ef9353 100644
  		}
  
  		cpumask_clear_cpu(rq->cpu, rq->rd->online);
-@@ -9647,7 +9738,7 @@ int sched_cpu_activate(unsigned int cpu)
+@@ -9672,7 +9763,7 @@ int sched_cpu_activate(unsigned int cpu)
  	rq_lock_irqsave(rq, &rf);
  	if (rq->rd) {
  		BUG_ON(!cpumask_test_cpu(cpu, rq->rd->span));
@@ -3217,7 +2134,7 @@ index a708d225c..937ef9353 100644
  	}
  	rq_unlock_irqrestore(rq, &rf);
  
-@@ -9691,7 +9782,7 @@ int sched_cpu_deactivate(unsigned int cpu)
+@@ -9716,7 +9807,7 @@ int sched_cpu_deactivate(unsigned int cpu)
  	rq_lock_irqsave(rq, &rf);
  	if (rq->rd) {
  		BUG_ON(!cpumask_test_cpu(cpu, rq->rd->span));
@@ -3226,7 +2143,7 @@ index a708d225c..937ef9353 100644
  	}
  	rq_unlock_irqrestore(rq, &rf);
  
-@@ -9878,11 +9969,15 @@ void __init sched_init(void)
+@@ -9903,11 +9994,15 @@ void __init sched_init(void)
  	int i;
  
  	/* Make sure the linker didn't screw up */
@@ -3246,7 +2163,7 @@ index a708d225c..937ef9353 100644
  #endif
  
  	wait_bit_init();
-@@ -9906,6 +10001,9 @@ void __init sched_init(void)
+@@ -9931,6 +10026,9 @@ void __init sched_init(void)
  		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
  		init_cfs_bandwidth(&root_task_group.cfs_bandwidth, NULL);
  #endif /* CONFIG_FAIR_GROUP_SCHED */
@@ -3256,7 +2173,7 @@ index a708d225c..937ef9353 100644
  #ifdef CONFIG_RT_GROUP_SCHED
  		root_task_group.rt_se = (struct sched_rt_entity **)ptr;
  		ptr += nr_cpu_ids * sizeof(void **);
-@@ -10051,6 +10149,7 @@ void __init sched_init(void)
+@@ -10076,6 +10174,7 @@ void __init sched_init(void)
  	balance_push_set(smp_processor_id(), false);
  #endif
  	init_sched_fair_class();
@@ -3264,7 +2181,7 @@ index a708d225c..937ef9353 100644
  
  	psi_init();
  
-@@ -10336,6 +10435,7 @@ struct task_group *sched_create_group(struct task_group *parent)
+@@ -10361,6 +10460,7 @@ struct task_group *sched_create_group(struct task_group *parent)
  	if (!alloc_rt_sched_group(tg, parent))
  		goto err;
  
@@ -3272,7 +2189,7 @@ index a708d225c..937ef9353 100644
  	alloc_uclamp_sched_group(tg, parent);
  
  	return tg;
-@@ -10463,6 +10563,7 @@ void sched_move_task(struct task_struct *tsk)
+@@ -10488,6 +10588,7 @@ void sched_move_task(struct task_struct *tsk)
  		put_prev_task(rq, tsk);
  
  	sched_change_group(tsk, group);
@@ -3280,7 +2197,7 @@ index a708d225c..937ef9353 100644
  
  	if (queued)
  		enqueue_task(rq, tsk, queue_flags);
-@@ -10477,11 +10578,6 @@ void sched_move_task(struct task_struct *tsk)
+@@ -10502,11 +10603,6 @@ void sched_move_task(struct task_struct *tsk)
  	}
  }
  
@@ -3292,7 +2209,7 @@ index a708d225c..937ef9353 100644
  static struct cgroup_subsys_state *
  cpu_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
  {
-@@ -10505,6 +10601,11 @@ static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
+@@ -10530,6 +10626,11 @@ static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
  {
  	struct task_group *tg = css_tg(css);
  	struct task_group *parent = css_tg(css->parent);
@@ -3304,7 +2221,7 @@ index a708d225c..937ef9353 100644
  
  	if (parent)
  		sched_online_group(tg, parent);
-@@ -10519,6 +10620,13 @@ static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
+@@ -10544,6 +10645,13 @@ static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
  	return 0;
  }
  
@@ -3318,7 +2235,7 @@ index a708d225c..937ef9353 100644
  static void cpu_cgroup_css_released(struct cgroup_subsys_state *css)
  {
  	struct task_group *tg = css_tg(css);
-@@ -10536,9 +10644,10 @@ static void cpu_cgroup_css_free(struct cgroup_subsys_state *css)
+@@ -10561,9 +10669,10 @@ static void cpu_cgroup_css_free(struct cgroup_subsys_state *css)
  	sched_unregister_group(tg);
  }
  
@@ -3330,7 +2247,7 @@ index a708d225c..937ef9353 100644
  	struct task_struct *task;
  	struct cgroup_subsys_state *css;
  
-@@ -10546,7 +10655,8 @@ static int cpu_cgroup_can_attach(struct cgroup_taskset *tset)
+@@ -10571,7 +10680,8 @@ static int cpu_cgroup_can_attach(struct cgroup_taskset *tset)
  		if (!sched_rt_can_attach(css_tg(css), task))
  			return -EINVAL;
  	}
@@ -3340,7 +2257,7 @@ index a708d225c..937ef9353 100644
  }
  #endif
  
-@@ -10557,8 +10667,17 @@ static void cpu_cgroup_attach(struct cgroup_taskset *tset)
+@@ -10582,8 +10692,17 @@ static void cpu_cgroup_attach(struct cgroup_taskset *tset)
  
  	cgroup_taskset_for_each(task, css, tset)
  		sched_move_task(task);
@@ -3358,7 +2275,7 @@ index a708d225c..937ef9353 100644
  #ifdef CONFIG_UCLAMP_TASK_GROUP
  static void cpu_util_update_eff(struct cgroup_subsys_state *css)
  {
-@@ -10737,9 +10856,15 @@ static int cpu_uclamp_max_show(struct seq_file *sf, void *v)
+@@ -10762,9 +10881,15 @@ static int cpu_uclamp_max_show(struct seq_file *sf, void *v)
  static int cpu_shares_write_u64(struct cgroup_subsys_state *css,
  				struct cftype *cftype, u64 shareval)
  {
@@ -3375,7 +2292,7 @@ index a708d225c..937ef9353 100644
  }
  
  static u64 cpu_shares_read_u64(struct cgroup_subsys_state *css,
-@@ -11136,7 +11261,7 @@ static int cpu_idle_write_s64(struct cgroup_subsys_state *css,
+@@ -11161,7 +11286,7 @@ static int cpu_idle_write_s64(struct cgroup_subsys_state *css,
  }
  #endif
  
@@ -3384,7 +2301,7 @@ index a708d225c..937ef9353 100644
  #ifdef CONFIG_FAIR_GROUP_SCHED
  	{
  		.name = "shares",
-@@ -11247,38 +11372,44 @@ static int cpu_local_stat_show(struct seq_file *sf,
+@@ -11272,38 +11397,44 @@ static int cpu_local_stat_show(struct seq_file *sf,
  	return 0;
  }
  
@@ -3445,7 +2362,7 @@ index a708d225c..937ef9353 100644
  	int last_delta = INT_MAX;
  	int prio, delta;
  
-@@ -11297,7 +11428,7 @@ static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
+@@ -11322,7 +11453,7 @@ static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
  				     struct cftype *cft, s64 nice)
  {
  	unsigned long weight;
@@ -3454,7 +2371,7 @@ index a708d225c..937ef9353 100644
  
  	if (nice < MIN_NICE || nice > MAX_NICE)
  		return -ERANGE;
-@@ -11306,7 +11437,11 @@ static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
+@@ -11331,7 +11462,11 @@ static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
  	idx = array_index_nospec(idx, 40);
  	weight = sched_prio_to_weight[idx];
  
@@ -3467,7 +2384,7 @@ index a708d225c..937ef9353 100644
  }
  #endif
  
-@@ -11367,21 +11502,23 @@ static ssize_t cpu_max_write(struct kernfs_open_file *of,
+@@ -11392,21 +11527,23 @@ static ssize_t cpu_max_write(struct kernfs_open_file *of,
  }
  #endif
  
@@ -3496,7 +2413,7 @@ index a708d225c..937ef9353 100644
  		.name = "idle",
  		.flags = CFTYPE_NOT_ON_ROOT,
  		.read_s64 = cpu_idle_read_s64,
-@@ -11389,13 +11526,13 @@ static struct cftype cpu_files[] = {
+@@ -11414,13 +11551,13 @@ static struct cftype cpu_files[] = {
  	},
  #endif
  #ifdef CONFIG_CFS_BANDWIDTH
@@ -3512,7 +2429,7 @@ index a708d225c..937ef9353 100644
  		.name = "max.burst",
  		.flags = CFTYPE_NOT_ON_ROOT,
  		.read_u64 = cpu_cfs_burst_read_u64,
-@@ -11403,13 +11540,13 @@ static struct cftype cpu_files[] = {
+@@ -11428,13 +11565,13 @@ static struct cftype cpu_files[] = {
  	},
  #endif
  #ifdef CONFIG_UCLAMP_TASK_GROUP
@@ -3528,7 +2445,7 @@ index a708d225c..937ef9353 100644
  		.name = "uclamp.max",
  		.flags = CFTYPE_NOT_ON_ROOT,
  		.seq_show = cpu_uclamp_max_show,
-@@ -11422,16 +11559,20 @@ static struct cftype cpu_files[] = {
+@@ -11447,16 +11584,20 @@ static struct cftype cpu_files[] = {
  struct cgroup_subsys cpu_cgrp_subsys = {
  	.css_alloc	= cpu_cgroup_css_alloc,
  	.css_online	= cpu_cgroup_css_online,
@@ -3552,7 +2469,7 @@ index a708d225c..937ef9353 100644
  	.early_init	= true,
  	.threaded	= true,
  };
-@@ -12019,3 +12160,38 @@ void sched_mm_cid_fork(struct task_struct *t)
+@@ -12044,3 +12185,38 @@ void sched_mm_cid_fork(struct task_struct *t)
  	t->mm_cid_active = 1;
  }
  #endif
@@ -3592,10 +2509,10 @@ index a708d225c..937ef9353 100644
 +}
 +#endif	/* CONFIG_SCHED_CLASS_EXT */
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index b28114478..e00704ddd 100644
+index a04a436af8cc..010d1dc5f918 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -2483,7 +2483,7 @@ static void set_cpus_allowed_dl(struct task_struct *p,
+@@ -2607,7 +2607,7 @@ static void set_cpus_allowed_dl(struct task_struct *p,
  }
  
  /* Assumes rq->lock is held */
@@ -3604,7 +2521,7 @@ index b28114478..e00704ddd 100644
  {
  	if (rq->dl.overloaded)
  		dl_set_overload(rq);
-@@ -2494,7 +2494,7 @@ static void rq_online_dl(struct rq *rq)
+@@ -2618,7 +2618,7 @@ static void rq_online_dl(struct rq *rq)
  }
  
  /* Assumes rq->lock is held */
@@ -3614,10 +2531,10 @@ index b28114478..e00704ddd 100644
  	if (rq->dl.overloaded)
  		dl_clear_overload(rq);
 diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index 4580a4507..c5ee001d3 100644
+index 8d5d98a5834d..6f306e1c9c3e 100644
 --- a/kernel/sched/debug.c
 +++ b/kernel/sched/debug.c
-@@ -1085,6 +1085,9 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
+@@ -1089,6 +1089,9 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
  		P(dl.runtime);
  		P(dl.deadline);
  	}
@@ -3629,10 +2546,10 @@ index 4580a4507..c5ee001d3 100644
  
 diff --git a/kernel/sched/ext.c b/kernel/sched/ext.c
 new file mode 100644
-index 000000000..b74d1a0bc
+index 000000000000..3b3d38fb1ca7
 --- /dev/null
 +++ b/kernel/sched/ext.c
-@@ -0,0 +1,5187 @@
+@@ -0,0 +1,5374 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * BPF extensible scheduler class: Documentation/scheduler/sched-ext.rst
@@ -3641,6 +2558,7 @@ index 000000000..b74d1a0bc
 + * Copyright (c) 2022 Tejun Heo <tj@kernel.org>
 + * Copyright (c) 2022 David Vernet <dvernet@meta.com>
 + */
++
 +#include <linux/btf.h>
 +
 +#define SCX_OP_IDX(op)		(offsetof(struct sched_ext_ops, op) / sizeof(void (*)(void)))
@@ -3838,9 +2756,9 @@ index 000000000..b74d1a0bc
 +static struct kset *scx_kset;
 +static struct kobject *scx_root_kobj;
 +
-+void scx_bpf_dispatch(struct task_struct *p, u64 dsq_id, u64 slice,
-+		      u64 enq_flags);
-+void scx_bpf_kick_cpu(s32 cpu, u64 flags);
++static void scx_bpf_dispatch(struct task_struct *p, u64 dsq_id, u64 slice,
++			     u64 enq_flags);
++static void scx_bpf_kick_cpu(s32 cpu, u64 flags);
 +
 +struct scx_task_iter {
 +	struct sched_ext_entity		cursor;
@@ -5723,12 +4641,18 @@ index 000000000..b74d1a0bc
 +	}
 +
 +	/*
-+	 * If WAKE_SYNC and the machine isn't fully saturated, wake up @p to the
-+	 * local DSQ of the waker.
++	 * If WAKE_SYNC, the waker's local DSQ is empty, and the system is
++	 * under utilized, wake up @p to the local DSQ of the waker. Checking
++	 * only for an empty local DSQ is insufficient as it could give the
++	 * wakee an unfair advantage when the system is oversaturated.
++	 * Checking only for the presence of idle CPUs is also insufficient as
++	 * the local DSQ of the waker could have tasks piled up on it even if
++	 * there is an idle core elsewhere on the system.
 +	 */
++	cpu = smp_processor_id();
 +	if ((wake_flags & SCX_WAKE_SYNC) && p->nr_cpus_allowed > 1 &&
-+	    !cpumask_empty(idle_masks.cpu) && !(current->flags & PF_EXITING)) {
-+		cpu = smp_processor_id();
++	    !cpumask_empty(idle_masks.cpu) && !(current->flags & PF_EXITING) &&
++	    cpu_rq(cpu)->scx.local_dsq.nr == 0) {
 +		if (cpumask_test_cpu(cpu, p->cpus_ptr))
 +			goto cpu_found;
 +	}
@@ -5774,6 +4698,8 @@ index 000000000..b74d1a0bc
 +	return cpu;
 +}
 +
++__bpf_kfunc_start_defs();
++
 +__bpf_kfunc s32 scx_bpf_select_cpu_dfl(struct task_struct *p, s32 prev_cpu,
 +				       u64 wake_flags, bool *found)
 +{
@@ -5785,8 +4711,23 @@ index 000000000..b74d1a0bc
 +	return scx_select_cpu_dfl(p, prev_cpu, wake_flags, found);
 +}
 +
++__bpf_kfunc_end_defs();
++
 +static int select_task_rq_scx(struct task_struct *p, int prev_cpu, int wake_flags)
 +{
++	/*
++	 * sched_exec() calls with %WF_EXEC when @p is about to exec(2) as it
++	 * can be a good migration opportunity with low cache and memory
++	 * footprint. Returning a CPU different than @prev_cpu triggers
++	 * immediate rq migration. However, for SCX, as the current rq
++	 * association doesn't dictate where the task is going to run, this
++	 * doesn't fit well. If necessary, we can later add a dedicated method
++	 * which can decide to preempt self to force it through the regular
++	 * scheduling path.
++	 */
++	if (unlikely(wake_flags & WF_EXEC))
++		return prev_cpu;
++
 +	if (SCX_HAS_OP(select_cpu)) {
 +		s32 cpu;
 +		struct task_struct **ddsp_taskp;
@@ -5837,9 +4778,12 @@ index 000000000..b74d1a0bc
 +
 +static void reset_idle_masks(void)
 +{
-+	/* consider all cpus idle, should converge to the actual state quickly */
-+	cpumask_setall(idle_masks.cpu);
-+	cpumask_setall(idle_masks.smt);
++	/*
++	 * Consider all online cpus idle. Should converge to the actual state
++	 * quickly.
++	 */
++	cpumask_copy(idle_masks.cpu, cpu_online_mask);
++	cpumask_copy(idle_masks.smt, cpu_online_mask);
 +}
 +
 +void __scx_update_idle(struct rq *rq, bool idle)
@@ -6329,6 +5273,17 @@ index 000000000..b74d1a0bc
 +
 +	cgroup_taskset_for_each(p, css, tset) {
 +		struct cgroup *from = tg_cgrp(task_group(p));
++		struct cgroup *to = tg_cgrp(css_tg(css));
++
++		WARN_ON_ONCE(p->scx.cgrp_moving_from);
++
++		/*
++		 * sched_move_task() omits identity migrations. Let's match the
++		 * behavior so that ops.cgroup_prep_move() and ops.cgroup_move()
++		 * always match one-to-one.
++		 */
++		if (from == to)
++			continue;
 +
 +		if (SCX_HAS_OP(cgroup_prep_move)) {
 +			ret = SCX_CALL_OP_RET(SCX_KF_SLEEPABLE, cgroup_prep_move,
@@ -6337,7 +5292,6 @@ index 000000000..b74d1a0bc
 +				goto err;
 +		}
 +
-+		WARN_ON_ONCE(p->scx.cgrp_moving_from);
 +		p->scx.cgrp_moving_from = from;
 +	}
 +
@@ -6345,9 +5299,7 @@ index 000000000..b74d1a0bc
 +
 +err:
 +	cgroup_taskset_for_each(p, css, tset) {
-+		if (!p->scx.cgrp_moving_from)
-+			break;
-+		if (SCX_HAS_OP(cgroup_cancel_move))
++		if (SCX_HAS_OP(cgroup_cancel_move) && p->scx.cgrp_moving_from)
 +			SCX_CALL_OP(SCX_KF_SLEEPABLE, cgroup_cancel_move, p,
 +				    p->scx.cgrp_moving_from, css->cgroup);
 +		p->scx.cgrp_moving_from = NULL;
@@ -6375,12 +5327,13 @@ index 000000000..b74d1a0bc
 +	if (!scx_enabled())
 +		return;
 +
-+	if (SCX_HAS_OP(cgroup_move)) {
-+		if (WARN_ON_ONCE(!p->scx.cgrp_moving_from))
-+			return;
++	/*
++	 * @p must have ops.cgroup_prep_move() called on it and thus
++	 * cgrp_moving_from set.
++	 */
++	if (SCX_HAS_OP(cgroup_move) && !WARN_ON_ONCE(!p->scx.cgrp_moving_from))
 +		SCX_CALL_OP_TASK(SCX_KF_UNLOCKED, cgroup_move, p,
 +			p->scx.cgrp_moving_from, tg_cgrp(task_group(p)));
-+	}
 +	p->scx.cgrp_moving_from = NULL;
 +}
 +
@@ -6398,11 +5351,9 @@ index 000000000..b74d1a0bc
 +		goto out_unlock;
 +
 +	cgroup_taskset_for_each(p, css, tset) {
-+		if (SCX_HAS_OP(cgroup_cancel_move)) {
-+			WARN_ON_ONCE(!p->scx.cgrp_moving_from);
++		if (SCX_HAS_OP(cgroup_cancel_move) && p->scx.cgrp_moving_from)
 +			SCX_CALL_OP(SCX_KF_SLEEPABLE, cgroup_cancel_move, p,
 +				    p->scx.cgrp_moving_from, css->cgroup);
-+		}
 +		p->scx.cgrp_moving_from = NULL;
 +	}
 +out_unlock:
@@ -6835,6 +5786,10 @@ index 000000000..b74d1a0bc
 +			return;
 +	}
 +
++	mutex_lock(&scx_ops_enable_mutex);
++	if (!scx_enabled())
++		goto out_unlock;
++
 +	/*
 +	 * No task property is changing. We just need to make sure all currently
 +	 * queued tasks are re-queued according to the new scx_ops_bypassing()
@@ -6872,6 +5827,9 @@ index 000000000..b74d1a0bc
 +		/* kick to restore ticks */
 +		resched_cpu(cpu);
 +	}
++
++out_unlock:
++	mutex_unlock(&scx_ops_enable_mutex);
 +}
 +
 +static void free_exit_info(struct scx_exit_info *ei)
@@ -7770,6 +6728,150 @@ index 000000000..b74d1a0bc
 +/* "extern" to avoid sparse warning, only used in this file */
 +extern struct bpf_struct_ops bpf_sched_ext_ops;
 +
++static s32 select_cpu_stub(struct task_struct *p, s32 prev_cpu, u64 wake_flags)
++{
++	return -EINVAL;
++}
++
++static void enqueue_stub(struct task_struct *p, u64 enq_flags)
++{}
++
++static void dequeue_stub(struct task_struct *p, u64 enq_flags)
++{}
++
++static void dispatch_stub(s32 prev_cpu, struct task_struct *p)
++{}
++
++static void runnable_stub(struct task_struct *p, u64 enq_flags)
++{}
++
++static void running_stub(struct task_struct *p)
++{}
++
++static void stopping_stub(struct task_struct *p, bool runnable)
++{}
++
++static void quiescent_stub(struct task_struct *p, u64 deq_flags)
++{}
++
++static bool yield_stub(struct task_struct *from, struct task_struct *to)
++{
++	return false;
++}
++
++static bool core_sched_before_stub(struct task_struct *a, struct task_struct *b)
++{
++	return false;
++}
++
++static void set_weight_stub(struct task_struct *p, u32 weight)
++{}
++
++static void set_cpumask_stub(struct task_struct *p, const struct cpumask *mask)
++{}
++
++static void update_idle_stub(s32 cpu, bool idle)
++{}
++
++static void cpu_acquire_stub(s32 cpu, struct scx_cpu_acquire_args *args)
++{}
++
++static void cpu_release_stub(s32 cpu, struct scx_cpu_release_args *args)
++{}
++
++static s32 init_task_stub(struct task_struct *p,
++			  struct scx_init_task_args *args)
++{
++	return -EINVAL;
++}
++
++
++static void exit_task_stub(struct task_struct *p,
++			   struct scx_exit_task_args *args)
++{}
++
++static void enable_stub(struct task_struct *p)
++{}
++
++static void disable_stub(struct task_struct *p)
++{}
++
++#ifdef CONFIG_EXT_GROUP_SCHED
++static s32 cgroup_init_stub(struct cgroup *cgrp,
++			    struct scx_cgroup_init_args *args)
++{
++	return -EINVAL;
++}
++
++static void cgroup_exit_stub(struct cgroup *cgrp)
++{}
++
++static s32 cgroup_prep_move_stub(struct task_struct *p,
++				 struct cgroup *from, struct cgroup *to)
++{
++	return -EINVAL;
++}
++
++static void cgroup_move_stub(struct task_struct *p,
++			     struct cgroup *from, struct cgroup *to)
++{}
++
++static void cgroup_cancel_move_stub(struct task_struct *p,
++				    struct cgroup *from, struct cgroup *to)
++{}
++
++static void cgroup_set_weight_stub(struct cgroup *cgrp, u32 weight)
++{}
++#endif
++
++static void cpu_online_stub(s32 cpu)
++{}
++
++static void cpu_offline_stub(s32 cpu)
++{}
++
++static s32 init_stub(void)
++{
++	return -EINVAL;
++}
++
++static void exit_stub(struct scx_exit_info *info)
++{}
++
++static struct sched_ext_ops __bpf_ops_sched_ext_ops = {
++	.select_cpu = select_cpu_stub,
++	.enqueue = enqueue_stub,
++	.dequeue = dequeue_stub,
++	.dispatch = dispatch_stub,
++	.runnable = runnable_stub,
++	.running = running_stub,
++	.stopping = stopping_stub,
++	.quiescent = quiescent_stub,
++	.yield = yield_stub,
++	.core_sched_before = core_sched_before_stub,
++	.set_weight = set_weight_stub,
++	.set_cpumask = set_cpumask_stub,
++	.update_idle = update_idle_stub,
++	.cpu_acquire = cpu_acquire_stub,
++	.cpu_release = cpu_release_stub,
++	.init_task = init_task_stub,
++	.exit_task = exit_task_stub,
++	.enable = enable_stub,
++	.disable = disable_stub,
++#ifdef CONFIG_EXT_GROUP_SCHED
++	.cgroup_init = cgroup_init_stub,
++	.cgroup_exit = cgroup_exit_stub,
++	.cgroup_prep_move = cgroup_prep_move_stub,
++	.cgroup_move = cgroup_move_stub,
++	.cgroup_cancel_move = cgroup_cancel_move_stub,
++	.cgroup_set_weight = cgroup_set_weight_stub,
++#endif
++	.cpu_online = cpu_online_stub,
++	.cpu_offline = cpu_offline_stub,
++	.init = init_stub,
++	.exit = exit_stub,
++};
++
 +struct bpf_struct_ops bpf_sched_ext_ops = {
 +	.verifier_ops = &bpf_scx_verifier_ops,
 +	.reg = bpf_scx_reg,
@@ -7780,6 +6882,7 @@ index 000000000..b74d1a0bc
 +	.update = bpf_scx_update,
 +	.validate = bpf_scx_validate,
 +	.name = "sched_ext_ops",
++	.cfi_stubs = &__bpf_ops_sched_ext_ops
 +};
 +
 +
@@ -7958,9 +7061,6 @@ index 000000000..b74d1a0bc
 +
 +static int scx_pm_handler(struct notifier_block *nb, unsigned long event, void *ptr)
 +{
-+	if (!scx_enabled())
-+		return NOTIFY_OK;
-+
 +	/*
 +	 * SCX schedulers often have userspace components which are sometimes
 +	 * involved in critial scheduling paths. PM operations involve freezing
@@ -7996,8 +7096,8 @@ index 000000000..b74d1a0bc
 +	 * definitions so that BPF scheduler implementations can use them
 +	 * through the generated vmlinux.h.
 +	 */
-+	WRITE_ONCE(v, SCX_WAKE_EXEC | SCX_ENQ_WAKEUP | SCX_DEQ_SLEEP |
-+		   SCX_TG_ONLINE | SCX_KICK_PREEMPT);
++	WRITE_ONCE(v, SCX_ENQ_WAKEUP | SCX_DEQ_SLEEP | SCX_TG_ONLINE |
++		   SCX_KICK_PREEMPT);
 +
 +	BUG_ON(rhashtable_init(&dsq_hash, &dsq_hash_params));
 +	init_dsq(&scx_dsq_global, SCX_DSQ_GLOBAL);
@@ -8088,6 +7188,8 @@ index 000000000..b74d1a0bc
 +	.set			= &scx_kfunc_ids_sleepable,
 +};
 +
++__bpf_kfunc_end_defs();
++
 +static bool scx_dispatch_preamble(struct task_struct *p, u64 enq_flags)
 +{
 +	if (!scx_kf_allowed(SCX_KF_ENQUEUE | SCX_KF_DISPATCH))
@@ -8133,6 +7235,8 @@ index 000000000..b74d1a0bc
 +	};
 +	__this_cpu_inc(scx_dsp_ctx.buf_cursor);
 +}
++
++__bpf_kfunc_start_defs();
 +
 +/**
 + * scx_bpf_dispatch - Dispatch a task into the FIFO queue of a DSQ
@@ -8822,10 +7926,10 @@ index 000000000..b74d1a0bc
 +__initcall(scx_init);
 diff --git a/kernel/sched/ext.h b/kernel/sched/ext.h
 new file mode 100644
-index 000000000..0c97e8d71
+index 000000000000..c61291fb9758
 --- /dev/null
 +++ b/kernel/sched/ext.h
-@@ -0,0 +1,278 @@
+@@ -0,0 +1,277 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * BPF extensible scheduler class: Documentation/scheduler/sched-ext.rst
@@ -8836,7 +7940,6 @@ index 000000000..0c97e8d71
 + */
 +enum scx_wake_flags {
 +	/* expose select WF_* flags as enums */
-+	SCX_WAKE_EXEC		= WF_EXEC,
 +	SCX_WAKE_FORK		= WF_FORK,
 +	SCX_WAKE_TTWU		= WF_TTWU,
 +	SCX_WAKE_SYNC		= WF_SYNC,
@@ -9105,10 +8208,10 @@ index 000000000..0c97e8d71
 +#endif	/* CONFIG_EXT_GROUP_SCHED */
 +#endif	/* CONFIG_CGROUP_SCHED */
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 44c5950ea..3d6a96fe9 100644
+index e2b4e0396af8..792278575b36 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -3840,7 +3840,7 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
+@@ -3829,7 +3829,7 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
  	}
  }
  
@@ -9143,7 +8246,7 @@ index 44c5950ea..3d6a96fe9 100644
  {
  	update_sysctl();
  
-@@ -13166,6 +13166,7 @@ DEFINE_SCHED_CLASS(fair) = {
+@@ -13153,6 +13153,7 @@ DEFINE_SCHED_CLASS(fair) = {
  	.task_tick		= task_tick_fair,
  	.task_fork		= task_fork_fair,
  
@@ -9152,10 +8255,10 @@ index 44c5950ea..3d6a96fe9 100644
  	.switched_from		= switched_from_fair,
  	.switched_to		= switched_to_fair,
 diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
-index 565f8374d..4aa6acd96 100644
+index 31231925f1ec..0179ce0c70c1 100644
 --- a/kernel/sched/idle.c
 +++ b/kernel/sched/idle.c
-@@ -408,11 +408,13 @@ static void wakeup_preempt_idle(struct rq *rq, struct task_struct *p, int flags)
+@@ -438,11 +438,13 @@ static void wakeup_preempt_idle(struct rq *rq, struct task_struct *p, int flags)
  
  static void put_prev_task_idle(struct rq *rq, struct task_struct *prev)
  {
@@ -9170,10 +8273,10 @@ index 565f8374d..4aa6acd96 100644
  }
  
 diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 6aaf0a3d6..c5511ce07 100644
+index 3261b067b67e..8620474d117d 100644
 --- a/kernel/sched/rt.c
 +++ b/kernel/sched/rt.c
-@@ -2435,7 +2435,7 @@ static void task_woken_rt(struct rq *rq, struct task_struct *p)
+@@ -2426,7 +2426,7 @@ static void task_woken_rt(struct rq *rq, struct task_struct *p)
  }
  
  /* Assumes rq->lock is held */
@@ -9182,7 +8285,7 @@ index 6aaf0a3d6..c5511ce07 100644
  {
  	if (rq->rt.overloaded)
  		rt_set_overload(rq);
-@@ -2446,7 +2446,7 @@ static void rq_online_rt(struct rq *rq)
+@@ -2437,7 +2437,7 @@ static void rq_online_rt(struct rq *rq)
  }
  
  /* Assumes rq->lock is held */
@@ -9192,7 +8295,7 @@ index 6aaf0a3d6..c5511ce07 100644
  	if (rq->rt.overloaded)
  		rt_clear_overload(rq);
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index dabb52655..88239cdb8 100644
+index 001fe047bd5d..a25e7a4996ae 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -171,9 +171,19 @@ static inline int idle_policy(int policy)
@@ -9241,7 +8344,7 @@ index dabb52655..88239cdb8 100644
  /*
   * !! For sched_setattr_nocheck() (kernel) only !!
   *
-@@ -379,6 +407,11 @@ struct task_group {
+@@ -404,6 +432,11 @@ struct task_group {
  	struct rt_bandwidth	rt_bandwidth;
  #endif
  
@@ -9253,7 +8356,7 @@ index dabb52655..88239cdb8 100644
  	struct rcu_head		rcu;
  	struct list_head	list;
  
-@@ -434,6 +467,11 @@ static inline int walk_tg_tree(tg_visitor down, tg_visitor up, void *data)
+@@ -459,6 +492,11 @@ static inline int walk_tg_tree(tg_visitor down, tg_visitor up, void *data)
  	return walk_tg_tree_from(&root_task_group, down, up, data);
  }
  
@@ -9264,8 +8367,8 @@ index dabb52655..88239cdb8 100644
 +
  extern int tg_nop(struct task_group *tg, void *data);
  
- extern void free_fair_sched_group(struct task_group *tg);
-@@ -479,6 +517,11 @@ extern void set_task_rq_fair(struct sched_entity *se,
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+@@ -515,6 +553,11 @@ extern void set_task_rq_fair(struct sched_entity *se,
  static inline void set_task_rq_fair(struct sched_entity *se,
  			     struct cfs_rq *prev, struct cfs_rq *next) { }
  #endif /* CONFIG_SMP */
@@ -9277,7 +8380,7 @@ index dabb52655..88239cdb8 100644
  #endif /* CONFIG_FAIR_GROUP_SCHED */
  
  #else /* CONFIG_CGROUP_SCHED */
-@@ -639,6 +682,30 @@ struct cfs_rq {
+@@ -675,6 +718,30 @@ struct cfs_rq {
  #endif /* CONFIG_FAIR_GROUP_SCHED */
  };
  
@@ -9308,7 +8411,7 @@ index dabb52655..88239cdb8 100644
  static inline int rt_bandwidth_enabled(void)
  {
  	return sysctl_sched_rt_runtime >= 0;
-@@ -979,6 +1046,9 @@ struct rq {
+@@ -1015,6 +1082,9 @@ struct rq {
  	struct cfs_rq		cfs;
  	struct rt_rq		rt;
  	struct dl_rq		dl;
@@ -9318,7 +8421,7 @@ index dabb52655..88239cdb8 100644
  
  #ifdef CONFIG_FAIR_GROUP_SCHED
  	/* list of leaf cfs_rq on this CPU: */
-@@ -2206,6 +2276,11 @@ extern const u32		sched_prio_to_wmult[40];
+@@ -2248,6 +2318,11 @@ extern const u32		sched_prio_to_wmult[40];
  
  #define RETRY_TASK		((void *)-1UL)
  
@@ -9330,7 +8433,7 @@ index dabb52655..88239cdb8 100644
  struct affinity_context {
  	const struct cpumask *new_mask;
  	struct cpumask *user_mask;
-@@ -2242,8 +2317,8 @@ struct sched_class {
+@@ -2286,8 +2361,8 @@ struct sched_class {
  
  	void (*set_cpus_allowed)(struct task_struct *p, struct affinity_context *ctx);
  
@@ -9341,7 +8444,7 @@ index dabb52655..88239cdb8 100644
  
  	struct rq *(*find_lock_rq)(struct task_struct *p, struct rq *rq);
  #endif
-@@ -2257,8 +2332,11 @@ struct sched_class {
+@@ -2301,8 +2376,11 @@ struct sched_class {
  	 * cannot assume the switched_from/switched_to pair is serialized by
  	 * rq->lock. They are however serialized by p->pi_lock.
  	 */
@@ -9353,7 +8456,7 @@ index dabb52655..88239cdb8 100644
  	void (*prio_changed) (struct rq *this_rq, struct task_struct *task,
  			      int oldprio);
  
-@@ -2416,7 +2494,7 @@ extern void init_sched_dl_class(void);
+@@ -2460,7 +2538,7 @@ extern void init_sched_dl_class(void);
  extern void init_sched_rt_class(void);
  extern void init_sched_fair_class(void);
  
@@ -9362,7 +8465,7 @@ index dabb52655..88239cdb8 100644
  
  extern void resched_curr(struct rq *rq);
  extern void resched_cpu(int cpu);
-@@ -2497,6 +2575,12 @@ static inline void sub_nr_running(struct rq *rq, unsigned count)
+@@ -2540,6 +2618,12 @@ static inline void sub_nr_running(struct rq *rq, unsigned count)
  extern void activate_task(struct rq *rq, struct task_struct *p, int flags);
  extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
  
@@ -9374,8 +8477,8 @@ index dabb52655..88239cdb8 100644
 +
  extern void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags);
  
- #if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_CACHY)
-@@ -2778,8 +2862,8 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
+ #ifdef CONFIG_PREEMPT_RT
+@@ -2821,8 +2905,8 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
  	raw_spin_rq_unlock(rq1);
  }
  
@@ -9386,7 +8489,7 @@ index dabb52655..88239cdb8 100644
  extern bool sched_smp_initialized;
  
  #else /* CONFIG_SMP */
-@@ -3509,4 +3593,27 @@ static inline void init_sched_mm_cid(struct task_struct *t) { }
+@@ -3473,4 +3557,27 @@ static inline void init_sched_mm_cid(struct task_struct *t) { }
  extern u64 avg_vruntime(struct cfs_rq *cfs_rq);
  extern int entity_eligible(struct cfs_rq *cfs_rq, struct sched_entity *se);
  
@@ -9415,7 +8518,7 @@ index dabb52655..88239cdb8 100644
 +
  #endif /* _KERNEL_SCHED_SCHED_H */
 diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index 10d1391e7..7798063b3 100644
+index 10d1391e7416..7798063b3a38 100644
 --- a/kernel/sched/topology.c
 +++ b/kernel/sched/topology.c
 @@ -497,7 +497,7 @@ void rq_attach_root(struct rq *rq, struct root_domain *rd)
@@ -9437,7 +8540,7 @@ index 10d1391e7..7798063b3 100644
  	rq_unlock_irqrestore(rq, &rf);
  
 diff --git a/lib/dump_stack.c b/lib/dump_stack.c
-index 83471e815..6e667c445 100644
+index 222c6d6c8281..9581ef4efec5 100644
 --- a/lib/dump_stack.c
 +++ b/lib/dump_stack.c
 @@ -68,6 +68,7 @@ void dump_stack_print_info(const char *log_lvl)
@@ -9449,7 +8552,7 @@ index 83471e815..6e667c445 100644
  
  /**
 diff --git a/tools/Makefile b/tools/Makefile
-index 37e9f6804..8021267f7 100644
+index 37e9f6804832..8021267f7e5b 100644
 --- a/tools/Makefile
 +++ b/tools/Makefile
 @@ -29,6 +29,7 @@ help:
@@ -9489,22 +8592,9 @@ index 37e9f6804..8021267f7 100644
 +		sched_ext_clean
  
  .PHONY: FORCE
-diff --git a/tools/bpf/bpftool/Documentation/bpftool.rst b/tools/bpf/bpftool/Documentation/bpftool.rst
-index 6965c94df..09e4f2ff5 100644
---- a/tools/bpf/bpftool/Documentation/bpftool.rst
-+++ b/tools/bpf/bpftool/Documentation/bpftool.rst
-@@ -20,7 +20,7 @@ SYNOPSIS
- 
- 	**bpftool** **version**
- 
--	*OBJECT* := { **map** | **program** | **link** | **cgroup** | **perf** | **net** | **feature** |
-+	*OBJECT* := { **map** | **prog** | **link** | **cgroup** | **perf** | **net** | **feature** |
- 	**btf** | **gen** | **struct_ops** | **iter** }
- 
- 	*OPTIONS* := { { **-V** | **--version** } | |COMMON_OPTIONS| }
 diff --git a/tools/sched_ext/.gitignore b/tools/sched_ext/.gitignore
 new file mode 100644
-index 000000000..215ed36b2
+index 000000000000..215ed36b2a94
 --- /dev/null
 +++ b/tools/sched_ext/.gitignore
 @@ -0,0 +1,10 @@
@@ -9520,7 +8610,7 @@ index 000000000..215ed36b2
 +build/
 diff --git a/tools/sched_ext/Kconfig b/tools/sched_ext/Kconfig
 new file mode 100644
-index 000000000..6543fcf19
+index 000000000000..6543fcf199f6
 --- /dev/null
 +++ b/tools/sched_ext/Kconfig
 @@ -0,0 +1,9 @@
@@ -9535,7 +8625,7 @@ index 000000000..6543fcf19
 +CONFIG_PAHOLE_HAS_BTF_TAG=y
 diff --git a/tools/sched_ext/Makefile b/tools/sched_ext/Makefile
 new file mode 100644
-index 000000000..731bf6278
+index 000000000000..731bf6278ffc
 --- /dev/null
 +++ b/tools/sched_ext/Makefile
 @@ -0,0 +1,251 @@
@@ -9792,7 +8882,7 @@ index 000000000..731bf6278
 +.SECONDARY:
 diff --git a/tools/sched_ext/README.md b/tools/sched_ext/README.md
 new file mode 100644
-index 000000000..407327494
+index 000000000000..407327494a99
 --- /dev/null
 +++ b/tools/sched_ext/README.md
 @@ -0,0 +1,269 @@
@@ -10067,7 +9157,7 @@ index 000000000..407327494
 +Seeing `llvm: [ OFF ]` here is not an issue. You can safely ignore.
 diff --git a/tools/sched_ext/include/bpf-compat/gnu/stubs.h b/tools/sched_ext/include/bpf-compat/gnu/stubs.h
 new file mode 100644
-index 000000000..ad7d139ce
+index 000000000000..ad7d139ce907
 --- /dev/null
 +++ b/tools/sched_ext/include/bpf-compat/gnu/stubs.h
 @@ -0,0 +1,11 @@
@@ -10084,7 +9174,7 @@ index 000000000..ad7d139ce
 + */
 diff --git a/tools/sched_ext/include/scx/common.bpf.h b/tools/sched_ext/include/scx/common.bpf.h
 new file mode 100644
-index 000000000..f2336d357
+index 000000000000..f2336d357106
 --- /dev/null
 +++ b/tools/sched_ext/include/scx/common.bpf.h
 @@ -0,0 +1,245 @@
@@ -10335,7 +9425,7 @@ index 000000000..f2336d357
 +#endif	/* __SCHED_EXT_COMMON_BPF_H */
 diff --git a/tools/sched_ext/include/scx/common.h b/tools/sched_ext/include/scx/common.h
 new file mode 100644
-index 000000000..7019d9f2d
+index 000000000000..7019d9f2da60
 --- /dev/null
 +++ b/tools/sched_ext/include/scx/common.h
 @@ -0,0 +1,69 @@
@@ -10410,7 +9500,7 @@ index 000000000..7019d9f2d
 +#endif	/* __SCHED_EXT_COMMON_H */
 diff --git a/tools/sched_ext/include/scx/ravg.bpf.h b/tools/sched_ext/include/scx/ravg.bpf.h
 new file mode 100644
-index 000000000..a233d85d0
+index 000000000000..a233d85d05aa
 --- /dev/null
 +++ b/tools/sched_ext/include/scx/ravg.bpf.h
 @@ -0,0 +1,42 @@
@@ -10458,7 +9548,7 @@ index 000000000..a233d85d0
 +#endif /* __SCX_RAVG_BPF_H__ */
 diff --git a/tools/sched_ext/include/scx/ravg_impl.bpf.h b/tools/sched_ext/include/scx/ravg_impl.bpf.h
 new file mode 100644
-index 000000000..4922a3e68
+index 000000000000..4922a3e689bc
 --- /dev/null
 +++ b/tools/sched_ext/include/scx/ravg_impl.bpf.h
 @@ -0,0 +1,358 @@
@@ -10822,7 +9912,7 @@ index 000000000..4922a3e68
 +}
 diff --git a/tools/sched_ext/include/scx/user_exit_info.h b/tools/sched_ext/include/scx/user_exit_info.h
 new file mode 100644
-index 000000000..a51b0baf1
+index 000000000000..a51b0baf1cbf
 --- /dev/null
 +++ b/tools/sched_ext/include/scx/user_exit_info.h
 @@ -0,0 +1,67 @@
@@ -10895,7 +9985,7 @@ index 000000000..a51b0baf1
 +#endif	/* __USER_EXIT_INFO_H */
 diff --git a/tools/sched_ext/scx_qmap.bpf.c b/tools/sched_ext/scx_qmap.bpf.c
 new file mode 100644
-index 000000000..2fb75543a
+index 000000000000..2fb75543a164
 --- /dev/null
 +++ b/tools/sched_ext/scx_qmap.bpf.c
 @@ -0,0 +1,400 @@
@@ -11301,7 +10391,7 @@ index 000000000..2fb75543a
 +};
 diff --git a/tools/sched_ext/scx_qmap.c b/tools/sched_ext/scx_qmap.c
 new file mode 100644
-index 000000000..7008b9138
+index 000000000000..7008b9138644
 --- /dev/null
 +++ b/tools/sched_ext/scx_qmap.c
 @@ -0,0 +1,106 @@
@@ -11413,7 +10503,7 @@ index 000000000..7008b9138
 +}
 diff --git a/tools/sched_ext/scx_show_state.py b/tools/sched_ext/scx_show_state.py
 new file mode 100644
-index 000000000..d457d2a74
+index 000000000000..d457d2a74e1e
 --- /dev/null
 +++ b/tools/sched_ext/scx_show_state.py
 @@ -0,0 +1,39 @@
@@ -11458,7 +10548,7 @@ index 000000000..d457d2a74
 +print(f'nr_rejected   : {read_atomic("scx_nr_rejected")}')
 diff --git a/tools/sched_ext/scx_simple.bpf.c b/tools/sched_ext/scx_simple.bpf.c
 new file mode 100644
-index 000000000..95035aa29
+index 000000000000..95035aa29b10
 --- /dev/null
 +++ b/tools/sched_ext/scx_simple.bpf.c
 @@ -0,0 +1,155 @@
@@ -11619,7 +10709,7 @@ index 000000000..95035aa29
 +};
 diff --git a/tools/sched_ext/scx_simple.c b/tools/sched_ext/scx_simple.c
 new file mode 100644
-index 000000000..5c5589770
+index 000000000000..5c5589770a2f
 --- /dev/null
 +++ b/tools/sched_ext/scx_simple.c
 @@ -0,0 +1,99 @@
@@ -11722,593 +10812,9 @@ index 000000000..5c5589770
 +	scx_simple__destroy(skel);
 +	return 0;
 +}
-diff --git a/tools/testing/selftests/bpf/config.aarch64 b/tools/testing/selftests/bpf/config.aarch64
-index 253821494..29c8635c5 100644
---- a/tools/testing/selftests/bpf/config.aarch64
-+++ b/tools/testing/selftests/bpf/config.aarch64
-@@ -1,4 +1,3 @@
--CONFIG_9P_FS=y
- CONFIG_ARCH_VEXPRESS=y
- CONFIG_ARCH_WANT_DEFAULT_BPF_JIT=y
- CONFIG_ARM_SMMU_V3=y
-@@ -37,6 +36,7 @@ CONFIG_CRYPTO_USER_API_SKCIPHER=y
- CONFIG_DEBUG_ATOMIC_SLEEP=y
- CONFIG_DEBUG_INFO_BTF=y
- CONFIG_DEBUG_INFO_DWARF4=y
-+CONFIG_DEBUG_INFO_REDUCED=n
- CONFIG_DEBUG_LIST=y
- CONFIG_DEBUG_LOCKDEP=y
- CONFIG_DEBUG_NOTIFIERS=y
-@@ -46,7 +46,6 @@ CONFIG_DEBUG_SG=y
- CONFIG_DETECT_HUNG_TASK=y
- CONFIG_DEVTMPFS_MOUNT=y
- CONFIG_DEVTMPFS=y
--CONFIG_DRM_VIRTIO_GPU=y
- CONFIG_DRM=y
- CONFIG_DUMMY=y
- CONFIG_EXPERT=y
-@@ -67,7 +66,6 @@ CONFIG_HAVE_KRETPROBES=y
- CONFIG_HEADERS_INSTALL=y
- CONFIG_HIGH_RES_TIMERS=y
- CONFIG_HUGETLBFS=y
--CONFIG_HW_RANDOM_VIRTIO=y
- CONFIG_HW_RANDOM=y
- CONFIG_HZ_100=y
- CONFIG_IDLE_PAGE_TRACKING=y
-@@ -99,8 +97,6 @@ CONFIG_MEMCG=y
- CONFIG_MEMORY_HOTPLUG=y
- CONFIG_MEMORY_HOTREMOVE=y
- CONFIG_NAMESPACES=y
--CONFIG_NET_9P_VIRTIO=y
--CONFIG_NET_9P=y
- CONFIG_NET_ACT_BPF=y
- CONFIG_NET_ACT_GACT=y
- CONFIG_NETDEVICES=y
-@@ -140,7 +136,6 @@ CONFIG_SCHED_TRACER=y
- CONFIG_SCSI_CONSTANTS=y
- CONFIG_SCSI_LOGGING=y
- CONFIG_SCSI_SCAN_ASYNC=y
--CONFIG_SCSI_VIRTIO=y
- CONFIG_SCSI=y
- CONFIG_SECURITY_NETWORK=y
- CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
-@@ -167,16 +162,6 @@ CONFIG_UPROBES=y
- CONFIG_USELIB=y
- CONFIG_USER_NS=y
- CONFIG_VETH=y
--CONFIG_VIRTIO_BALLOON=y
--CONFIG_VIRTIO_BLK=y
--CONFIG_VIRTIO_CONSOLE=y
--CONFIG_VIRTIO_FS=y
--CONFIG_VIRTIO_INPUT=y
--CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES=y
--CONFIG_VIRTIO_MMIO=y
--CONFIG_VIRTIO_NET=y
--CONFIG_VIRTIO_PCI=y
--CONFIG_VIRTIO_VSOCKETS_COMMON=y
- CONFIG_VLAN_8021Q=y
- CONFIG_VSOCKETS=y
- CONFIG_VSOCKETS_LOOPBACK=y
-diff --git a/tools/testing/selftests/bpf/config.s390x b/tools/testing/selftests/bpf/config.s390x
-index 2ba92167b..e93330382 100644
---- a/tools/testing/selftests/bpf/config.s390x
-+++ b/tools/testing/selftests/bpf/config.s390x
-@@ -1,4 +1,3 @@
--CONFIG_9P_FS=y
- CONFIG_ARCH_WANT_DEFAULT_BPF_JIT=y
- CONFIG_AUDIT=y
- CONFIG_BLK_CGROUP=y
-@@ -84,8 +83,6 @@ CONFIG_MEMORY_HOTPLUG=y
- CONFIG_MEMORY_HOTREMOVE=y
- CONFIG_NAMESPACES=y
- CONFIG_NET=y
--CONFIG_NET_9P=y
--CONFIG_NET_9P_VIRTIO=y
- CONFIG_NET_ACT_BPF=y
- CONFIG_NET_ACT_GACT=y
- CONFIG_NET_KEY=y
-@@ -114,7 +111,6 @@ CONFIG_SAMPLE_SECCOMP=y
- CONFIG_SAMPLES=y
- CONFIG_SCHED_TRACER=y
- CONFIG_SCSI=y
--CONFIG_SCSI_VIRTIO=y
- CONFIG_SECURITY_NETWORK=y
- CONFIG_STACK_TRACER=y
- CONFIG_STATIC_KEYS_SELFTEST=y
-@@ -136,11 +132,6 @@ CONFIG_UPROBES=y
- CONFIG_USELIB=y
- CONFIG_USER_NS=y
- CONFIG_VETH=y
--CONFIG_VIRTIO_BALLOON=y
--CONFIG_VIRTIO_BLK=y
--CONFIG_VIRTIO_NET=y
--CONFIG_VIRTIO_PCI=y
--CONFIG_VIRTIO_VSOCKETS_COMMON=y
- CONFIG_VLAN_8021Q=y
- CONFIG_VSOCKETS=y
- CONFIG_VSOCKETS_LOOPBACK=y
-diff --git a/tools/testing/selftests/bpf/config.vm b/tools/testing/selftests/bpf/config.vm
-new file mode 100644
-index 000000000..a9746ca78
---- /dev/null
-+++ b/tools/testing/selftests/bpf/config.vm
-@@ -0,0 +1,12 @@
-+CONFIG_9P_FS=y
-+CONFIG_9P_FS_POSIX_ACL=y
-+CONFIG_9P_FS_SECURITY=y
-+CONFIG_CRYPTO_DEV_VIRTIO=y
-+CONFIG_NET_9P=y
-+CONFIG_NET_9P_VIRTIO=y
-+CONFIG_VIRTIO_BALLOON=y
-+CONFIG_VIRTIO_BLK=y
-+CONFIG_VIRTIO_CONSOLE=y
-+CONFIG_VIRTIO_NET=y
-+CONFIG_VIRTIO_PCI=y
-+CONFIG_VIRTIO_VSOCKETS_COMMON=y
-diff --git a/tools/testing/selftests/bpf/config.x86_64 b/tools/testing/selftests/bpf/config.x86_64
-index 49a29dbc1..b94608801 100644
---- a/tools/testing/selftests/bpf/config.x86_64
-+++ b/tools/testing/selftests/bpf/config.x86_64
-@@ -1,6 +1,3 @@
--CONFIG_9P_FS=y
--CONFIG_9P_FS_POSIX_ACL=y
--CONFIG_9P_FS_SECURITY=y
- CONFIG_AGP=y
- CONFIG_AGP_AMD64=y
- CONFIG_AGP_INTEL=y
-@@ -45,7 +42,6 @@ CONFIG_CPU_IDLE_GOV_LADDER=y
- CONFIG_CPUSETS=y
- CONFIG_CRC_T10DIF=y
- CONFIG_CRYPTO_BLAKE2B=y
--CONFIG_CRYPTO_DEV_VIRTIO=y
- CONFIG_CRYPTO_SEQIV=y
- CONFIG_CRYPTO_XXHASH=y
- CONFIG_DCB=y
-@@ -144,8 +140,6 @@ CONFIG_MEMORY_FAILURE=y
- CONFIG_MINIX_SUBPARTITION=y
- CONFIG_NAMESPACES=y
- CONFIG_NET=y
--CONFIG_NET_9P=y
--CONFIG_NET_9P_VIRTIO=y
- CONFIG_NET_ACT_BPF=y
- CONFIG_NET_CLS_CGROUP=y
- CONFIG_NET_EMATCH=y
-@@ -227,12 +221,6 @@ CONFIG_USER_NS=y
- CONFIG_VALIDATE_FS_PARSER=y
- CONFIG_VETH=y
- CONFIG_VIRT_DRIVERS=y
--CONFIG_VIRTIO_BALLOON=y
--CONFIG_VIRTIO_BLK=y
--CONFIG_VIRTIO_CONSOLE=y
--CONFIG_VIRTIO_NET=y
--CONFIG_VIRTIO_PCI=y
--CONFIG_VIRTIO_VSOCKETS_COMMON=y
- CONFIG_VLAN_8021Q=y
- CONFIG_VSOCKETS=y
- CONFIG_VSOCKETS_LOOPBACK=y
-diff --git a/tools/testing/selftests/bpf/map_tests/map_percpu_stats.c b/tools/testing/selftests/bpf/map_tests/map_percpu_stats.c
-index 8bf497a98..2ea364088 100644
---- a/tools/testing/selftests/bpf/map_tests/map_percpu_stats.c
-+++ b/tools/testing/selftests/bpf/map_tests/map_percpu_stats.c
-@@ -131,10 +131,17 @@ static bool is_lru(__u32 map_type)
- 	       map_type == BPF_MAP_TYPE_LRU_PERCPU_HASH;
- }
- 
-+static bool is_percpu(__u32 map_type)
-+{
-+	return map_type == BPF_MAP_TYPE_PERCPU_HASH ||
-+	       map_type == BPF_MAP_TYPE_LRU_PERCPU_HASH;
-+}
-+
- struct upsert_opts {
- 	__u32 map_type;
- 	int map_fd;
- 	__u32 n;
-+	bool retry_for_nomem;
- };
- 
- static int create_small_hash(void)
-@@ -148,19 +155,38 @@ static int create_small_hash(void)
- 	return map_fd;
- }
- 
-+static bool retry_for_nomem_fn(int err)
-+{
-+	return err == ENOMEM;
-+}
-+
- static void *patch_map_thread(void *arg)
- {
-+	/* 8KB is enough for 1024 CPUs. And it is shared between N_THREADS. */
-+	static __u8 blob[8 << 10];
- 	struct upsert_opts *opts = arg;
-+	void *val_ptr;
- 	int val;
- 	int ret;
- 	int i;
- 
- 	for (i = 0; i < opts->n; i++) {
--		if (opts->map_type == BPF_MAP_TYPE_HASH_OF_MAPS)
-+		if (opts->map_type == BPF_MAP_TYPE_HASH_OF_MAPS) {
- 			val = create_small_hash();
--		else
-+			val_ptr = &val;
-+		} else if (is_percpu(opts->map_type)) {
-+			val_ptr = blob;
-+		} else {
- 			val = rand();
--		ret = bpf_map_update_elem(opts->map_fd, &i, &val, 0);
-+			val_ptr = &val;
-+		}
-+
-+		/* 2 seconds may be enough ? */
-+		if (opts->retry_for_nomem)
-+			ret = map_update_retriable(opts->map_fd, &i, val_ptr, 0,
-+						   40, retry_for_nomem_fn);
-+		else
-+			ret = bpf_map_update_elem(opts->map_fd, &i, val_ptr, 0);
- 		CHECK(ret < 0, "bpf_map_update_elem", "key=%d error: %s\n", i, strerror(errno));
- 
- 		if (opts->map_type == BPF_MAP_TYPE_HASH_OF_MAPS)
-@@ -281,6 +307,13 @@ static void __test(int map_fd)
- 	else
- 		opts.n /= 2;
- 
-+	/* per-cpu bpf memory allocator may not be able to allocate per-cpu
-+	 * pointer successfully and it can not refill free llist timely, and
-+	 * bpf_map_update_elem() will return -ENOMEM. so just retry to mitigate
-+	 * the problem temporarily.
-+	 */
-+	opts.retry_for_nomem = is_percpu(opts.map_type) && (info.map_flags & BPF_F_NO_PREALLOC);
-+
- 	/*
- 	 * Upsert keys [0, n) under some competition: with random values from
- 	 * N_THREADS threads. Check values, then delete all elements and check
-diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-index 2cacc8fa9..618af9dfa 100644
---- a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-+++ b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-@@ -34,8 +34,6 @@
- #include "bpf_iter_ksym.skel.h"
- #include "bpf_iter_sockmap.skel.h"
- 
--static int duration;
--
- static void test_btf_id_or_null(void)
- {
- 	struct bpf_iter_test_kern3 *skel;
-@@ -64,7 +62,7 @@ static void do_dummy_read_opts(struct bpf_program *prog, struct bpf_iter_attach_
- 	/* not check contents, but ensure read() ends without error */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	CHECK(len < 0, "read", "read failed: %s\n", strerror(errno));
-+	ASSERT_GE(len, 0, "read");
- 
- 	close(iter_fd);
- 
-@@ -415,7 +413,7 @@ static int do_btf_read(struct bpf_iter_task_btf *skel)
- 		goto free_link;
- 	}
- 
--	if (CHECK(err < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(err, 0, "read"))
- 		goto free_link;
- 
- 	ASSERT_HAS_SUBSTR(taskbuf, "(struct task_struct)",
-@@ -528,11 +526,11 @@ static int do_read_with_fd(int iter_fd, const char *expected,
- 	start = 0;
- 	while ((len = read(iter_fd, buf + start, read_buf_len)) > 0) {
- 		start += len;
--		if (CHECK(start >= 16, "read", "read len %d\n", len))
-+		if (!ASSERT_LT(start, 16, "read"))
- 			return -1;
- 		read_buf_len = read_one_char ? 1 : 16 - start;
- 	}
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		return -1;
- 
- 	if (!ASSERT_STREQ(buf, expected, "read"))
-@@ -573,8 +571,7 @@ static int do_read(const char *path, const char *expected)
- 	int err, iter_fd;
- 
- 	iter_fd = open(path, O_RDONLY);
--	if (CHECK(iter_fd < 0, "open", "open %s failed: %s\n",
--		  path, strerror(errno)))
-+	if (!ASSERT_GE(iter_fd, 0, "open"))
- 		return -1;
- 
- 	err = do_read_with_fd(iter_fd, expected, false);
-@@ -602,7 +599,7 @@ static void test_file_iter(void)
- 	unlink(path);
- 
- 	err = bpf_link__pin(link, path);
--	if (CHECK(err, "pin_iter", "pin_iter to %s failed: %d\n", path, err))
-+	if (!ASSERT_OK(err, "pin_iter"))
- 		goto free_link;
- 
- 	err = do_read(path, "abcd");
-@@ -653,12 +650,10 @@ static void test_overflow(bool test_e2big_overflow, bool ret1)
- 	 * overflow and needs restart.
- 	 */
- 	map1_fd = bpf_map_create(BPF_MAP_TYPE_ARRAY, NULL, 4, 8, 1, NULL);
--	if (CHECK(map1_fd < 0, "bpf_map_create",
--		  "map_creation failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(map1_fd, 0, "bpf_map_create"))
- 		goto out;
- 	map2_fd = bpf_map_create(BPF_MAP_TYPE_ARRAY, NULL, 4, 8, 1, NULL);
--	if (CHECK(map2_fd < 0, "bpf_map_create",
--		  "map_creation failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(map2_fd, 0, "bpf_map_create"))
- 		goto free_map1;
- 
- 	/* bpf_seq_printf kernel buffer is 8 pages, so one map
-@@ -687,14 +682,12 @@ static void test_overflow(bool test_e2big_overflow, bool ret1)
- 	/* setup filtering map_id in bpf program */
- 	map_info_len = sizeof(map_info);
- 	err = bpf_map_get_info_by_fd(map1_fd, &map_info, &map_info_len);
--	if (CHECK(err, "get_map_info", "get map info failed: %s\n",
--		  strerror(errno)))
-+	if (!ASSERT_OK(err, "get_map_info"))
- 		goto free_map2;
- 	skel->bss->map1_id = map_info.id;
- 
- 	err = bpf_map_get_info_by_fd(map2_fd, &map_info, &map_info_len);
--	if (CHECK(err, "get_map_info", "get map info failed: %s\n",
--		  strerror(errno)))
-+	if (!ASSERT_OK(err, "get_map_info"))
- 		goto free_map2;
- 	skel->bss->map2_id = map_info.id;
- 
-@@ -707,7 +700,7 @@ static void test_overflow(bool test_e2big_overflow, bool ret1)
- 		goto free_link;
- 
- 	buf = malloc(expected_read_len);
--	if (!buf)
-+	if (!ASSERT_OK_PTR(buf, "malloc"))
- 		goto close_iter;
- 
- 	/* do read */
-@@ -716,16 +709,14 @@ static void test_overflow(bool test_e2big_overflow, bool ret1)
- 		while ((len = read(iter_fd, buf, expected_read_len)) > 0)
- 			total_read_len += len;
- 
--		CHECK(len != -1 || errno != E2BIG, "read",
--		      "expected ret -1, errno E2BIG, but get ret %d, error %s\n",
--			  len, strerror(errno));
-+		ASSERT_EQ(len, -1, "read");
-+		ASSERT_EQ(errno, E2BIG, "read");
- 		goto free_buf;
- 	} else if (!ret1) {
- 		while ((len = read(iter_fd, buf, expected_read_len)) > 0)
- 			total_read_len += len;
- 
--		if (CHECK(len < 0, "read", "read failed: %s\n",
--			  strerror(errno)))
-+		if (!ASSERT_GE(len, 0, "read"))
- 			goto free_buf;
- 	} else {
- 		do {
-@@ -734,8 +725,7 @@ static void test_overflow(bool test_e2big_overflow, bool ret1)
- 				total_read_len += len;
- 		} while (len > 0 || len == -EAGAIN);
- 
--		if (CHECK(len < 0, "read", "read failed: %s\n",
--			  strerror(errno)))
-+		if (!ASSERT_GE(len, 0, "read"))
- 			goto free_buf;
- 	}
- 
-@@ -838,7 +828,7 @@ static void test_bpf_hash_map(void)
- 	/* do some tests */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
-@@ -880,6 +870,8 @@ static void test_bpf_percpu_hash_map(void)
- 
- 	skel->rodata->num_cpus = bpf_num_possible_cpus();
- 	val = malloc(8 * bpf_num_possible_cpus());
-+	if (!ASSERT_OK_PTR(val, "malloc"))
-+		goto out;
- 
- 	err = bpf_iter_bpf_percpu_hash_map__load(skel);
- 	if (!ASSERT_OK_PTR(skel, "bpf_iter_bpf_percpu_hash_map__load"))
-@@ -919,7 +911,7 @@ static void test_bpf_percpu_hash_map(void)
- 	/* do some tests */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
-@@ -985,17 +977,14 @@ static void test_bpf_array_map(void)
- 	start = 0;
- 	while ((len = read(iter_fd, buf + start, sizeof(buf) - start)) > 0)
- 		start += len;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
- 	res_first_key = *(__u32 *)buf;
- 	res_first_val = *(__u64 *)(buf + sizeof(__u32));
--	if (CHECK(res_first_key != 0 || res_first_val != first_val,
--		  "bpf_seq_write",
--		  "seq_write failure: first key %u vs expected 0, "
--		  " first value %llu vs expected %llu\n",
--		  res_first_key, res_first_val, first_val))
-+	if (!ASSERT_EQ(res_first_key, 0, "bpf_seq_write") ||
-+			!ASSERT_EQ(res_first_val, first_val, "bpf_seq_write"))
- 		goto close_iter;
- 
- 	if (!ASSERT_EQ(skel->bss->key_sum, expected_key, "key_sum"))
-@@ -1059,6 +1048,8 @@ static void test_bpf_percpu_array_map(void)
- 
- 	skel->rodata->num_cpus = bpf_num_possible_cpus();
- 	val = malloc(8 * bpf_num_possible_cpus());
-+	if (!ASSERT_OK_PTR(val, "malloc"))
-+		goto out;
- 
- 	err = bpf_iter_bpf_percpu_array_map__load(skel);
- 	if (!ASSERT_OK_PTR(skel, "bpf_iter_bpf_percpu_array_map__load"))
-@@ -1094,7 +1085,7 @@ static void test_bpf_percpu_array_map(void)
- 	/* do some tests */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
-@@ -1133,6 +1124,7 @@ static void test_bpf_sk_storage_delete(void)
- 	sock_fd = socket(AF_INET6, SOCK_STREAM, 0);
- 	if (!ASSERT_GE(sock_fd, 0, "socket"))
- 		goto out;
-+
- 	err = bpf_map_update_elem(map_fd, &sock_fd, &val, BPF_NOEXIST);
- 	if (!ASSERT_OK(err, "map_update"))
- 		goto out;
-@@ -1153,14 +1145,19 @@ static void test_bpf_sk_storage_delete(void)
- 	/* do some tests */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
- 	err = bpf_map_lookup_elem(map_fd, &sock_fd, &val);
--	if (CHECK(!err || errno != ENOENT, "bpf_map_lookup_elem",
--		  "map value wasn't deleted (err=%d, errno=%d)\n", err, errno))
--		goto close_iter;
-+
-+	 /* Note: The following assertions serve to ensure
-+	  * the value was deleted. It does so by asserting
-+	  * that bpf_map_lookup_elem has failed. This might
-+	  * seem counterintuitive at first.
-+	  */
-+	ASSERT_ERR(err, "bpf_map_lookup_elem");
-+	ASSERT_EQ(errno, ENOENT, "bpf_map_lookup_elem");
- 
- close_iter:
- 	close(iter_fd);
-@@ -1205,17 +1202,15 @@ static void test_bpf_sk_storage_get(void)
- 	do_dummy_read(skel->progs.fill_socket_owner);
- 
- 	err = bpf_map_lookup_elem(map_fd, &sock_fd, &val);
--	if (CHECK(err || val != getpid(), "bpf_map_lookup_elem",
--	    "map value wasn't set correctly (expected %d, got %d, err=%d)\n",
--	    getpid(), val, err))
-+	if (!ASSERT_OK(err, "bpf_map_lookup_elem") ||
-+			!ASSERT_EQ(val, getpid(), "bpf_map_lookup_elem"))
- 		goto close_socket;
- 
- 	do_dummy_read(skel->progs.negate_socket_local_storage);
- 
- 	err = bpf_map_lookup_elem(map_fd, &sock_fd, &val);
--	CHECK(err || val != -getpid(), "bpf_map_lookup_elem",
--	      "map value wasn't set correctly (expected %d, got %d, err=%d)\n",
--	      -getpid(), val, err);
-+	ASSERT_OK(err, "bpf_map_lookup_elem");
-+	ASSERT_EQ(val, -getpid(), "bpf_map_lookup_elem");
- 
- close_socket:
- 	close(sock_fd);
-@@ -1292,7 +1287,7 @@ static void test_bpf_sk_storage_map(void)
- 	/* do some tests */
- 	while ((len = read(iter_fd, buf, sizeof(buf))) > 0)
- 		;
--	if (CHECK(len < 0, "read", "read failed: %s\n", strerror(errno)))
-+	if (!ASSERT_GE(len, 0, "read"))
- 		goto close_iter;
- 
- 	/* test results */
-diff --git a/tools/testing/selftests/bpf/test_maps.c b/tools/testing/selftests/bpf/test_maps.c
-index 7fc00e423..767e0693d 100644
---- a/tools/testing/selftests/bpf/test_maps.c
-+++ b/tools/testing/selftests/bpf/test_maps.c
-@@ -1396,13 +1396,18 @@ static void test_map_stress(void)
- #define MAX_DELAY_US 50000
- #define MIN_DELAY_RANGE_US 5000
- 
--static int map_update_retriable(int map_fd, const void *key, const void *value,
--				int flags, int attempts)
-+static bool retry_for_again_or_busy(int err)
-+{
-+	return (err == EAGAIN || err == EBUSY);
-+}
-+
-+int map_update_retriable(int map_fd, const void *key, const void *value, int flags, int attempts,
-+			 retry_for_error_fn need_retry)
- {
- 	int delay = rand() % MIN_DELAY_RANGE_US;
- 
- 	while (bpf_map_update_elem(map_fd, key, value, flags)) {
--		if (!attempts || (errno != EAGAIN && errno != EBUSY))
-+		if (!attempts || !need_retry(errno))
- 			return -errno;
- 
- 		if (delay <= MAX_DELAY_US / 2)
-@@ -1445,11 +1450,13 @@ static void test_update_delete(unsigned int fn, void *data)
- 		key = value = i;
- 
- 		if (do_update) {
--			err = map_update_retriable(fd, &key, &value, BPF_NOEXIST, MAP_RETRIES);
-+			err = map_update_retriable(fd, &key, &value, BPF_NOEXIST, MAP_RETRIES,
-+						   retry_for_again_or_busy);
- 			if (err)
- 				printf("error %d %d\n", err, errno);
- 			assert(err == 0);
--			err = map_update_retriable(fd, &key, &value, BPF_EXIST, MAP_RETRIES);
-+			err = map_update_retriable(fd, &key, &value, BPF_EXIST, MAP_RETRIES,
-+						   retry_for_again_or_busy);
- 			if (err)
- 				printf("error %d %d\n", err, errno);
- 			assert(err == 0);
-diff --git a/tools/testing/selftests/bpf/test_maps.h b/tools/testing/selftests/bpf/test_maps.h
-index f6fbca761..e4ac704a5 100644
---- a/tools/testing/selftests/bpf/test_maps.h
-+++ b/tools/testing/selftests/bpf/test_maps.h
-@@ -4,6 +4,7 @@
- 
- #include <stdio.h>
- #include <stdlib.h>
-+#include <stdbool.h>
- 
- #define CHECK(condition, tag, format...) ({				\
- 	int __ret = !!(condition);					\
-@@ -16,4 +17,8 @@
- 
- extern int skips;
- 
-+typedef bool (*retry_for_error_fn)(int err);
-+int map_update_retriable(int map_fd, const void *key, const void *value, int flags, int attempts,
-+			 retry_for_error_fn need_retry);
-+
- #endif
-diff --git a/tools/testing/selftests/bpf/vmtest.sh b/tools/testing/selftests/bpf/vmtest.sh
-index 685034528..65d14f3bb 100755
---- a/tools/testing/selftests/bpf/vmtest.sh
-+++ b/tools/testing/selftests/bpf/vmtest.sh
-@@ -36,7 +36,9 @@ DEFAULT_COMMAND="./test_progs"
- MOUNT_DIR="mnt"
- ROOTFS_IMAGE="root.img"
- OUTPUT_DIR="$HOME/.bpf_selftests"
--KCONFIG_REL_PATHS=("tools/testing/selftests/bpf/config" "tools/testing/selftests/bpf/config.${ARCH}")
-+KCONFIG_REL_PATHS=("tools/testing/selftests/bpf/config"
-+	"tools/testing/selftests/bpf/config.vm"
-+	"tools/testing/selftests/bpf/config.${ARCH}")
- INDEX_URL="https://raw.githubusercontent.com/libbpf/ci/master/INDEX"
- NUM_COMPILE_JOBS="$(nproc)"
- LOG_FILE_BASE="$(date +"bpf_selftests.%Y-%m-%d_%H-%M-%S")"
 diff --git a/tools/testing/selftests/scx/.gitignore b/tools/testing/selftests/scx/.gitignore
 new file mode 100644
-index 000000000..ae5491a11
+index 000000000000..ae5491a114c0
 --- /dev/null
 +++ b/tools/testing/selftests/scx/.gitignore
 @@ -0,0 +1,6 @@
@@ -12320,7 +10826,7 @@ index 000000000..ae5491a11
 +!config
 diff --git a/tools/testing/selftests/scx/Makefile b/tools/testing/selftests/scx/Makefile
 new file mode 100644
-index 000000000..c8d5231af
+index 000000000000..c8d5231af31d
 --- /dev/null
 +++ b/tools/testing/selftests/scx/Makefile
 @@ -0,0 +1,210 @@
@@ -12536,7 +11042,7 @@ index 000000000..c8d5231af
 +.SECONDARY:
 diff --git a/tools/testing/selftests/scx/config b/tools/testing/selftests/scx/config
 new file mode 100644
-index 000000000..fef8f81ad
+index 000000000000..fef8f81ad377
 --- /dev/null
 +++ b/tools/testing/selftests/scx/config
 @@ -0,0 +1,5 @@
@@ -12547,7 +11053,7 @@ index 000000000..fef8f81ad
 +CONFIG_EXT_GROUP_SCHED=y
 diff --git a/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.bpf.c b/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.bpf.c
 new file mode 100644
-index 000000000..dd32b1899
+index 000000000000..dd32b189911e
 --- /dev/null
 +++ b/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.bpf.c
 @@ -0,0 +1,50 @@
@@ -12603,7 +11109,7 @@ index 000000000..dd32b1899
 +};
 diff --git a/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.c b/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.c
 new file mode 100644
-index 000000000..ef8ee04ff
+index 000000000000..ef8ee04ff987
 --- /dev/null
 +++ b/tools/testing/selftests/scx/ddsp_bogus_dsq_fail.c
 @@ -0,0 +1,57 @@
@@ -12666,7 +11172,7 @@ index 000000000..ef8ee04ff
 +REGISTER_SCX_TEST(&ddsp_bogus_dsq_fail)
 diff --git a/tools/testing/selftests/scx/ddsp_vtimelocal_fail.bpf.c b/tools/testing/selftests/scx/ddsp_vtimelocal_fail.bpf.c
 new file mode 100644
-index 000000000..9b21c1d57
+index 000000000000..9b21c1d57861
 --- /dev/null
 +++ b/tools/testing/selftests/scx/ddsp_vtimelocal_fail.bpf.c
 @@ -0,0 +1,47 @@
@@ -12719,7 +11225,7 @@ index 000000000..9b21c1d57
 +};
 diff --git a/tools/testing/selftests/scx/ddsp_vtimelocal_fail.c b/tools/testing/selftests/scx/ddsp_vtimelocal_fail.c
 new file mode 100644
-index 000000000..b55611cd0
+index 000000000000..b55611cd0b1f
 --- /dev/null
 +++ b/tools/testing/selftests/scx/ddsp_vtimelocal_fail.c
 @@ -0,0 +1,56 @@
@@ -12781,7 +11287,7 @@ index 000000000..b55611cd0
 +REGISTER_SCX_TEST(&ddsp_vtimelocal_fail)
 diff --git a/tools/testing/selftests/scx/enq_last_no_enq_fails.bpf.c b/tools/testing/selftests/scx/enq_last_no_enq_fails.bpf.c
 new file mode 100644
-index 000000000..4b0f84568
+index 000000000000..4b0f84568dc1
 --- /dev/null
 +++ b/tools/testing/selftests/scx/enq_last_no_enq_fails.bpf.c
 @@ -0,0 +1,29 @@
@@ -12816,7 +11322,7 @@ index 000000000..4b0f84568
 +};
 diff --git a/tools/testing/selftests/scx/enq_last_no_enq_fails.c b/tools/testing/selftests/scx/enq_last_no_enq_fails.c
 new file mode 100644
-index 000000000..2a3eda5e2
+index 000000000000..2a3eda5e2c0b
 --- /dev/null
 +++ b/tools/testing/selftests/scx/enq_last_no_enq_fails.c
 @@ -0,0 +1,60 @@
@@ -12882,7 +11388,7 @@ index 000000000..2a3eda5e2
 +REGISTER_SCX_TEST(&enq_last_no_enq_fails)
 diff --git a/tools/testing/selftests/scx/enq_select_cpu_fails.bpf.c b/tools/testing/selftests/scx/enq_select_cpu_fails.bpf.c
 new file mode 100644
-index 000000000..40ea393b2
+index 000000000000..40ea393b2bbc
 --- /dev/null
 +++ b/tools/testing/selftests/scx/enq_select_cpu_fails.bpf.c
 @@ -0,0 +1,51 @@
@@ -12939,7 +11445,7 @@ index 000000000..40ea393b2
 +};
 diff --git a/tools/testing/selftests/scx/enq_select_cpu_fails.c b/tools/testing/selftests/scx/enq_select_cpu_fails.c
 new file mode 100644
-index 000000000..dd1350e5f
+index 000000000000..dd1350e5f002
 --- /dev/null
 +++ b/tools/testing/selftests/scx/enq_select_cpu_fails.c
 @@ -0,0 +1,61 @@
@@ -13006,7 +11512,7 @@ index 000000000..dd1350e5f
 +REGISTER_SCX_TEST(&enq_select_cpu_fails)
 diff --git a/tools/testing/selftests/scx/init_enable_count.bpf.c b/tools/testing/selftests/scx/init_enable_count.bpf.c
 new file mode 100644
-index 000000000..a5053aeb0
+index 000000000000..a5053aeb0ca0
 --- /dev/null
 +++ b/tools/testing/selftests/scx/init_enable_count.bpf.c
 @@ -0,0 +1,63 @@
@@ -13075,7 +11581,7 @@ index 000000000..a5053aeb0
 +};
 diff --git a/tools/testing/selftests/scx/init_enable_count.c b/tools/testing/selftests/scx/init_enable_count.c
 new file mode 100644
-index 000000000..1d89f9f6f
+index 000000000000..1d89f9f6fb92
 --- /dev/null
 +++ b/tools/testing/selftests/scx/init_enable_count.c
 @@ -0,0 +1,160 @@
@@ -13241,7 +11747,7 @@ index 000000000..1d89f9f6f
 +REGISTER_SCX_TEST(&init_enable_count)
 diff --git a/tools/testing/selftests/scx/maximal.bpf.c b/tools/testing/selftests/scx/maximal.bpf.c
 new file mode 100644
-index 000000000..00bfa9cb9
+index 000000000000..00bfa9cb95d3
 --- /dev/null
 +++ b/tools/testing/selftests/scx/maximal.bpf.c
 @@ -0,0 +1,164 @@
@@ -13411,7 +11917,7 @@ index 000000000..00bfa9cb9
 +};
 diff --git a/tools/testing/selftests/scx/maximal.c b/tools/testing/selftests/scx/maximal.c
 new file mode 100644
-index 000000000..f38fc973c
+index 000000000000..f38fc973c380
 --- /dev/null
 +++ b/tools/testing/selftests/scx/maximal.c
 @@ -0,0 +1,51 @@
@@ -13468,7 +11974,7 @@ index 000000000..f38fc973c
 +REGISTER_SCX_TEST(&maximal)
 diff --git a/tools/testing/selftests/scx/maybe_null.bpf.c b/tools/testing/selftests/scx/maybe_null.bpf.c
 new file mode 100644
-index 000000000..ad5e69422
+index 000000000000..ad5e694226bb
 --- /dev/null
 +++ b/tools/testing/selftests/scx/maybe_null.bpf.c
 @@ -0,0 +1,26 @@
@@ -13500,7 +12006,7 @@ index 000000000..ad5e69422
 +};
 diff --git a/tools/testing/selftests/scx/maybe_null.c b/tools/testing/selftests/scx/maybe_null.c
 new file mode 100644
-index 000000000..3f26b784f
+index 000000000000..3f26b784f9c5
 --- /dev/null
 +++ b/tools/testing/selftests/scx/maybe_null.c
 @@ -0,0 +1,40 @@
@@ -13546,7 +12052,7 @@ index 000000000..3f26b784f
 +REGISTER_SCX_TEST(&maybe_null)
 diff --git a/tools/testing/selftests/scx/maybe_null_fail.bpf.c b/tools/testing/selftests/scx/maybe_null_fail.bpf.c
 new file mode 100644
-index 000000000..1607fe07b
+index 000000000000..1607fe07bead
 --- /dev/null
 +++ b/tools/testing/selftests/scx/maybe_null_fail.bpf.c
 @@ -0,0 +1,25 @@
@@ -13577,7 +12083,7 @@ index 000000000..1607fe07b
 +};
 diff --git a/tools/testing/selftests/scx/minimal.bpf.c b/tools/testing/selftests/scx/minimal.bpf.c
 new file mode 100644
-index 000000000..14b3d44d9
+index 000000000000..14b3d44d90db
 --- /dev/null
 +++ b/tools/testing/selftests/scx/minimal.bpf.c
 @@ -0,0 +1,32 @@
@@ -13615,7 +12121,7 @@ index 000000000..14b3d44d9
 +};
 diff --git a/tools/testing/selftests/scx/minimal.c b/tools/testing/selftests/scx/minimal.c
 new file mode 100644
-index 000000000..6c5db8ebb
+index 000000000000..6c5db8ebbf8a
 --- /dev/null
 +++ b/tools/testing/selftests/scx/minimal.c
 @@ -0,0 +1,58 @@
@@ -13679,7 +12185,7 @@ index 000000000..6c5db8ebb
 +REGISTER_SCX_TEST(&minimal)
 diff --git a/tools/testing/selftests/scx/reload_loop.c b/tools/testing/selftests/scx/reload_loop.c
 new file mode 100644
-index 000000000..5cfba2d6e
+index 000000000000..5cfba2d6e056
 --- /dev/null
 +++ b/tools/testing/selftests/scx/reload_loop.c
 @@ -0,0 +1,75 @@
@@ -13760,7 +12266,7 @@ index 000000000..5cfba2d6e
 +REGISTER_SCX_TEST(&reload_loop)
 diff --git a/tools/testing/selftests/scx/runner.c b/tools/testing/selftests/scx/runner.c
 new file mode 100644
-index 000000000..37b25b283
+index 000000000000..37b25b2830d2
 --- /dev/null
 +++ b/tools/testing/selftests/scx/runner.c
 @@ -0,0 +1,201 @@
@@ -13967,7 +12473,7 @@ index 000000000..37b25b283
 +}
 diff --git a/tools/testing/selftests/scx/scx_test.h b/tools/testing/selftests/scx/scx_test.h
 new file mode 100644
-index 000000000..4b70bf75f
+index 000000000000..4b70bf75fa81
 --- /dev/null
 +++ b/tools/testing/selftests/scx/scx_test.h
 @@ -0,0 +1,123 @@
@@ -14096,7 +12602,7 @@ index 000000000..4b70bf75f
 +#endif  // # __SCX_TEST_H__
 diff --git a/tools/testing/selftests/scx/select_cpu_dfl.bpf.c b/tools/testing/selftests/scx/select_cpu_dfl.bpf.c
 new file mode 100644
-index 000000000..f2fa80628
+index 000000000000..f2fa80628299
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dfl.bpf.c
 @@ -0,0 +1,48 @@
@@ -14150,7 +12656,7 @@ index 000000000..f2fa80628
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_dfl.c b/tools/testing/selftests/scx/select_cpu_dfl.c
 new file mode 100644
-index 000000000..a53a40c2d
+index 000000000000..a53a40c2d2f0
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dfl.c
 @@ -0,0 +1,72 @@
@@ -14228,7 +12734,7 @@ index 000000000..a53a40c2d
 +REGISTER_SCX_TEST(&select_cpu_dfl)
 diff --git a/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.bpf.c b/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.bpf.c
 new file mode 100644
-index 000000000..636ea1de1
+index 000000000000..636ea1de12fe
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.bpf.c
 @@ -0,0 +1,97 @@
@@ -14331,7 +12837,7 @@ index 000000000..636ea1de1
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.c b/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.c
 new file mode 100644
-index 000000000..1d85bf4bf
+index 000000000000..1d85bf4bf3a3
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dfl_nodispatch.c
 @@ -0,0 +1,72 @@
@@ -14409,7 +12915,7 @@ index 000000000..1d85bf4bf
 +REGISTER_SCX_TEST(&select_cpu_dfl_nodispatch)
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch.bpf.c b/tools/testing/selftests/scx/select_cpu_dispatch.bpf.c
 new file mode 100644
-index 000000000..0fda97769
+index 000000000000..0fda97769725
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch.bpf.c
 @@ -0,0 +1,49 @@
@@ -14464,7 +12970,7 @@ index 000000000..0fda97769
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch.c b/tools/testing/selftests/scx/select_cpu_dispatch.c
 new file mode 100644
-index 000000000..0309ca878
+index 000000000000..0309ca8785b3
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch.c
 @@ -0,0 +1,70 @@
@@ -14540,7 +13046,7 @@ index 000000000..0309ca878
 +REGISTER_SCX_TEST(&select_cpu_dispatch)
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.bpf.c b/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.bpf.c
 new file mode 100644
-index 000000000..c9105add9
+index 000000000000..c9105add924d
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.bpf.c
 @@ -0,0 +1,45 @@
@@ -14591,7 +13097,7 @@ index 000000000..c9105add9
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.c b/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.c
 new file mode 100644
-index 000000000..a7b91d58c
+index 000000000000..a7b91d58cb31
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch_bad_dsq.c
 @@ -0,0 +1,56 @@
@@ -14653,7 +13159,7 @@ index 000000000..a7b91d58c
 +REGISTER_SCX_TEST(&select_cpu_dispatch_bad_dsq)
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.bpf.c b/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.bpf.c
 new file mode 100644
-index 000000000..82d814839
+index 000000000000..82d8148399f2
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.bpf.c
 @@ -0,0 +1,46 @@
@@ -14705,7 +13211,7 @@ index 000000000..82d814839
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.c b/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.c
 new file mode 100644
-index 000000000..e32b22963
+index 000000000000..e32b22963744
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_dispatch_dbl_dsp.c
 @@ -0,0 +1,56 @@
@@ -14767,7 +13273,7 @@ index 000000000..e32b22963
 +REGISTER_SCX_TEST(&select_cpu_dispatch_dbl_dsp)
 diff --git a/tools/testing/selftests/scx/select_cpu_vtime.bpf.c b/tools/testing/selftests/scx/select_cpu_vtime.bpf.c
 new file mode 100644
-index 000000000..b8bdadf3e
+index 000000000000..b8bdadf3e541
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_vtime.bpf.c
 @@ -0,0 +1,94 @@
@@ -14867,7 +13373,7 @@ index 000000000..b8bdadf3e
 +};
 diff --git a/tools/testing/selftests/scx/select_cpu_vtime.c b/tools/testing/selftests/scx/select_cpu_vtime.c
 new file mode 100644
-index 000000000..b4629c236
+index 000000000000..b4629c2364f5
 --- /dev/null
 +++ b/tools/testing/selftests/scx/select_cpu_vtime.c
 @@ -0,0 +1,59 @@
@@ -14932,7 +13438,7 @@ index 000000000..b4629c236
 +REGISTER_SCX_TEST(&select_cpu_vtime)
 diff --git a/tools/testing/selftests/scx/test_example.c b/tools/testing/selftests/scx/test_example.c
 new file mode 100644
-index 000000000..ce36cdf03
+index 000000000000..ce36cdf03cdc
 --- /dev/null
 +++ b/tools/testing/selftests/scx/test_example.c
 @@ -0,0 +1,49 @@
@@ -14986,5 +13492,5 @@ index 000000000..ce36cdf03
 +};
 +REGISTER_SCX_TEST(&example)
 -- 
-2.43.0.232.ge79552d197
+2.44.0
 

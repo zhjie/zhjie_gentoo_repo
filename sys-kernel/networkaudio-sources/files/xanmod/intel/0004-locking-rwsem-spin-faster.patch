@@ -1,4 +1,4 @@
-From 82c400751707ed2a95c84a5e68e141d0efe30545 Mon Sep 17 00:00:00 2001
+From bcd79b42d9d1633e795ea3c0b1d621ffe616bf16 Mon Sep 17 00:00:00 2001
 From: Arjan van de Ven <arjan@linux.intel.com>
 Date: Sun, 18 Feb 2018 23:35:41 +0000
 Subject: [PATCH 4/5] locking: rwsem: spin faster
@@ -11,7 +11,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/locking/rwsem.c b/kernel/locking/rwsem.c
-index 9eabd585ce7a..56229464d3d1 100644
+index 2340b6d90ec6..1c0e7d5a4ec9 100644
 --- a/kernel/locking/rwsem.c
 +++ b/kernel/locking/rwsem.c
 @@ -749,6 +749,7 @@ rwsem_spin_on_owner(struct rw_semaphore *sem)

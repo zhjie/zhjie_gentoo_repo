@@ -1,7 +1,7 @@
-From 0a6cde80f8e37212ead13519ac5a5938932b6d52 Mon Sep 17 00:00:00 2001
+From b798d5a785a5b4f2a0f72433400a3f2a9e3595f3 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Wed, 5 Oct 2022 03:46:34 +0000
-Subject: [PATCH 06/18] XANMOD: rcu: Change sched_setscheduler_nocheck() calls
+Subject: [PATCH 06/17] XANMOD: rcu: Change sched_setscheduler_nocheck() calls
  to SCHED_RR policy
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -15,10 +15,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  6 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 65731b060e3f..a5e1bb639b23 100644
+index 31b3a25680d0..439890d318bf 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4891,7 +4891,7 @@
+@@ -4904,7 +4904,7 @@
  			overwritten.
  
  	rcutree.kthread_prio= 	 [KNL,BOOT]
@@ -44,7 +44,7 @@ index bdd7eadb33d8..18acdc3d1cee 100644
  	  of milliseconds or more.  Therefore, when enabling this option,
  	  it is your responsibility to ensure that latency-sensitive
 diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
-index 30fc9d34e329..506a1be1e168 100644
+index 7567ca8e743c..b039f1c97514 100644
 --- a/kernel/rcu/rcutorture.c
 +++ b/kernel/rcu/rcutorture.c
 @@ -2408,7 +2408,7 @@ static int rcutorture_booster_init(unsigned int cpu)
@@ -57,10 +57,10 @@ index 30fc9d34e329..506a1be1e168 100644
  
  	/* Don't allow time recalculation while creating a new task. */
 diff --git a/kernel/rcu/tree.c b/kernel/rcu/tree.c
-index 3ac3c846105f..f9ec58ca965c 100644
+index b2bccfd37c38..d5b18f1767f2 100644
 --- a/kernel/rcu/tree.c
 +++ b/kernel/rcu/tree.c
-@@ -4719,8 +4719,8 @@ static void __init rcu_start_exp_gp_kworkers(void)
+@@ -4753,8 +4753,8 @@ static void __init rcu_start_exp_gp_kworkers(void)
  		return;
  	}
  
@@ -71,7 +71,7 @@ index 3ac3c846105f..f9ec58ca965c 100644
  				   &param);
  }
  
-@@ -4758,7 +4758,7 @@ static int __init rcu_spawn_gp_kthread(void)
+@@ -4792,7 +4792,7 @@ static int __init rcu_spawn_gp_kthread(void)
  		return 0;
  	if (kthread_prio) {
  		sp.sched_priority = kthread_prio;

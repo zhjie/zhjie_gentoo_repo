@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="16"
+K_GENPATCHES_VER="10"
 K_EXP_GENPATCHES_NOUSE="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
@@ -40,7 +40,7 @@ src_prepare() {
 
 	# bmq scheduler
 	if use bmq; then
-		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.7-r2.patch"
+		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.8-r4.patch"
 	fi
 
 	# bore scheduler
@@ -66,10 +66,9 @@ src_prepare() {
 	eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
 
 	eapply_user
 }

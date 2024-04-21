@@ -1,7 +1,7 @@
-From 08f1f0b8506d1795894800484c3fca8df0261bd7 Mon Sep 17 00:00:00 2001
+From 1dfe3f06b90b96164f4b488924b293f96069c979 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Thu, 3 Aug 2023 13:53:49 +0000
-Subject: [PATCH 01/18] XANMOD: x86/build: Prevent generating avx2 and avx512
+Subject: [PATCH 01/17] XANMOD: x86/build: Prevent generating avx2 and avx512
  floating-point code
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 1a068de12a56..1e8c6eba6c96 100644
+index da8f3caf2781..12d119781eb7 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -67,8 +67,8 @@ export BITS

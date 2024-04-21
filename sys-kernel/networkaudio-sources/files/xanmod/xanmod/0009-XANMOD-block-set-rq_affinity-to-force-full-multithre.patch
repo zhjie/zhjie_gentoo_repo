@@ -1,7 +1,7 @@
-From 8f35bc05a1bcc90429ab2508698f1a5a6349a4e7 Mon Sep 17 00:00:00 2001
+From 01fb0126da45972f2aac069784278ff94c0f58eb Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 14 Dec 2020 16:24:26 +0000
-Subject: [PATCH 09/18] XANMOD: block: set rq_affinity to force full
+Subject: [PATCH 09/17] XANMOD: block: set rq_affinity to force full
  multithreading I/O requests
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,10 +10,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 88e9dd4b71fb..d84902057392 100644
+index 99e4f5e72213..fbc23533ef8f 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -558,6 +558,7 @@ struct request_queue {
+@@ -542,6 +542,7 @@ struct request_queue {
  
  #define QUEUE_FLAG_MQ_DEFAULT	((1UL << QUEUE_FLAG_IO_STAT) |		\
  				 (1UL << QUEUE_FLAG_SAME_COMP) |	\

@@ -1,4 +1,4 @@
-From a736e3085361a7dbccab8dfbc7f1b128a987eec1 Mon Sep 17 00:00:00 2001
+From d8af22b079b8f404659b866d8a85851c61a55615 Mon Sep 17 00:00:00 2001
 From: Arjan van de Ven <arjan@linux.intel.com>
 Date: Thu, 13 Dec 2018 01:00:49 +0000
 Subject: [PATCH 2/5] sched/wait: Do accept() in LIFO order for cache
@@ -12,10 +12,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  3 files changed, 27 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/wait.h b/include/linux/wait.h
-index 5ec7739400f4..d1df939187fb 100644
+index 8aa3372f21a0..924778a426ce 100644
 --- a/include/linux/wait.h
 +++ b/include/linux/wait.h
-@@ -165,6 +165,7 @@ static inline bool wq_has_sleeper(struct wait_queue_head *wq_head)
+@@ -163,6 +163,7 @@ static inline bool wq_has_sleeper(struct wait_queue_head *wq_head)
  
  extern void add_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  extern void add_wait_queue_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
@@ -23,7 +23,7 @@ index 5ec7739400f4..d1df939187fb 100644
  extern void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  extern void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  
-@@ -1195,6 +1196,7 @@ do {										\
+@@ -1191,6 +1192,7 @@ do {										\
   */
  void prepare_to_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
  bool prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
@@ -32,7 +32,7 @@ index 5ec7739400f4..d1df939187fb 100644
  void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  long wait_woken(struct wait_queue_entry *wq_entry, unsigned mode, long timeout);
 diff --git a/kernel/sched/wait.c b/kernel/sched/wait.c
-index 802d98cf2de3..9e5a15389c30 100644
+index 51e38f5f4701..c5cc616484ba 100644
 --- a/kernel/sched/wait.c
 +++ b/kernel/sched/wait.c
 @@ -47,6 +47,17 @@ void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_
@@ -53,7 +53,7 @@ index 802d98cf2de3..9e5a15389c30 100644
  void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
  {
  	unsigned long flags;
-@@ -298,6 +309,19 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
+@@ -258,6 +269,19 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
  }
  EXPORT_SYMBOL(prepare_to_wait_exclusive);
  
@@ -74,10 +74,10 @@ index 802d98cf2de3..9e5a15389c30 100644
  {
  	wq_entry->flags = flags;
 diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index 394a498c2823..c7ecb4b596a0 100644
+index 459af1f89739..552795982cf4 100644
 --- a/net/ipv4/inet_connection_sock.c
 +++ b/net/ipv4/inet_connection_sock.c
-@@ -627,7 +627,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
+@@ -624,7 +624,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
  	 * having to remove and re-insert us on the wait queue.
  	 */
  	for (;;) {

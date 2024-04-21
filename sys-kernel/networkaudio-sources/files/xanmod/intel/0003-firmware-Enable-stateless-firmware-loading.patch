@@ -1,4 +1,4 @@
-From e0d0bc87df00b9c605d6b24c6184885c4199bb6d Mon Sep 17 00:00:00 2001
+From 608e96b2f0d6f67a2b01dd4f1783a1710635630e Mon Sep 17 00:00:00 2001
 From: William Douglas <william.douglas@intel.com>
 Date: Wed, 20 Jun 2018 17:23:21 +0000
 Subject: [PATCH 3/5] firmware: Enable stateless firmware loading
@@ -13,10 +13,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
-index b58c42f1b1ce..817c81bc9107 100644
+index ea28102d421e..9e76813de9ea 100644
 --- a/drivers/base/firmware_loader/main.c
 +++ b/drivers/base/firmware_loader/main.c
-@@ -470,6 +470,8 @@ static int fw_decompress_xz(struct device *dev, struct fw_priv *fw_priv,
+@@ -471,6 +471,8 @@ static int fw_decompress_xz(struct device *dev, struct fw_priv *fw_priv,
  static char fw_path_para[256];
  static const char * const fw_path[] = {
  	fw_path_para,
