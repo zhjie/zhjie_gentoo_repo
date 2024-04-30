@@ -40,7 +40,7 @@ src_prepare() {
 
 	# bmq scheduler
 	if use bmq; then
-		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.8-r4.patch"
+		eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.8-r6.patch"
 	fi
 
 	# bore scheduler
