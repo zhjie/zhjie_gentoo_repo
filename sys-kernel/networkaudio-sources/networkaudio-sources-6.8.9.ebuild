@@ -4,13 +4,13 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="11"
+K_GENPATCHES_VER="12"
 K_EXP_GENPATCHES_NOUSE="1"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa bmq +bore"
+IUSE="naa bmq +bore intel"
 REQUIRED_USE="
         bmq? ( !bore )
 "
@@ -37,6 +37,11 @@ src_prepare() {
 
 	# highhz patch
 	eapply "${FILESDIR}"/highhz/*.patch
+
+	# intel thread director
+	if use intel; then
+		eapply "${FILESDIR}/cachy/misc/intel/0001-intel-thread-director.patch"
+	fi
 
 	# bmq scheduler
 	if use bmq; then
