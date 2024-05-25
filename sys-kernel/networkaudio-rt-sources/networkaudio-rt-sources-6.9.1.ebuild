@@ -4,12 +4,12 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="12"
+K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="11"
-MINOR_VERSION="2"
+RT_VERSION="5"
+MINOR_VERSION="0"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
@@ -22,15 +22,15 @@ EXTRAVERSION="-networkaudio-rt"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
+	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
 "
 
 KV_FULL="${KV_FULL}-rt"
 S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
-	unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
-	# unpack patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+	# unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
+	unpack patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
 	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 
 	UNIPATCH_LIST_DEFAULT=""
@@ -53,26 +53,6 @@ src_prepare() {
 # Posted
 ###########################################################################
 
-# tty/ serial
-0001-serial-amba-pl011-Use-uart_prepare_sysrq_char.patch
-0002-serial-ar933x-Use-uart_prepare_sysrq_char.patch
-0003-serial-bcm63xx-Use-uart_prepare_sysrq_char.patch
-0004-serial-meson-Use-uart_prepare_sysrq_char.patch
-0005-serial-msm-Use-uart_prepare_sysrq_char.patch
-0006-serial-omap-Use-uart_prepare_sysrq_char.patch
-0007-serial-pxa-Use-uart_prepare_sysrq_char.patch
-0008-serial-sunplus-Use-uart_prepare_sysrq_char.patch
-0009-serial-lpc32xx_hs-Use-uart_prepare_sysrq_char-to-han.patch
-0010-serial-owl-Use-uart_prepare_sysrq_char-to-handle-sys.patch
-0011-serial-rda-Use-uart_prepare_sysrq_char-to-handle-sys.patch
-0012-serial-sifive-Use-uart_prepare_sysrq_char-to-handle-.patch
-0013-serial-pch-Invoke-handle_rx_to-directly.patch
-0014-serial-pch-Make-push_rx-return-void.patch
-0015-serial-pch-Don-t-disable-interrupts-while-acquiring-.patch
-0016-serial-pch-Don-t-initialize-uart_port-s-spin_lock.patch
-0017-serial-pch-Remove-eg20t_port-lock.patch
-0018-serial-pch-Use-uart_prepare_sysrq_char.patch
-
 # net, RPS, v5
 0001-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
 0002-net-Allow-to-use-SMP-threads-for-backlog-NAPI.patch
@@ -84,6 +64,9 @@ src_prepare() {
 0002-perf-Enqueue-SIGTRAP-always-via-task_work.patch
 0003-perf-Remove-perf_swevent_get_recursion_context-from-.patch
 0004-perf-Split-__perf_pending_irq-out-of-perf_pending_ir.patch
+
+# locking.
+drm-ttm-tests-Let-ttm_bo_test-consider-different-ww_.patch
 
 ###########################################################################
 # Post
@@ -117,15 +100,61 @@ zram-Replace-bit-spinlocks-with-spinlock_t-for-PREEM.patch
 ###########################################################################
 # John's printk queue
 ###########################################################################
+0001-printk-Add-notation-to-console_srcu-locking.patch
+0002-printk-Properly-deal-with-nbcon-consoles-on-seq-init.patch
+0003-printk-nbcon-Remove-return-value-for-write_atomic.patch
+0004-printk-Check-printk_deferred_enter-_exit-usage.patch
+0005-printk-nbcon-Add-detailed-doc-for-write_atomic.patch
+0006-printk-nbcon-Add-callbacks-to-synchronize-with-drive.patch
+0007-printk-nbcon-Use-driver-synchronization-while-un-reg.patch
+0008-serial-core-Provide-low-level-functions-to-lock-port.patch
+0009-serial-core-Introduce-wrapper-to-set-uart_port-cons.patch
+0010-console-Improve-console_srcu_read_flags-comments.patch
+0011-nbcon-Provide-functions-for-drivers-to-acquire-conso.patch
+0012-serial-core-Implement-processing-in-port-lock-wrappe.patch
+0013-printk-nbcon-Do-not-rely-on-proxy-headers.patch
+0014-printk-Make-console_is_usable-available-to-nbcon.patch
+0015-printk-Let-console_is_usable-handle-nbcon.patch
+0016-printk-Add-flags-argument-for-console_is_usable.patch
+0017-printk-nbcon-Add-helper-to-assign-priority-based-on-.patch
+0018-printk-nbcon-Provide-function-to-flush-using-write_a.patch
+0019-printk-Track-registered-boot-consoles.patch
+0020-printk-nbcon-Use-nbcon-consoles-in-console_flush_all.patch
+0021-printk-nbcon-Add-unsafe-flushing-on-panic.patch
+0022-printk-Avoid-console_lock-dance-if-no-legacy-or-boot.patch
+0023-printk-Track-nbcon-consoles.patch
+0024-printk-Coordinate-direct-printing-in-panic.patch
+0025-printk-nbcon-Implement-emergency-sections.patch
+0026-panic-Mark-emergency-section-in-warn.patch
+0027-panic-Mark-emergency-section-in-oops.patch
+0028-rcu-Mark-emergency-sections-in-rcu-stalls.patch
+0029-lockdep-Mark-emergency-sections-in-lockdep-splats.patch
+0030-printk-nbcon-Introduce-printing-kthreads.patch
+0031-printk-Atomic-print-in-printk-context-on-shutdown.patch
+0032-printk-nbcon-Add-context-to-console_is_usable.patch
+0033-printk-nbcon-Add-printer-thread-wakeups.patch
+0034-printk-nbcon-Stop-threads-on-shutdown-reboot.patch
+0035-printk-nbcon-Start-printing-threads.patch
+0036-printk-Provide-helper-for-message-prepending.patch
+0037-printk-nbcon-Show-replay-message-on-takeover.patch
+0038-proc-consoles-Add-notation-to-c_start-c_stop.patch
+0039-proc-Add-nbcon-support-for-proc-consoles.patch
+0040-tty-sysfs-Add-nbcon-support-for-active.patch
+0041-printk-nbcon-Provide-function-to-reacquire-ownership.patch
+0042-serial-8250-Switch-to-nbcon-console.patch
+0043-serial-8250-Revert-drop-lockdep-annotation-from-seri.patch
+0044-printk-Add-kthread-for-all-legacy-consoles.patch
+0045-printk-Provide-threadprintk-boot-argument.patch
+0046-printk-Avoid-false-positive-lockdep-report-for-legac.patch
 
 ###########################################################################
 # DRM:
 ###########################################################################
+# https://lore.kernel.org/all/20240405142737.920626-1-bigeasy@linutronix.de/
 0003-drm-i915-Use-preempt_disable-enable_rt-where-recomme.patch
 0004-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-duri.patch
 0005-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_R.patch
-0006-drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
-0007-drm-i915-skip-DRM_I915_LOW_LEVEL_TRACEPOINTS-with-NO.patch
+drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
 0008-drm-i915-gt-Queue-and-wait-for-the-irq_work-item.patch
 0009-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_d.patch
 0010-drm-i915-Drop-the-irqs_disabled-check.patch
@@ -192,27 +221,31 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 	eapply "${FILESDIR}"/highhz/*.patch
 
 	# xanmod patch
-	eapply "${FILESDIR}/xanmod/intel/0001-x86-vdso-Use-lfence-instead-of-rep-and-nop.patch"
 	eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
+	eapply "${FILESDIR}/xanmod/intel/0003-firmware-Enable-stateless-firmware-loading.patch"
 	eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
+	# eapply "${FILESDIR}/xanmod/intel/0005-drivers-initialize-ata-before-graphics.patch"
 
 	eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
 	# eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-Makefile-Disable-GCC-vectorization-on-trees.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-Raise-max_map_count-default-value.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0017-XANMOD-scripts-setlocalversion-remove-tag-for-git-re.patch"
+	# eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
 
         eapply_user
 }

@@ -1,7 +1,7 @@
-From 2c055cc2f45fb3b5a2492d1445e23d0617640dd8 Mon Sep 17 00:00:00 2001
+From 5e21dc23e33793984f0787c1c7726970ceae62e7 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Wed, 11 May 2022 18:56:51 +0000
-Subject: [PATCH 07/17] XANMOD: block/mq-deadline: Increase write priority to
+Subject: [PATCH 07/18] XANMOD: block/mq-deadline: Increase write priority to
  improve responsiveness
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f958e79277b8..1ceaf30c755e 100644
+index 02a916ba62ee..4796753ad460 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
 @@ -4,6 +4,9 @@
@@ -40,5 +40,5 @@ index f958e79277b8..1ceaf30c755e 100644
  				     by the above parameters. For throughput. */
  
 -- 
-2.39.2
+2.43.0
 

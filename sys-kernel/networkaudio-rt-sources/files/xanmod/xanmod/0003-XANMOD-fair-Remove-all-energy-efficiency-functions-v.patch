@@ -1,7 +1,7 @@
-From 05f9e75c3d06fee67b04cd1ac6502b0827974783 Mon Sep 17 00:00:00 2001
+From 2c7e0a96dd3afdc19f18a5f60246afa27b8a6f8d Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Sun, 7 Jan 2024 19:24:34 -0300
-Subject: [PATCH 03/17] XANMOD: fair: Remove all energy efficiency functions
+Subject: [PATCH 03/18] XANMOD: fair: Remove all energy efficiency functions
  [v6.7.0+]
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 3 insertions(+), 257 deletions(-)
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 533547e3c90a..cefb8753c53a 100644
+index c62805dbd608..4955bc7f918a 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -19,6 +19,9 @@
@@ -23,7 +23,7 @@ index 533547e3c90a..cefb8753c53a 100644
   */
  #include <linux/energy_model.h>
  #include <linux/mmap_lock.h>
-@@ -7875,256 +7878,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
+@@ -7893,256 +7896,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
  	return min(max_util, eenv->cpu_cap);
  }
  
@@ -280,7 +280,7 @@ index 533547e3c90a..cefb8753c53a 100644
  /*
   * select_task_rq_fair: Select target runqueue for the waking task in domains
   * that have the relevant SD flag set. In practice, this is SD_BALANCE_WAKE,
-@@ -8157,13 +7910,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
+@@ -8175,13 +7928,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
  		    cpumask_test_cpu(cpu, p->cpus_ptr))
  			return cpu;
  
@@ -295,5 +295,5 @@ index 533547e3c90a..cefb8753c53a 100644
  	}
  
 -- 
-2.39.2
+2.43.0
 
