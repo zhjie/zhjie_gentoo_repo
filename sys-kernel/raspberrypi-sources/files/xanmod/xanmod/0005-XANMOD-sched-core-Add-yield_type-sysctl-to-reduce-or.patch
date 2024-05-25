@@ -1,7 +1,7 @@
-From b5bad45f043a4317ce43de98bd63edf18e3a24b3 Mon Sep 17 00:00:00 2001
+From 14ddbf7f259243945970f52429e36d150862edfe Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Thu, 15 Sep 2022 02:45:40 +0000
-Subject: [PATCH 05/17] XANMOD: sched/core: Add yield_type sysctl to reduce or
+Subject: [PATCH 05/18] XANMOD: sched/core: Add yield_type sysctl to reduce or
  disable sched_yield
 
 [1] https://github.com/hamadmarri/cacule-cpu-scheduler/issues/35
@@ -13,7 +13,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  2 files changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9116bcc90346..2b5c0d272d6e 100644
+index 7019a40457a6..5cba256d773f 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -144,6 +144,14 @@ __read_mostly int sysctl_resched_latency_warn_ms = 100;
@@ -31,7 +31,7 @@ index 9116bcc90346..2b5c0d272d6e 100644
  /*
   * Number of tasks to iterate in a single balance run.
   * Limited because this is done with IRQs disabled.
-@@ -8536,10 +8544,15 @@ static void do_sched_yield(void)
+@@ -8557,10 +8565,15 @@ static void do_sched_yield(void)
  	struct rq_flags rf;
  	struct rq *rq;
  
@@ -49,7 +49,7 @@ index 9116bcc90346..2b5c0d272d6e 100644
  	preempt_disable();
  	rq_unlock_irq(rq, &rf);
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 157f7ce2942d..438d233bedf3 100644
+index 81cc974913bb..345951b50adf 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
 @@ -97,6 +97,7 @@ static const int six_hundred_forty_kb = 640 * 1024;
@@ -77,5 +77,5 @@ index 157f7ce2942d..438d233bedf3 100644
  	{
  		.procname	= "tainted",
 -- 
-2.39.2
+2.43.0
 
