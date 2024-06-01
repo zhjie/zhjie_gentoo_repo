@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="4"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
@@ -215,7 +215,14 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 	fi
 
 	# cachy patch
-	eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
+        eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
+        eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
+        eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+        eapply "${FILESDIR}/cachy/0004-block.patch"
+        eapply "${FILESDIR}/cachy/0005-cachy.patch"
+        eapply "${FILESDIR}/cachy/0007-fixes.patch"
+        eapply "${FILESDIR}/cachy/0008-ksm.patch"
+        eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
 	# highhz patch
 	eapply "${FILESDIR}"/highhz/*.patch
@@ -230,8 +237,8 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
 	# eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
+	eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
 	# eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
 	eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
