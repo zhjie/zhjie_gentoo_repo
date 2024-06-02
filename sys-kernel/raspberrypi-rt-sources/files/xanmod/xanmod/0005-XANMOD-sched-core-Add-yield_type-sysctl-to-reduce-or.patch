@@ -61,9 +61,9 @@ index 81cc974913bb..345951b50adf 100644
  static const int cap_last_cap = CAP_LAST_CAP;
  
 @@ -1623,6 +1624,15 @@ static struct ctl_table kern_table[] = {
- 		.mode		= 0644,
  		.proc_handler	= proc_dointvec,
  	},
+ #endif
 +	{
 +		.procname	= "yield_type",
 +		.data		= &sysctl_sched_yield_type,

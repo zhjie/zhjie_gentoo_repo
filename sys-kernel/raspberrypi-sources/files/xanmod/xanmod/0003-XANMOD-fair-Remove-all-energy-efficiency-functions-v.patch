@@ -13,16 +13,6 @@ diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
 index c62805dbd608..4955bc7f918a 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -19,6 +19,9 @@
-  *
-  *  Adaptive scheduling granularity, math enhancements by Peter Zijlstra
-  *  Copyright (C) 2007 Red Hat, Inc., Peter Zijlstra
-+ *
-+ *  Remove energy efficiency functions by Alexandre Frade
-+ *  (C) 2021 Alexandre Frade <kernel@xanmod.org>
-  */
- #include <linux/energy_model.h>
- #include <linux/mmap_lock.h>
 @@ -7893,256 +7896,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
  	return min(max_util, eenv->cpu_cap);
  }
