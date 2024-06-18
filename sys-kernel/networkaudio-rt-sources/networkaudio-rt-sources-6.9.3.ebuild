@@ -14,7 +14,7 @@ MINOR_VERSION="0"
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="+naa"
+IUSE="+naa video_cards_nvidia"
 
 inherit kernel-2
 detect_version
@@ -226,6 +226,10 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
 	# highhz patch
 	eapply "${FILESDIR}"/highhz/*.patch
+
+	if use video_cards_nvidia; then
+		eapply "${FILESDIR}/nvidia/0001-NVIDIA-Fixup-GPL-issue.patch"
+	fi
 
 	# xanmod patch
 	eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"

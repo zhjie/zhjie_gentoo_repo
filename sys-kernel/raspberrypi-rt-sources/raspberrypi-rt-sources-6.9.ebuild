@@ -7,7 +7,7 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="b95e7cb23030da55f214a19c352c01c1be020c27"
+EGIT_COMMIT="ec003bfca3b9fea49df18e9685b182f7f8d499f9"
 
 K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="4"
@@ -245,11 +245,11 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 	# high-hz patch
 	eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
 	eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
-	eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
+	# eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
 
 	# cachy patch
         if use cachy; then
-		eapply -R "${FILESDIR}/highhz/0001-high-hz-2.patch"
+		# eapply -R "${FILESDIR}/highhz/0001-high-hz-2.patch"
 		# eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
 		eapply "${FILESDIR}/cachy/0003-bbr3.patch"
@@ -258,7 +258,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		eapply "${FILESDIR}/cachy/0007-fixes.patch"
 		eapply "${FILESDIR}/cachy/0008-ksm.patch"
 		eapply "${FILESDIR}/cachy/0010-zstd.patch"
-		eapply "${FILESDIR}/highhz/0001-high-hz-3.patch"
+		# eapply "${FILESDIR}/highhz/0001-high-hz-3.patch"
 	fi
 
 	# xanmod patch
@@ -290,5 +290,6 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 	       	# eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
 	fi
 
+	cp -vf "${FILESDIR}/highhz/Kconfig.hz" "${WORKDIR}/linux-${K_BASE_VER}-raspberrypi-rt/kernel/Kconfig.hz"
         eapply_user
 }
