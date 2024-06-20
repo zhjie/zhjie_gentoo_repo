@@ -253,11 +253,10 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 		# eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
 		eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
 		eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-		eapply "${FILESDIR}/cachy/0004-block.patch"
-		eapply "${FILESDIR}/cachy/0005-cachy.patch"
-		eapply "${FILESDIR}/cachy/0007-fixes.patch"
-		eapply "${FILESDIR}/cachy/0008-ksm.patch"
+		eapply "${FILESDIR}/cachy/0004-cachy.patch"
+		eapply "${FILESDIR}/cachy/0006-fixes.patch"
 		eapply "${FILESDIR}/cachy/0010-zstd.patch"
+
 		# eapply "${FILESDIR}/highhz/0001-high-hz-3.patch"
 	fi
 
