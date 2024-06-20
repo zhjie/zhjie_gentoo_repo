@@ -28,7 +28,7 @@ DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
+    https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 "
 
 KEYWORDS="amd64 arm arm64"
@@ -36,34 +36,32 @@ IUSE="+naa +cachy +xanmod"
 
 RDEPEND=""
 DEPEND="${RDEPEND}
-	>=sys-devel/patch-2.7.6-r4"
+    >=sys-devel/patch-2.7.6-r4"
 
 S="${WORKDIR}/linux-${K_BASE_VER}-raspberrypi-rt"
 
 src_unpack() {
-	git-r3_src_unpack
-	mv "${WORKDIR}/${PF}" "${S}"
+    git-r3_src_unpack
+    mv "${WORKDIR}/${PF}" "${S}"
 
-	unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
-        unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
+    unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.base.tar.xz
+    unpack genpatches-${K_BASE_VER}-${K_GENPATCHES_VER}.extras.tar.xz
 
-	rm -rfv "${WORKDIR}"/10*.patch
-	rm -rfv "${S}/.git"
-	mkdir "${WORKDIR}"/genpatch
-	mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
+    rm -rfv "${WORKDIR}"/10*.patch
+    rm -rfv "${S}/.git"
+    mkdir "${WORKDIR}"/genpatch
+    mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
 
-	# unpack patches-${K_BASE_VER}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
-	unpack patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
+    # unpack patches-${K_BASE_VER}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
+    unpack patches-${K_BASE_VER}-rt${RT_VERSION}.tar.xz
 
-	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
-	echo "${EXTRAVERSION}"
-	unpack_set_extraversion
+    mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
+    echo "${EXTRAVERSION}"
+    unpack_set_extraversion
 }
 
 src_prepare() {
-	# cp -vf "${FILESDIR}/config/${K_BASE_VER}-networkaudio-rt" ${K_BASE_VER}-networkaudio-rt
-
-	local p rt_patches=(
+    local p rt_patches=(
 # Applied upstream
 
 ###########################################################################
@@ -226,69 +224,67 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 # RT release version
 ###########################################################################
 # Add_localversion_for_-RT_release.patch
-        )
+    )
 
-	for p in "${rt_patches[@]}"; do
-		eapply "${WORKDIR}/rtpatch/${p}"
-        done
+    for p in "${rt_patches[@]}"; do
+        eapply "${WORKDIR}/rtpatch/${p}"
+    done
 
-	# eapply "${FILESDIR}/automagic-arm64.patch"
+    # genpatch
+    eapply "${WORKDIR}"/genpatch/*.patch
 
-	# genpatch
-	eapply "${WORKDIR}"/genpatch/*.patch
+    # naa patch
+    if use naa; then
+        eapply "${FILESDIR}"/naa/*.patch
+    fi
 
-	# naa patch
-	if use naa; then
-		eapply "${FILESDIR}"/naa/*.patch
-	fi
+    # high-hz patch
+    eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
+    eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
+    # eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
 
-	# high-hz patch
-	eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
-	eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
-	# eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
+    # cachy patch
+    if use cachy; then
+        # eapply -R "${FILESDIR}/highhz/0001-high-hz-2.patch"
 
-	# cachy patch
-        if use cachy; then
-		# eapply -R "${FILESDIR}/highhz/0001-high-hz-2.patch"
-		# eapply "${FILESDIR}/cachy/all/0001-cachyos-base-all.patch"
-		eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
-		eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-		eapply "${FILESDIR}/cachy/0004-cachy.patch"
-		eapply "${FILESDIR}/cachy/0006-fixes.patch"
-		eapply "${FILESDIR}/cachy/0010-zstd.patch"
+        eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
+        eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+        eapply "${FILESDIR}/cachy/0004-cachy.patch"
+        eapply "${FILESDIR}/cachy/0006-fixes.patch"
+        eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
-		# eapply "${FILESDIR}/highhz/0001-high-hz-3.patch"
-	fi
+        # eapply "${FILESDIR}/highhz/0001-high-hz-3.patch"
+    fi
 
-	# xanmod patch
-	if use xanmod; then
-	       	eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-	       	eapply "${FILESDIR}/xanmod/intel/0003-firmware-Enable-stateless-firmware-loading.patch"
-	        eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
-	       	# eapply "${FILESDIR}/xanmod/intel/0005-drivers-initialize-ata-before-graphics.patch"
+    # xanmod patch
+    if use xanmod; then
+        eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
+        eapply "${FILESDIR}/xanmod/intel/0003-firmware-Enable-stateless-firmware-loading.patch"
+        eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
+        # eapply "${FILESDIR}/xanmod/intel/0005-drivers-initialize-ata-before-graphics.patch"
 
-	       	eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+        eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
-	        eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-Raise-max_map_count-default-value.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
-	        eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
-	       	eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0017-XANMOD-scripts-setlocalversion-remove-tag-for-git-re.patch"
-	       	# eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
-	fi
+        # eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-Raise-max_map_count-default-value.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+        eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0017-XANMOD-scripts-setlocalversion-remove-tag-for-git-re.patch"
+        # eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
+    fi
 
-	cp -vf "${FILESDIR}/highhz/Kconfig.hz" "${WORKDIR}/linux-${K_BASE_VER}-raspberrypi-rt/kernel/Kconfig.hz"
-        eapply_user
+    cp -vf "${FILESDIR}/highhz/Kconfig.hz" "${WORKDIR}/linux-${K_BASE_VER}-raspberrypi-rt/kernel/Kconfig.hz"
+    eapply_user
 }
