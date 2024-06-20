@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="ec003bfca3b9fea49df18e9685b182f7f8d499f9"
+EGIT_COMMIT="380df7b7938d3c3ba1d0d0b472a810fd38061329"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="6"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
