@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="7"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
@@ -22,25 +22,25 @@ EXTRAVERSION="-networkaudio-rt"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
-	https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+    https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
 "
 
 KV_FULL="${KV_FULL}-rt"
 S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
-	# unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
-	unpack patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
-	mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
+    # unpack patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-rt${RT_VERSION}.tar.xz
+    unpack patches-${KV_MAJOR}.${KV_MINOR}-rt${RT_VERSION}.tar.xz
+    mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 
-	UNIPATCH_LIST_DEFAULT=""
-	UNIPATCH_EXCLUDE=""
-	kernel-2_src_unpack
+    UNIPATCH_LIST_DEFAULT=""
+    UNIPATCH_EXCLUDE=""
+    kernel-2_src_unpack
 }
 
 src_prepare() {
-	# rt patch
-	local p rt_patches=(
+    # rt patch
+    local p rt_patches=(
 # Applied upstream
 
 ###########################################################################
@@ -155,7 +155,7 @@ zram-Replace-bit-spinlocks-with-spinlock_t-for-PREEM.patch
 0004-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-duri.patch
 0005-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_R.patch
 drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
-0008-drm-i915-gt-Queue-and-wait-for-the-irq_work-item.patch
+# 0008-drm-i915-gt-Queue-and-wait-for-the-irq_work-item.patch
 0009-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_d.patch
 0010-drm-i915-Drop-the-irqs_disabled-check.patch
 drm-i915-guc-Consider-also-RCU-depth-in-busy-loop.patch
@@ -203,58 +203,58 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 # RT release version
 ###########################################################################
 # Add_localversion_for_-RT_release.patch
-	)
+    )
 
-	for p in "${rt_patches[@]}"; do
-		eapply "${WORKDIR}/rtpatch/${p}"
-	done
+    for p in "${rt_patches[@]}"; do
+        eapply "${WORKDIR}/rtpatch/${p}"
+    done
 
-	# naa patch
-	if use naa; then
-		eapply "${FILESDIR}"/naa/*.patch
-	fi
+    # naa patch
+    if use naa; then
+        eapply "${FILESDIR}"/naa/*.patch
+    fi
 
-	# cachy patch
-	eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
-	eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
-	eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-	eapply "${FILESDIR}/cachy/0004-cachy.patch"
-	eapply "${FILESDIR}/cachy/0006-fixes.patch"
-	eapply "${FILESDIR}/cachy/0010-zstd.patch"
+    # cachy patch
+    eapply "${FILESDIR}/cachy/0001-aes-crypto.patch"
+    eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0006-fixes.patch"
+    eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
-	# highhz patch
-	eapply "${FILESDIR}"/highhz/*.patch
+    # highhz patch
+    eapply "${FILESDIR}"/highhz/*.patch
 
-	if use video_cards_nvidia; then
-		eapply "${FILESDIR}/nvidia/0001-NVIDIA-Fixup-GPL-issue.patch"
-	fi
+    if use video_cards_nvidia; then
+        eapply "${FILESDIR}/nvidia/0001-NVIDIA-Fixup-GPL-issue.patch"
+    fi
 
-	# xanmod patch
-	eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-	eapply "${FILESDIR}/xanmod/intel/0003-firmware-Enable-stateless-firmware-loading.patch"
-	eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
-	# eapply "${FILESDIR}/xanmod/intel/0005-drivers-initialize-ata-before-graphics.patch"
+    # xanmod patch
+    eapply "${FILESDIR}/xanmod/intel/0002-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
+    eapply "${FILESDIR}/xanmod/intel/0003-firmware-Enable-stateless-firmware-loading.patch"
+    eapply "${FILESDIR}/xanmod/intel/0004-locking-rwsem-spin-faster.patch"
+    # eapply "${FILESDIR}/xanmod/intel/0005-drivers-initialize-ata-before-graphics.patch"
 
-	eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+    eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
-	# eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-Raise-max_map_count-default-value.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
-	eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0017-XANMOD-scripts-setlocalversion-remove-tag-for-git-re.patch"
-	# eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0001-XANMOD-x86-build-Prevent-generating-avx2-and-avx512-.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0002-XANMOD-x86-build-Add-more-x86-code-optimization-flag.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0003-XANMOD-fair-Remove-all-energy-efficiency-functions-v.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0004-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-sched-core-Add-yield_type-sysctl-to-reduce-or.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-rcu-Change-sched_setscheduler_nocheck-calls-t.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-block-mq-deadline-Increase-write-priority-to-.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-set-rq_affinity-to-force-full-multithre.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-kconfig-add-500Hz-timer-interrupt-kernel-conf.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0011-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-mm-Raise-max_map_count-default-value.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-vmscan-vm_swappiness-30-decreases-the-amou.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-sched-autogroup-Add-kernel-parameter-and-conf.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0015-XANMOD-cpufreq-tunes-ondemand-and-conservative-gover.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0016-XANMOD-lib-kconfig.debug-disable-default-CONFIG_SYMB.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0017-XANMOD-scripts-setlocalversion-remove-tag-for-git-re.patch"
+    # eapply "${FILESDIR}/xanmod/xanmod/0018-XANMOD-scripts-setlocalversion-Move-localversion-fil.patch"
 
-        eapply_user
+    eapply_user
 }
