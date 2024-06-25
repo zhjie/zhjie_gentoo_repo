@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg system-dotnet web alsa rt +taskset4 trace"
+IUSE="systemd samba ffmpeg system-dotnet web alsa rt taskset4 trace"
 
 RDEPEND="dev-libs/icu
 	 alsa? ( media-libs/alsa-lib )
