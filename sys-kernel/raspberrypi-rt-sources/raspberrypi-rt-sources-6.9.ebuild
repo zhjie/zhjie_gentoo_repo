@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="58ef628dc47a79e2135f901a3ad36b49781452ef"
+EGIT_COMMIT="b858a58f60399db1465d45a3f7fc81823d3895b3"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="8"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
@@ -172,15 +172,15 @@ zram-Replace-bit-spinlocks-with-spinlock_t-for-PREEM.patch
 # DRM:
 ###########################################################################
 # https://lore.kernel.org/all/20240405142737.920626-1-bigeasy@linutronix.de/
-0003-drm-i915-Use-preempt_disable-enable_rt-where-recomme.patch
-0004-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-duri.patch
-0005-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_R.patch
-drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
-0008-drm-i915-gt-Queue-and-wait-for-the-irq_work-item.patch
-0009-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_d.patch
-0010-drm-i915-Drop-the-irqs_disabled-check.patch
-drm-i915-guc-Consider-also-RCU-depth-in-busy-loop.patch
-Revert-drm-i915-Depend-on-PREEMPT_RT.patch
+# 0003-drm-i915-Use-preempt_disable-enable_rt-where-recomme.patch
+# 0004-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-duri.patch
+# 0005-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_R.patch
+# drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
+# 0008-drm-i915-gt-Queue-and-wait-for-the-irq_work-item.patch
+# 0009-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_d.patch
+# 0010-drm-i915-Drop-the-irqs_disabled-check.patch
+# drm-i915-guc-Consider-also-RCU-depth-in-busy-loop.patch
+# Revert-drm-i915-Depend-on-PREEMPT_RT.patch
 
 ###########################################################################
 # Lazy preemption
