@@ -7,10 +7,10 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="58ef628dc47a79e2135f901a3ad36b49781452ef"
+EGIT_COMMIT="b858a58f60399db1465d45a3f7fc81823d3895b3"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="8"
 K_EXP_GENPATCHES_NOUSE="1"
 
 # only use this if it's not an _rc/_pre release
