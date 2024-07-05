@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="7"
+K_GENPATCHES_VER="8"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
@@ -219,7 +219,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
     eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
     eapply "${FILESDIR}/cachy/0003-bbr3.patch"
     eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0006-fixes.patch"
+    eapply "${FILESDIR}/cachy/0005-fixes.patch"
     eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
     # highhz patch
