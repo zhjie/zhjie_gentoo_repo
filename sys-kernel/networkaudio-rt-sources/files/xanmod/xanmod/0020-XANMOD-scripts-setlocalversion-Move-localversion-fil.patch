@@ -1,7 +1,7 @@
-From 2f53b9196217a77f3e34cdbfd9cd9d76b5e76c6f Mon Sep 17 00:00:00 2001
+From 4b1ba0096f9992f2a95679457578d9d7d4ee090c Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 24 Apr 2023 04:50:34 +0000
-Subject: [PATCH 18/18] XANMOD: scripts/setlocalversion: Move localversion*
+Subject: [PATCH 20/20] XANMOD: scripts/setlocalversion: Move localversion*
  files to the end
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
