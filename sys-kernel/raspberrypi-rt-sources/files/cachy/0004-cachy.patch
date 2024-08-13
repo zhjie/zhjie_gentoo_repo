@@ -1,17 +1,20 @@
-From dd01155d0fd623b9938bbf9b30eddc31ea01106e Mon Sep 17 00:00:00 2001
+From 54932df65673dcb915c1cc74330fc8cb7574f01b Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 16 Jun 2024 15:33:48 +0200
-Subject: [PATCH 04/10] cachy
+Date: Sat, 27 Jul 2024 11:47:38 +0200
+Subject: [PATCH 04/11] cachy
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
+ .gitignore                                    |    6 +
  .../admin-guide/kernel-parameters.txt         |   12 +
- Makefile                                      |    7 +-
+ MAINTAINERS                                   |    7 +
+ Makefile                                      |    9 +-
  arch/x86/Kconfig.cpu                          |  432 ++-
  arch/x86/Makefile                             |   45 +-
  arch/x86/include/asm/pci.h                    |    6 +
  arch/x86/include/asm/vermagic.h               |   76 +
  arch/x86/pci/common.c                         |    7 +-
+ arch/x86/xen/setup.c                          |    5 +-
  block/bfq-iosched.c                           |    6 +
  block/elevator.c                              |   10 +
  drivers/Makefile                              |   13 +-
@@ -20,13 +23,18 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/cpufreq/intel_pstate.c                |    2 +
  drivers/gpu/drm/amd/amdgpu/amdgpu.h           |    1 +
  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |   10 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c       |   53 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.h       |    1 +
  drivers/gpu/drm/amd/display/Kconfig           |    6 +
  .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |    2 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_color.c   |    2 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_crtc.c    |    6 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_plane.c   |    6 +-
+ .../amd/display/dc/optc/dcn10/dcn10_optc.c    |   15 +-
+ .../amd/display/dc/optc/dcn20/dcn20_optc.c    |   10 +
  drivers/gpu/drm/amd/pm/amdgpu_pm.c            |    3 +
  drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     |   14 +-
+ drivers/gpu/drm/drm_atomic_uapi.c             |   11 +-
  drivers/i2c/busses/Kconfig                    |    9 +
  drivers/i2c/busses/Makefile                   |    1 +
  drivers/i2c/busses/i2c-nct6775.c              |  648 ++++
@@ -41,6 +49,8 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/pci/controller/Makefile               |    6 +
  drivers/pci/controller/intel-nvme-remap.c     |  462 +++
  drivers/pci/quirks.c                          |  101 +
+ include/linux/minmax.h                        |    7 +
+ include/linux/pageblock-flags.h               |    4 +-
  include/linux/pagemap.h                       |    2 +-
  include/linux/user_namespace.h                |    4 +
  init/Kconfig                                  |   26 +
@@ -54,22 +64,42 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  mm/compaction.c                               |    4 +
  mm/huge_memory.c                              |    4 +
  mm/page-writeback.c                           |    8 +
- mm/page_alloc.c                               |   27 +-
+ mm/page_alloc.c                               |    4 +
  mm/swap.c                                     |    5 +
  mm/vmpressure.c                               |    4 +
  mm/vmscan.c                                   |    8 +
- 53 files changed, 5776 insertions(+), 70 deletions(-)
+ scripts/Makefile.package                      |   14 +
+ scripts/package/PKGBUILD                      |  108 +
+ 65 files changed, 5948 insertions(+), 118 deletions(-)
  create mode 100644 drivers/i2c/busses/i2c-nct6775.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.h
  create mode 100644 drivers/media/v4l2-core/v4l2loopback_formats.h
  create mode 100644 drivers/pci/controller/intel-nvme-remap.c
+ create mode 100644 scripts/package/PKGBUILD
 
+diff --git a/.gitignore b/.gitignore
+index c59dc60ba62e..7902adf4f7f1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -92,6 +92,12 @@ modules.order
+ #
+ /tar-install/
+ 
++#
++# pacman files (make pacman-pkg)
++#
++/PKGBUILD
++/pacman/
++
+ #
+ # We don't want to ignore the following even if they are dot-files
+ #
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 396137ee018d..91c1f316651f 100644
+index 27ec49af1bf2..07ac4c81a7dd 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2204,6 +2204,9 @@
+@@ -2229,6 +2229,9 @@
  			disable
  			  Do not enable intel_pstate as the default
  			  scaling driver for the supported processors
@@ -79,7 +109,7 @@ index 396137ee018d..91c1f316651f 100644
                          active
                            Use intel_pstate driver to bypass the scaling
                            governors layer of cpufreq and provides it own
-@@ -4420,6 +4423,15 @@
+@@ -4447,6 +4450,15 @@
  		nomsi		[MSI] If the PCI_MSI kernel config parameter is
  				enabled, this kernel boot option can be used to
  				disable the use of MSI interrupts system-wide.
@@ -95,11 +125,29 @@ index 396137ee018d..91c1f316651f 100644
  		noioapicquirk	[APIC] Disable all boot interrupt quirks.
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 958e935449e5..b27470be2e6a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11978,6 +11978,13 @@ F:	include/uapi/linux/nfsd/
+ F:	include/uapi/linux/sunrpc/
+ F:	net/sunrpc/
+ 
++KERNEL PACMAN PACKAGING (in addition to generic KERNEL BUILD)
++M:	Thomas Weißschuh <linux@weissschuh.net>
++R:	Christian Heusel <christian@heusel.eu>
++R:	Nathan Chancellor <nathan@kernel.org>
++S:	Maintained
++F:	scripts/package/PKGBUILD
++
+ KERNEL REGRESSIONS
+ M:	Thorsten Leemhuis <linux@leemhuis.info>
+ L:	regressions@lists.linux.dev
 diff --git a/Makefile b/Makefile
-index d5062a593ef7..a53f04edd0e7 100644
+index 07e1aec72c17..51567fe7c60a 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -810,6 +810,9 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
+@@ -817,6 +817,9 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
  ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
  KBUILD_CFLAGS += -O2
  KBUILD_RUSTFLAGS += -Copt-level=2
@@ -109,7 +157,7 @@ index d5062a593ef7..a53f04edd0e7 100644
  else ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
  KBUILD_CFLAGS += -Os
  KBUILD_RUSTFLAGS += -Copt-level=s
-@@ -993,9 +996,9 @@ KBUILD_CFLAGS	+= -fno-strict-overflow
+@@ -1005,9 +1008,9 @@ KBUILD_CFLAGS	+= -fno-strict-overflow
  # Make sure -fstack-check isn't enabled (like gentoo apparently did)
  KBUILD_CFLAGS  += -fno-stack-check
  
@@ -121,6 +169,15 @@ index d5062a593ef7..a53f04edd0e7 100644
  endif
  
  # change __FILE__ to the relative path from the srctree
+@@ -1497,7 +1500,7 @@ CLEAN_FILES += vmlinux.symvers modules-only.symvers \
+ # Directories & files removed with 'make mrproper'
+ MRPROPER_FILES += include/config include/generated          \
+ 		  arch/$(SRCARCH)/include/generated .objdiff \
+-		  debian snap tar-install \
++		  debian snap tar-install PKGBUILD pacman \
+ 		  .config .config.old .version \
+ 		  Module.symvers \
+ 		  certs/signing_key.pem \
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
 index 2a7279d80460..3b077b9f9291 100644
 --- a/arch/x86/Kconfig.cpu
@@ -659,10 +716,10 @@ index 2a7279d80460..3b077b9f9291 100644
  	default "4"
  
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 5ab93fcdd691..ac203b599bef 100644
+index 801fd85c3ef6..93cc88b59cbb 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
-@@ -156,8 +156,49 @@ else
+@@ -176,8 +176,49 @@ else
          # FIXME - should be integrated in Makefile.cpu (Makefile_32.cpu)
          cflags-$(CONFIG_MK8)		+= -march=k8
          cflags-$(CONFIG_MPSC)		+= -march=nocona
@@ -854,19 +911,42 @@ index ddb798603201..7c20387d8202 100644
  	return dev;
  }
 -#endif
+diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
+index 380591028cb8..f6f5aa569367 100644
+--- a/arch/x86/xen/setup.c
++++ b/arch/x86/xen/setup.c
+@@ -691,6 +691,7 @@ char * __init xen_memory_setup(void)
+ 	struct xen_memory_map memmap;
+ 	unsigned long max_pages;
+ 	unsigned long extra_pages = 0;
++	unsigned long maxmem_pages;
+ 	int i;
+ 	int op;
+ 
+@@ -762,8 +763,8 @@ char * __init xen_memory_setup(void)
+ 	 * Make sure we have no memory above max_pages, as this area
+ 	 * isn't handled by the p2m management.
+ 	 */
+-	extra_pages = min3(EXTRA_MEM_RATIO * min(max_pfn, PFN_DOWN(MAXMEM)),
+-			   extra_pages, max_pages - max_pfn);
++	maxmem_pages = EXTRA_MEM_RATIO * min(max_pfn, PFN_DOWN(MAXMEM));
++	extra_pages = min3(maxmem_pages, extra_pages, max_pages - max_pfn);
+ 	i = 0;
+ 	addr = xen_e820_table.entries[0].addr;
+ 	size = xen_e820_table.entries[0].size;
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 4b88a54a9b76..7a6275d65a23 100644
+index 88df08a246fa..deecce63d0fc 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -7627,6 +7627,7 @@ MODULE_ALIAS("bfq-iosched");
+@@ -7703,6 +7703,7 @@ MODULE_ALIAS("bfq-iosched");
  static int __init bfq_init(void)
  {
  	int ret;
-+	char msg[60] = "BFQ I/O-scheduler: BFQ-CachyOS v6.9";
++	char msg[60] = "BFQ I/O-scheduler: BFQ-CachyOS v6.10";
  
  #ifdef CONFIG_BFQ_GROUP_IOSCHED
  	ret = blkcg_policy_register(&blkcg_policy_bfq);
-@@ -7658,6 +7659,11 @@ static int __init bfq_init(void)
+@@ -7734,6 +7735,11 @@ static int __init bfq_init(void)
  	if (ret)
  		goto slab_kill;
  
@@ -879,10 +959,10 @@ index 4b88a54a9b76..7a6275d65a23 100644
  
  slab_kill:
 diff --git a/block/elevator.c b/block/elevator.c
-index 5ff093cb3cf8..1c93fe91b006 100644
+index f64ebd726e58..4f1ccf8cf250 100644
 --- a/block/elevator.c
 +++ b/block/elevator.c
-@@ -574,9 +574,19 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
+@@ -567,9 +567,19 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
  
  	if (q->nr_hw_queues != 1 &&
  	    !blk_mq_is_shared_tags(q->tag_set->flags))
@@ -903,10 +983,10 @@ index 5ff093cb3cf8..1c93fe91b006 100644
  
  /*
 diff --git a/drivers/Makefile b/drivers/Makefile
-index 3bf5cab4b451..3c3ba6266417 100644
+index fe9ceb0d2288..b58955caf19b 100644
 --- a/drivers/Makefile
 +++ b/drivers/Makefile
-@@ -66,14 +66,8 @@ obj-y				+= char/
+@@ -61,14 +61,8 @@ obj-y				+= char/
  # iommu/ comes before gpu as gpu are using iommu controllers
  obj-y				+= iommu/
  
@@ -921,7 +1001,7 @@ index 3bf5cab4b451..3c3ba6266417 100644
  obj-$(CONFIG_PARPORT)		+= parport/
  obj-y				+= base/ block/ misc/ mfd/ nfc/
  obj-$(CONFIG_LIBNVDIMM)		+= nvdimm/
-@@ -85,6 +79,13 @@ obj-y				+= macintosh/
+@@ -80,6 +74,13 @@ obj-y				+= macintosh/
  obj-y				+= scsi/
  obj-y				+= nvme/
  obj-$(CONFIG_ATA)		+= ata/
@@ -936,10 +1016,10 @@ index 3bf5cab4b451..3c3ba6266417 100644
  obj-$(CONFIG_MTD)		+= mtd/
  obj-$(CONFIG_SPI)		+= spi/
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6548f10e61d9..c8c662a68ceb 100644
+index fc6fd583faf8..f79e205a51dd 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1619,7 +1619,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+@@ -1618,7 +1618,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
  }
  #endif
  
@@ -948,7 +1028,7 @@ index 6548f10e61d9..c8c662a68ceb 100644
  		struct ahci_host_priv *hpriv)
  {
  	int i;
-@@ -1632,7 +1632,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
+@@ -1631,7 +1631,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
  	    pci_resource_len(pdev, bar) < SZ_512K ||
  	    bar != AHCI_PCI_BAR_STANDARD ||
  	    !(readl(hpriv->mmio + AHCI_VSCAP) & 1))
@@ -957,7 +1037,7 @@ index 6548f10e61d9..c8c662a68ceb 100644
  
  	cap = readq(hpriv->mmio + AHCI_REMAP_CAP);
  	for (i = 0; i < AHCI_MAX_REMAP; i++) {
-@@ -1647,18 +1647,11 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
+@@ -1646,18 +1646,11 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
  	}
  
  	if (!hpriv->remapped_nvme)
@@ -980,7 +1060,7 @@ index 6548f10e61d9..c8c662a68ceb 100644
  }
  
  static int ahci_get_irq_vector(struct ata_host *host, int port)
-@@ -1887,7 +1880,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1894,7 +1887,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
  
  	/* detect remapped nvme devices */
@@ -992,7 +1072,7 @@ index 6548f10e61d9..c8c662a68ceb 100644
  	sysfs_add_file_to_group(&pdev->dev.kobj,
  				&dev_attr_remapped_nvme.attr,
 diff --git a/drivers/cpufreq/Kconfig.x86 b/drivers/cpufreq/Kconfig.x86
-index 438c9e75a04d..1bbfeca5f01e 100644
+index 97c2d4f15d76..5a3af44d785a 100644
 --- a/drivers/cpufreq/Kconfig.x86
 +++ b/drivers/cpufreq/Kconfig.x86
 @@ -9,7 +9,6 @@ config X86_INTEL_PSTATE
@@ -1012,10 +1092,10 @@ index 438c9e75a04d..1bbfeca5f01e 100644
  	  This driver adds a CPUFreq driver which utilizes a fine grain
  	  processor performance frequency control range instead of legacy
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index dbbf299f4219..6db030d3b0ab 100644
+index c31914a9876f..1035c074f36a 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -3586,6 +3586,8 @@ static int __init intel_pstate_setup(char *str)
+@@ -3550,6 +3550,8 @@ static int __init intel_pstate_setup(char *str)
  
  	if (!strcmp(str, "disable"))
  		no_load = 1;
@@ -1025,10 +1105,10 @@ index dbbf299f4219..6db030d3b0ab 100644
  		default_driver = &intel_pstate;
  	else if (!strcmp(str, "passive"))
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index b3b84647207e..bed8a67500d3 100644
+index f87d53e183c3..c489d3b2576b 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -151,6 +151,7 @@ struct amdgpu_watchdog_timer {
+@@ -159,6 +159,7 @@ struct amdgpu_watchdog_timer {
   */
  extern int amdgpu_modeset;
  extern unsigned int amdgpu_vram_limit;
@@ -1037,7 +1117,7 @@ index b3b84647207e..bed8a67500d3 100644
  extern int amdgpu_gart_size;
  extern int amdgpu_gtt_size;
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index e4277298cf1a..1afecc368ab3 100644
+index ea14f1c8f430..bb0b636d0d75 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 @@ -132,6 +132,7 @@ enum AMDGPU_DEBUG_MASK {
@@ -1064,8 +1144,194 @@ index e4277298cf1a..1afecc368ab3 100644
  /**
   * DOC: vramlimit (int)
   * Restrict the total amount of VRAM in MiB for testing.  The default is 0 (Use full VRAM).
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
+index 677eb141554e..ceb3f1e4ed1d 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
+@@ -151,6 +151,10 @@ int amdgpu_vcn_sw_init(struct amdgpu_device *adev)
+ 		}
+ 	}
+ 
++	/* from vcn4 and above, only unified queue is used */
++	adev->vcn.using_unified_queue =
++		amdgpu_ip_version(adev, UVD_HWIP, 0) >= IP_VERSION(4, 0, 0);
++
+ 	hdr = (const struct common_firmware_header *)adev->vcn.fw[0]->data;
+ 	adev->vcn.fw_version = le32_to_cpu(hdr->ucode_version);
+ 
+@@ -279,18 +283,6 @@ int amdgpu_vcn_sw_fini(struct amdgpu_device *adev)
+ 	return 0;
+ }
+ 
+-/* from vcn4 and above, only unified queue is used */
+-static bool amdgpu_vcn_using_unified_queue(struct amdgpu_ring *ring)
+-{
+-	struct amdgpu_device *adev = ring->adev;
+-	bool ret = false;
+-
+-	if (amdgpu_ip_version(adev, UVD_HWIP, 0) >= IP_VERSION(4, 0, 0))
+-		ret = true;
+-
+-	return ret;
+-}
+-
+ bool amdgpu_vcn_is_disabled_vcn(struct amdgpu_device *adev, enum vcn_ring_type type, uint32_t vcn_instance)
+ {
+ 	bool ret = false;
+@@ -401,7 +393,9 @@ static void amdgpu_vcn_idle_work_handler(struct work_struct *work)
+ 		for (i = 0; i < adev->vcn.num_enc_rings; ++i)
+ 			fence[j] += amdgpu_fence_count_emitted(&adev->vcn.inst[j].ring_enc[i]);
+ 
+-		if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG)	{
++		/* Only set DPG pause for VCN3 or below, VCN4 and above will be handled by FW */
++		if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG &&
++		    !adev->vcn.using_unified_queue) {
+ 			struct dpg_pause_state new_state;
+ 
+ 			if (fence[j] ||
+@@ -447,7 +441,9 @@ void amdgpu_vcn_ring_begin_use(struct amdgpu_ring *ring)
+ 	amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_VCN,
+ 	       AMD_PG_STATE_UNGATE);
+ 
+-	if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG)	{
++	/* Only set DPG pause for VCN3 or below, VCN4 and above will be handled by FW */
++	if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG &&
++	    !adev->vcn.using_unified_queue) {
+ 		struct dpg_pause_state new_state;
+ 
+ 		if (ring->funcs->type == AMDGPU_RING_TYPE_VCN_ENC) {
+@@ -473,8 +469,12 @@ void amdgpu_vcn_ring_begin_use(struct amdgpu_ring *ring)
+ 
+ void amdgpu_vcn_ring_end_use(struct amdgpu_ring *ring)
+ {
++	struct amdgpu_device *adev = ring->adev;
++
++	/* Only set DPG pause for VCN3 or below, VCN4 and above will be handled by FW */
+ 	if (ring->adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG &&
+-		ring->funcs->type == AMDGPU_RING_TYPE_VCN_ENC)
++	    ring->funcs->type == AMDGPU_RING_TYPE_VCN_ENC &&
++	    !adev->vcn.using_unified_queue)
+ 		atomic_dec(&ring->adev->vcn.inst[ring->me].dpg_enc_submission_cnt);
+ 
+ 	atomic_dec(&ring->adev->vcn.total_submission_cnt);
+@@ -728,12 +728,11 @@ static int amdgpu_vcn_dec_sw_send_msg(struct amdgpu_ring *ring,
+ 	struct amdgpu_job *job;
+ 	struct amdgpu_ib *ib;
+ 	uint64_t addr = AMDGPU_GPU_PAGE_ALIGN(ib_msg->gpu_addr);
+-	bool sq = amdgpu_vcn_using_unified_queue(ring);
+ 	uint32_t *ib_checksum;
+ 	uint32_t ib_pack_in_dw;
+ 	int i, r;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		ib_size_dw += 8;
+ 
+ 	r = amdgpu_job_alloc_with_ib(ring->adev, NULL, NULL,
+@@ -746,7 +745,7 @@ static int amdgpu_vcn_dec_sw_send_msg(struct amdgpu_ring *ring,
+ 	ib->length_dw = 0;
+ 
+ 	/* single queue headers */
+-	if (sq) {
++	if (adev->vcn.using_unified_queue) {
+ 		ib_pack_in_dw = sizeof(struct amdgpu_vcn_decode_buffer) / sizeof(uint32_t)
+ 						+ 4 + 2; /* engine info + decoding ib in dw */
+ 		ib_checksum = amdgpu_vcn_unified_ring_ib_header(ib, ib_pack_in_dw, false);
+@@ -765,7 +764,7 @@ static int amdgpu_vcn_dec_sw_send_msg(struct amdgpu_ring *ring,
+ 	for (i = ib->length_dw; i < ib_size_dw; ++i)
+ 		ib->ptr[i] = 0x0;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		amdgpu_vcn_unified_ring_ib_checksum(&ib_checksum, ib_pack_in_dw);
+ 
+ 	r = amdgpu_job_submit_direct(job, ring, &f);
+@@ -855,15 +854,15 @@ static int amdgpu_vcn_enc_get_create_msg(struct amdgpu_ring *ring, uint32_t hand
+ 					 struct dma_fence **fence)
+ {
+ 	unsigned int ib_size_dw = 16;
++	struct amdgpu_device *adev = ring->adev;
+ 	struct amdgpu_job *job;
+ 	struct amdgpu_ib *ib;
+ 	struct dma_fence *f = NULL;
+ 	uint32_t *ib_checksum = NULL;
+ 	uint64_t addr;
+-	bool sq = amdgpu_vcn_using_unified_queue(ring);
+ 	int i, r;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		ib_size_dw += 8;
+ 
+ 	r = amdgpu_job_alloc_with_ib(ring->adev, NULL, NULL,
+@@ -877,7 +876,7 @@ static int amdgpu_vcn_enc_get_create_msg(struct amdgpu_ring *ring, uint32_t hand
+ 
+ 	ib->length_dw = 0;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		ib_checksum = amdgpu_vcn_unified_ring_ib_header(ib, 0x11, true);
+ 
+ 	ib->ptr[ib->length_dw++] = 0x00000018;
+@@ -899,7 +898,7 @@ static int amdgpu_vcn_enc_get_create_msg(struct amdgpu_ring *ring, uint32_t hand
+ 	for (i = ib->length_dw; i < ib_size_dw; ++i)
+ 		ib->ptr[i] = 0x0;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		amdgpu_vcn_unified_ring_ib_checksum(&ib_checksum, 0x11);
+ 
+ 	r = amdgpu_job_submit_direct(job, ring, &f);
+@@ -922,15 +921,15 @@ static int amdgpu_vcn_enc_get_destroy_msg(struct amdgpu_ring *ring, uint32_t han
+ 					  struct dma_fence **fence)
+ {
+ 	unsigned int ib_size_dw = 16;
++	struct amdgpu_device *adev = ring->adev;
+ 	struct amdgpu_job *job;
+ 	struct amdgpu_ib *ib;
+ 	struct dma_fence *f = NULL;
+ 	uint32_t *ib_checksum = NULL;
+ 	uint64_t addr;
+-	bool sq = amdgpu_vcn_using_unified_queue(ring);
+ 	int i, r;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		ib_size_dw += 8;
+ 
+ 	r = amdgpu_job_alloc_with_ib(ring->adev, NULL, NULL,
+@@ -944,7 +943,7 @@ static int amdgpu_vcn_enc_get_destroy_msg(struct amdgpu_ring *ring, uint32_t han
+ 
+ 	ib->length_dw = 0;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		ib_checksum = amdgpu_vcn_unified_ring_ib_header(ib, 0x11, true);
+ 
+ 	ib->ptr[ib->length_dw++] = 0x00000018;
+@@ -966,7 +965,7 @@ static int amdgpu_vcn_enc_get_destroy_msg(struct amdgpu_ring *ring, uint32_t han
+ 	for (i = ib->length_dw; i < ib_size_dw; ++i)
+ 		ib->ptr[i] = 0x0;
+ 
+-	if (sq)
++	if (adev->vcn.using_unified_queue)
+ 		amdgpu_vcn_unified_ring_ib_checksum(&ib_checksum, 0x11);
+ 
+ 	r = amdgpu_job_submit_direct(job, ring, &f);
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.h
+index 9f06def236fd..1a5439abd1a0 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.h
+@@ -329,6 +329,7 @@ struct amdgpu_vcn {
+ 
+ 	uint16_t inst_mask;
+ 	uint8_t	num_inst_per_aid;
++	bool using_unified_queue;
+ };
+ 
+ struct amdgpu_fw_shared_rb_ptrs_struct {
 diff --git a/drivers/gpu/drm/amd/display/Kconfig b/drivers/gpu/drm/amd/display/Kconfig
-index 901d1961b739..05c49141f580 100644
+index 47b8b49da8a7..943959d1f401 100644
 --- a/drivers/gpu/drm/amd/display/Kconfig
 +++ b/drivers/gpu/drm/amd/display/Kconfig
 @@ -51,4 +51,10 @@ config DRM_AMD_SECURE_DISPLAY
@@ -1080,10 +1346,10 @@ index 901d1961b739..05c49141f580 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index d6e71aa808d8..8a7ac090711f 100644
+index 3cdcadd41be1..8c0b165ec7fb 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -4099,7 +4099,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
+@@ -4118,7 +4118,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
  		return r;
  	}
  
@@ -1093,7 +1359,7 @@ index d6e71aa808d8..8a7ac090711f 100644
  		return -ENOMEM;
  #endif
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
-index c87b64e464ed..6fe07243adc3 100644
+index ebabfe3a512f..4d3ebcaacca1 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 @@ -97,7 +97,7 @@ static inline struct fixed31_32 amdgpu_dm_fixpt_from_s3132(__u64 x)
@@ -1167,11 +1433,59 @@ index 8a4c40b4c27e..779880c64575 100644
  	dm_atomic_plane_attach_color_mgmt_properties(dm, plane);
  #endif
  	/* Create (reset) the plane state */
+diff --git a/drivers/gpu/drm/amd/display/dc/optc/dcn10/dcn10_optc.c b/drivers/gpu/drm/amd/display/dc/optc/dcn10/dcn10_optc.c
+index 5574bc628053..f109a101d84f 100644
+--- a/drivers/gpu/drm/amd/display/dc/optc/dcn10/dcn10_optc.c
++++ b/drivers/gpu/drm/amd/display/dc/optc/dcn10/dcn10_optc.c
+@@ -945,19 +945,10 @@ void optc1_set_drr(
+ 				OTG_FORCE_LOCK_ON_EVENT, 0,
+ 				OTG_SET_V_TOTAL_MIN_MASK_EN, 0,
+ 				OTG_SET_V_TOTAL_MIN_MASK, 0);
+-
+-		// Setup manual flow control for EOF via TRIG_A
+-		optc->funcs->setup_manual_trigger(optc);
+-
+-	} else {
+-		REG_UPDATE_4(OTG_V_TOTAL_CONTROL,
+-				OTG_SET_V_TOTAL_MIN_MASK, 0,
+-				OTG_V_TOTAL_MIN_SEL, 0,
+-				OTG_V_TOTAL_MAX_SEL, 0,
+-				OTG_FORCE_LOCK_ON_EVENT, 0);
+-
+-		optc->funcs->set_vtotal_min_max(optc, 0, 0);
+ 	}
++
++	// Setup manual flow control for EOF via TRIG_A
++	optc->funcs->setup_manual_trigger(optc);
+ }
+ 
+ void optc1_set_vtotal_min_max(struct timing_generator *optc, int vtotal_min, int vtotal_max)
+diff --git a/drivers/gpu/drm/amd/display/dc/optc/dcn20/dcn20_optc.c b/drivers/gpu/drm/amd/display/dc/optc/dcn20/dcn20_optc.c
+index d6f095b4555d..58bdbd859bf9 100644
+--- a/drivers/gpu/drm/amd/display/dc/optc/dcn20/dcn20_optc.c
++++ b/drivers/gpu/drm/amd/display/dc/optc/dcn20/dcn20_optc.c
+@@ -462,6 +462,16 @@ void optc2_setup_manual_trigger(struct timing_generator *optc)
+ {
+ 	struct optc *optc1 = DCN10TG_FROM_TG(optc);
+ 
++	/* Set the min/max selectors unconditionally so that
++	 * DMCUB fw may change OTG timings when necessary
++	 * TODO: Remove the w/a after fixing the issue in DMCUB firmware
++	 */
++	REG_UPDATE_4(OTG_V_TOTAL_CONTROL,
++				 OTG_V_TOTAL_MIN_SEL, 1,
++				 OTG_V_TOTAL_MAX_SEL, 1,
++				 OTG_FORCE_LOCK_ON_EVENT, 0,
++				 OTG_SET_V_TOTAL_MIN_MASK, (1 << 1)); /* TRIGA */
++
+ 	REG_SET_8(OTG_TRIGA_CNTL, 0,
+ 			OTG_TRIGA_SOURCE_SELECT, 21,
+ 			OTG_TRIGA_SOURCE_PIPE_SELECT, optc->inst,
 diff --git a/drivers/gpu/drm/amd/pm/amdgpu_pm.c b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-index bbd0169010c2..bb1e169538e5 100644
+index c11952a4389b..52f54a228b39 100644
 --- a/drivers/gpu/drm/amd/pm/amdgpu_pm.c
 +++ b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-@@ -3078,6 +3078,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
+@@ -3155,6 +3155,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
  					 struct device_attribute *attr,
  					 char *buf)
  {
@@ -1182,10 +1496,10 @@ index bbd0169010c2..bb1e169538e5 100644
  }
  
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 65333141b1c1..a92be27231a0 100644
+index e1796ecf9c05..5e46bd293205 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
 +++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -2730,7 +2730,10 @@ int smu_get_power_limit(void *handle,
+@@ -2749,7 +2749,10 @@ int smu_get_power_limit(void *handle,
  			*limit = smu->max_power_limit;
  			break;
  		case SMU_PPT_LIMIT_MIN:
@@ -1197,7 +1511,7 @@ index 65333141b1c1..a92be27231a0 100644
  			break;
  		default:
  			return -EINVAL;
-@@ -2754,7 +2757,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
+@@ -2773,7 +2776,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
  		if (smu->ppt_funcs->set_power_limit)
  			return smu->ppt_funcs->set_power_limit(smu, limit_type, limit);
  
@@ -1213,11 +1527,39 @@ index 65333141b1c1..a92be27231a0 100644
  		dev_err(smu->adev->dev,
  			"New power limit (%d) is out of range [%d,%d]\n",
  			limit, smu->min_power_limit, smu->max_power_limit);
+diff --git a/drivers/gpu/drm/drm_atomic_uapi.c b/drivers/gpu/drm/drm_atomic_uapi.c
+index fc16fddee5c5..05b21fe9b395 100644
+--- a/drivers/gpu/drm/drm_atomic_uapi.c
++++ b/drivers/gpu/drm/drm_atomic_uapi.c
+@@ -1066,21 +1066,14 @@ int drm_atomic_set_property(struct drm_atomic_state *state,
+ 			break;
+ 		}
+ 
+-		if (async_flip && prop != config->prop_fb_id) {
++		if (async_flip && (prop != config->prop_fb_id ||
++				   plane_state->plane->type != DRM_PLANE_TYPE_PRIMARY)) {
+ 			ret = drm_atomic_plane_get_property(plane, plane_state,
+ 							    prop, &old_val);
+ 			ret = drm_atomic_check_prop_changes(ret, old_val, prop_value, prop);
+ 			break;
+ 		}
+ 
+-		if (async_flip && plane_state->plane->type != DRM_PLANE_TYPE_PRIMARY) {
+-			drm_dbg_atomic(prop->dev,
+-				       "[OBJECT:%d] Only primary planes can be changed during async flip\n",
+-				       obj->id);
+-			ret = -EINVAL;
+-			break;
+-		}
+-
+ 		ret = drm_atomic_plane_set_property(plane,
+ 				plane_state, file_priv,
+ 				prop, prop_value);
 diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 97989c914260..9879b7bbec2c 100644
+index fe6e8a1bb607..1488a904e3bf 100644
 --- a/drivers/i2c/busses/Kconfig
 +++ b/drivers/i2c/busses/Kconfig
-@@ -230,6 +230,15 @@ config I2C_CHT_WC
+@@ -238,6 +238,15 @@ config I2C_CHT_WC
  	  combined with a FUSB302 Type-C port-controller as such it is advised
  	  to also select CONFIG_TYPEC_FUSB302=m.
  
@@ -1232,9 +1574,9 @@ index 97989c914260..9879b7bbec2c 100644
 +
  config I2C_NFORCE2
  	tristate "Nvidia nForce2, nForce3 and nForce4"
- 	depends on PCI
+ 	depends on PCI && HAS_IOPORT
 diff --git a/drivers/i2c/busses/Makefile b/drivers/i2c/busses/Makefile
-index aa0ee8ecd6f2..020714113e9a 100644
+index 78d0561339e5..9ea3a294f9f0 100644
 --- a/drivers/i2c/busses/Makefile
 +++ b/drivers/i2c/busses/Makefile
 @@ -20,6 +20,7 @@ obj-$(CONFIG_I2C_CHT_WC)	+= i2c-cht-wc.o
@@ -1247,7 +1589,7 @@ index aa0ee8ecd6f2..020714113e9a 100644
  obj-$(CONFIG_I2C_NVIDIA_GPU)	+= i2c-nvidia-gpu.o
 diff --git a/drivers/i2c/busses/i2c-nct6775.c b/drivers/i2c/busses/i2c-nct6775.c
 new file mode 100644
-index 000000000000..e919d1e10c51
+index 000000000000..fdbd9a1c8d7a
 --- /dev/null
 +++ b/drivers/i2c/busses/i2c-nct6775.c
 @@ -0,0 +1,648 @@
@@ -1629,7 +1971,7 @@ index 000000000000..e919d1e10c51
 +	}
 +
 +	adap->owner = THIS_MODULE;
-+	adap->class = I2C_CLASS_HWMON | I2C_CLASS_SPD;
++	adap->class = I2C_CLASS_HWMON;
 +	adap->algo = &smbus_algorithm;
 +
 +	adapdata = kzalloc(sizeof(*adapdata), GFP_KERNEL);
@@ -1982,10 +2324,10 @@ index 51e0c4954600..35c3ad741870 100644
  }
  
 diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 9a74c6316c5d..02acb76b8a93 100644
+index 1b7a97cc3779..37e9e43908ab 100644
 --- a/drivers/md/dm-crypt.c
 +++ b/drivers/md/dm-crypt.c
-@@ -3275,6 +3275,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+@@ -3284,6 +3284,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
  			goto bad;
  	}
  
@@ -6254,7 +6596,7 @@ index 000000000000..e105e6f5cc91
 +MODULE_AUTHOR("Daniel Drake <drake@endlessm.com>");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index eff7f5df08e2..cfb099dbeb5f 100644
+index 568410e64ce6..192d0557fb05 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
 @@ -3732,6 +3732,106 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
@@ -6372,11 +6714,47 @@ index eff7f5df08e2..cfb099dbeb5f 100644
  	{ 0 }
  };
  
+diff --git a/include/linux/minmax.h b/include/linux/minmax.h
+index 2ec559284a9f..a7ef65f78933 100644
+--- a/include/linux/minmax.h
++++ b/include/linux/minmax.h
+@@ -270,4 +270,11 @@ static inline bool in_range32(u32 val, u32 start, u32 len)
+ #define swap(a, b) \
+ 	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
+ 
++/*
++ * Use these carefully: no type checking, and uses the arguments
++ * multiple times. Use for obvious constants only.
++ */
++#define MIN_T(type,a,b) __cmp(min,(type)(a),(type)(b))
++#define MAX_T(type,a,b) __cmp(max,(type)(a),(type)(b))
++
+ #endif	/* _LINUX_MINMAX_H */
+diff --git a/include/linux/pageblock-flags.h b/include/linux/pageblock-flags.h
+index 547e82cdc89a..fc6b9c87cb0a 100644
+--- a/include/linux/pageblock-flags.h
++++ b/include/linux/pageblock-flags.h
+@@ -41,13 +41,13 @@ extern unsigned int pageblock_order;
+  * Huge pages are a constant size, but don't exceed the maximum allocation
+  * granularity.
+  */
+-#define pageblock_order		min_t(unsigned int, HUGETLB_PAGE_ORDER, MAX_PAGE_ORDER)
++#define pageblock_order		MIN_T(unsigned int, HUGETLB_PAGE_ORDER, MAX_PAGE_ORDER)
+ 
+ #endif /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
+ 
+ #elif defined(CONFIG_TRANSPARENT_HUGEPAGE)
+ 
+-#define pageblock_order		min_t(unsigned int, HPAGE_PMD_ORDER, MAX_PAGE_ORDER)
++#define pageblock_order		MIN_T(unsigned int, HPAGE_PMD_ORDER, MAX_PAGE_ORDER)
+ 
+ #else /* CONFIG_TRANSPARENT_HUGEPAGE */
+ 
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 5283b6193e7d..647e246f0d35 100644
+index a0a026d2d244..8bece21a8998 100644
 --- a/include/linux/pagemap.h
 +++ b/include/linux/pagemap.h
-@@ -1276,7 +1276,7 @@ struct readahead_control {
+@@ -1281,7 +1281,7 @@ struct readahead_control {
  		._index = i,						\
  	}
  
@@ -6408,7 +6786,7 @@ index 6030a8235617..60b7fe5fa74a 100644
  {
  	return &init_user_ns;
 diff --git a/init/Kconfig b/init/Kconfig
-index 459f44ef7cc9..62ea156584c6 100644
+index febdea2afc3b..3ba6142f2f42 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -132,6 +132,10 @@ config THREAD_INFO_IN_TASK
@@ -6422,7 +6800,7 @@ index 459f44ef7cc9..62ea156584c6 100644
  config BROKEN
  	bool
  
-@@ -1247,6 +1251,22 @@ config USER_NS
+@@ -1251,6 +1255,22 @@ config USER_NS
  
  	  If unsure, say N.
  
@@ -6445,7 +6823,7 @@ index 459f44ef7cc9..62ea156584c6 100644
  config PID_NS
  	bool "PID Namespaces"
  	default y
-@@ -1389,6 +1409,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
+@@ -1393,6 +1413,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
  	  with the "-O2" compiler flag for best performance and most
  	  helpful compile-time warnings.
  
@@ -6501,7 +6879,7 @@ index 38ef6d06888e..0f78364efd4f 100644
  
  config SCHED_HRTICK
 diff --git a/kernel/fork.c b/kernel/fork.c
-index aebb3e6c96dc..f186c72983b0 100644
+index 99076dbe27d8..18750b83c564 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -104,6 +104,10 @@
@@ -6540,7 +6918,7 @@ index aebb3e6c96dc..f186c72983b0 100644
  	if (err)
  		goto bad_unshare_out;
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 213c94d027a4..97bbabb4fec6 100644
+index 24dda708b699..c2bb8eb1d6ba 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -73,10 +73,19 @@ unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
@@ -6561,9 +6939,9 @@ index 213c94d027a4..97bbabb4fec6 100644
  const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
 +#endif
  
- int sched_thermal_decay_shift;
  static int __init setup_sched_thermal_decay_shift(char *str)
-@@ -127,8 +136,12 @@ int __weak arch_asym_cpu_priority(int cpu)
+ {
+@@ -121,8 +130,12 @@ int __weak arch_asym_cpu_priority(int cpu)
   *
   * (default: 5 msec, units: microseconds)
   */
@@ -6577,7 +6955,7 @@ index 213c94d027a4..97bbabb4fec6 100644
  #ifdef CONFIG_NUMA_BALANCING
  /* Restrict the NUMA promotion throughput (MB/s) for each target node. */
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index ae50f212775e..f7d2fb6cc099 100644
+index ef20c61004eb..10c1caff5e06 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -2544,7 +2544,7 @@ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
@@ -6590,7 +6968,7 @@ index ae50f212775e..f7d2fb6cc099 100644
  #else
  #define SCHED_NR_MIGRATE_BREAK 32
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 81cc974913bb..db581894e611 100644
+index e0b917328cf9..e70ae9c11dea 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
 @@ -80,6 +80,9 @@
@@ -6638,10 +7016,10 @@ index 0b0b95418b16..c4b835b91fc0 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 diff --git a/mm/Kconfig b/mm/Kconfig
-index b1448aa81e15..64da441d529b 100644
+index b4cb45255a54..8635b3b24739 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
-@@ -614,7 +614,7 @@ config COMPACTION
+@@ -613,7 +613,7 @@ config COMPACTION
  config COMPACT_UNEVICTABLE_DEFAULT
  	int
  	depends on COMPACTION
@@ -6651,10 +7029,10 @@ index b1448aa81e15..64da441d529b 100644
  
  #
 diff --git a/mm/compaction.c b/mm/compaction.c
-index 807b58e6eb68..b8aef0deeb38 100644
+index 739b1bf3d637..3a4269c02fb2 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
-@@ -1938,7 +1938,11 @@ static int sysctl_compact_unevictable_allowed __read_mostly = CONFIG_COMPACT_UNE
+@@ -1950,7 +1950,11 @@ static int sysctl_compact_unevictable_allowed __read_mostly = CONFIG_COMPACT_UNE
   * aggressively the kernel should compact memory in the
   * background. It takes values in the range [0, 100].
   */
@@ -6667,10 +7045,10 @@ index 807b58e6eb68..b8aef0deeb38 100644
  static int __read_mostly sysctl_compact_memory;
  
 diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index dd1fc105f70b..ddaa24f32ee5 100644
+index 2120f7478e55..765ea6197e1e 100644
 --- a/mm/huge_memory.c
 +++ b/mm/huge_memory.c
-@@ -62,7 +62,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
+@@ -63,7 +63,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
  #ifdef CONFIG_TRANSPARENT_HUGEPAGE_MADVISE
  	(1<<TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG)|
  #endif
@@ -6683,7 +7061,7 @@ index dd1fc105f70b..ddaa24f32ee5 100644
  	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
  
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3e19b87049db..7b62a21c2ca1 100644
+index 8a1c92090129..a415623cde8f 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
 @@ -71,7 +71,11 @@ static long ratelimit_pages = 32;
@@ -6711,10 +7089,10 @@ index 3e19b87049db..7b62a21c2ca1 100644
  EXPORT_SYMBOL_GPL(dirty_writeback_interval);
  
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 14d39f34d336..7e73d3df8d1b 100644
+index 9ecf99190ea2..6191be6c5de9 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -288,7 +288,11 @@ const char * const migratetype_names[MIGRATE_TYPES] = {
+@@ -271,7 +271,11 @@ const char * const migratetype_names[MIGRATE_TYPES] = {
  
  int min_free_kbytes = 1024;
  int user_min_free_kbytes = -1;
@@ -6726,61 +7104,11 @@ index 14d39f34d336..7e73d3df8d1b 100644
  static int watermark_scale_factor = 10;
  
  /* movable_zone is the "real" zone pages in ZONE_MOVABLE are taken from */
-@@ -2117,16 +2121,17 @@ __rmqueue(struct zone *zone, unsigned int order, int migratetype,
- }
- 
- /*
-- * Obtain a specified number of elements from the buddy allocator, all under
-- * a single hold of the lock, for efficiency.  Add them to the supplied list.
-- * Returns the number of new pages which were placed at *list.
-+ * Obtain a specified number of elements from the buddy allocator, and relax the
-+ * zone lock when needed. Add them to the supplied list. Returns the number of
-+ * new pages which were placed at *list.
-  */
- static int rmqueue_bulk(struct zone *zone, unsigned int order,
- 			unsigned long count, struct list_head *list,
- 			int migratetype, unsigned int alloc_flags)
- {
-+	const bool can_resched = !preempt_count() && !irqs_disabled();
- 	unsigned long flags;
--	int i;
-+	int i, last_mod = 0;
- 
- 	spin_lock_irqsave(&zone->lock, flags);
- 	for (i = 0; i < count; ++i) {
-@@ -2135,6 +2140,18 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
- 		if (unlikely(page == NULL))
- 			break;
- 
-+		/* Reschedule and ease the contention on the lock if needed */
-+		if (i + 1 < count && ((can_resched && need_resched()) ||
-+				      spin_needbreak(&zone->lock))) {
-+			__mod_zone_page_state(zone, NR_FREE_PAGES,
-+					      -((i + 1 - last_mod) << order));
-+			last_mod = i + 1;
-+			spin_unlock_irqrestore(&zone->lock, flags);
-+			if (can_resched)
-+				cond_resched();
-+			spin_lock_irqsave(&zone->lock, flags);
-+		}
-+
- 		/*
- 		 * Split buddy pages returned by expand() are received here in
- 		 * physical page order. The page is added to the tail of
-@@ -2151,7 +2168,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
- 					      -(1 << order));
- 	}
- 
--	__mod_zone_page_state(zone, NR_FREE_PAGES, -(i << order));
-+	__mod_zone_page_state(zone, NR_FREE_PAGES, -((i - last_mod) << order));
- 	spin_unlock_irqrestore(&zone->lock, flags);
- 
- 	return i;
 diff --git a/mm/swap.c b/mm/swap.c
-index 500a09a48dfd..5f97e8520743 100644
+index 67786cb77130..6a91db6f3302 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -1121,6 +1121,10 @@ void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
+@@ -1111,6 +1111,10 @@ void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
   */
  void __init swap_setup(void)
  {
@@ -6791,7 +7119,7 @@ index 500a09a48dfd..5f97e8520743 100644
  	unsigned long megs = totalram_pages() >> (20 - PAGE_SHIFT);
  
  	/* Use a smaller cluster for small-memory machines */
-@@ -1132,4 +1136,5 @@ void __init swap_setup(void)
+@@ -1122,4 +1126,5 @@ void __init swap_setup(void)
  	 * Right now other parts of the system means that we
  	 * _really_ don't want to cluster much more
  	 */
@@ -6814,7 +7142,7 @@ index bd5183dfd879..3a410f53a07c 100644
  
  /*
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3ef654addd44..f38c96e57cd6 100644
+index 2e34de9cd0d4..be9e40acc93b 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
 @@ -191,7 +191,11 @@ struct scan_control {
@@ -6829,7 +7157,7 @@ index 3ef654addd44..f38c96e57cd6 100644
  
  #ifdef CONFIG_MEMCG
  
-@@ -3933,7 +3937,11 @@ static bool lruvec_is_reclaimable(struct lruvec *lruvec, struct scan_control *sc
+@@ -3949,7 +3953,11 @@ static bool lruvec_is_reclaimable(struct lruvec *lruvec, struct scan_control *sc
  }
  
  /* to protect the working set of the last N jiffies */
@@ -6841,6 +7169,152 @@ index 3ef654addd44..f38c96e57cd6 100644
  
  static void lru_gen_age_node(struct pglist_data *pgdat, struct scan_control *sc)
  {
+diff --git a/scripts/Makefile.package b/scripts/Makefile.package
+index bf016af8bf8a..4a80584ec771 100644
+--- a/scripts/Makefile.package
++++ b/scripts/Makefile.package
+@@ -141,6 +141,19 @@ snap-pkg:
+ 	cd $(objtree)/snap && \
+ 	snapcraft --target-arch=$(UTS_MACHINE)
+ 
++# pacman-pkg
++# ---------------------------------------------------------------------------
++
++PHONY += pacman-pkg
++pacman-pkg:
++	@ln -srf $(srctree)/scripts/package/PKGBUILD $(objtree)/PKGBUILD
++	+objtree="$(realpath $(objtree))" \
++		BUILDDIR="$(realpath $(objtree))/pacman" \
++		CARCH="$(UTS_MACHINE)" \
++		KBUILD_MAKEFLAGS="$(MAKEFLAGS)" \
++		KBUILD_REVISION="$(shell $(srctree)/scripts/build-version)" \
++		makepkg $(MAKEPKGOPTS)
++
+ # dir-pkg tar*-pkg - tarball targets
+ # ---------------------------------------------------------------------------
+ 
+@@ -221,6 +234,7 @@ help:
+ 	@echo '  bindeb-pkg          - Build only the binary kernel deb package'
+ 	@echo '  snap-pkg            - Build only the binary kernel snap package'
+ 	@echo '                        (will connect to external hosts)'
++	@echo '  pacman-pkg          - Build only the binary kernel pacman package'
+ 	@echo '  dir-pkg             - Build the kernel as a plain directory structure'
+ 	@echo '  tar-pkg             - Build the kernel as an uncompressed tarball'
+ 	@echo '  targz-pkg           - Build the kernel as a gzip compressed tarball'
+diff --git a/scripts/package/PKGBUILD b/scripts/package/PKGBUILD
+new file mode 100644
+index 000000000000..663ce300dd06
+--- /dev/null
++++ b/scripts/package/PKGBUILD
+@@ -0,0 +1,108 @@
++# SPDX-License-Identifier: GPL-2.0-only
++# Maintainer: Thomas Weißschuh <linux@weissschuh.net>
++# Contributor: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
++
++pkgbase=${PACMAN_PKGBASE:-linux-upstream}
++pkgname=("${pkgbase}" "${pkgbase}-api-headers")
++if grep -q CONFIG_MODULES=y include/config/auto.conf; then
++	pkgname+=("${pkgbase}-headers")
++fi
++pkgver="${KERNELRELEASE//-/_}"
++# The PKGBUILD is evaluated multiple times.
++# Running scripts/build-version from here would introduce inconsistencies.
++pkgrel="${KBUILD_REVISION}"
++pkgdesc='Upstream Linux'
++url='https://www.kernel.org/'
++# Enable flexible cross-compilation
++arch=(${CARCH})
++license=(GPL-2.0-only)
++makedepends=(
++	bc
++	bison
++	cpio
++	flex
++	gettext
++	kmod
++	libelf
++	openssl
++	pahole
++	perl
++	python
++	rsync
++	tar
++)
++options=(!debug !strip !buildflags !makeflags)
++
++build() {
++	# MAKEFLAGS from makepkg.conf override the ones inherited from kbuild.
++	# Bypass this override with a custom variable.
++	export MAKEFLAGS="${KBUILD_MAKEFLAGS}"
++	cd "${objtree}"
++
++	${MAKE} KERNELRELEASE="${KERNELRELEASE}" KBUILD_BUILD_VERSION="${pkgrel}"
++}
++
++_package() {
++	pkgdesc="The ${pkgdesc} kernel and modules"
++
++	export MAKEFLAGS="${KBUILD_MAKEFLAGS}"
++	cd "${objtree}"
++	local modulesdir="${pkgdir}/usr/${MODLIB}"
++
++	echo "Installing boot image..."
++	# systemd expects to find the kernel here to allow hibernation
++	# https://github.com/systemd/systemd/commit/edda44605f06a41fb86b7ab8128dcf99161d2344
++	install -Dm644 "$(${MAKE} -s image_name)" "${modulesdir}/vmlinuz"
++
++	# Used by mkinitcpio to name the kernel
++	echo "${pkgbase}" > "${modulesdir}/pkgbase"
++
++	echo "Installing modules..."
++	${MAKE} INSTALL_MOD_PATH="${pkgdir}/usr" INSTALL_MOD_STRIP=1 \
++		DEPMOD=true modules_install
++
++	if [ -d "${srctree}/arch/${SRCARCH}/boot/dts" ]; then
++		echo "Installing dtbs..."
++		${MAKE} INSTALL_DTBS_PATH="${modulesdir}/dtb" dtbs_install
++	fi
++
++	# remove build link, will be part of -headers package
++	rm -f "${modulesdir}/build"
++}
++
++_package-headers() {
++	pkgdesc="Headers and scripts for building modules for the ${pkgdesc} kernel"
++
++	export MAKEFLAGS="${KBUILD_MAKEFLAGS}"
++	cd "${objtree}"
++	local builddir="${pkgdir}/usr/${MODLIB}/build"
++
++	echo "Installing build files..."
++	"${srctree}/scripts/package/install-extmod-build" "${builddir}"
++
++	echo "Installing System.map and config..."
++	cp System.map "${builddir}/System.map"
++	cp .config "${builddir}/.config"
++
++	echo "Adding symlink..."
++	mkdir -p "${pkgdir}/usr/src"
++	ln -sr "${builddir}" "${pkgdir}/usr/src/${pkgbase}"
++}
++
++_package-api-headers() {
++	pkgdesc="Kernel headers sanitized for use in userspace"
++	provides=(linux-api-headers)
++	conflicts=(linux-api-headers)
++
++	export MAKEFLAGS="${KBUILD_MAKEFLAGS}"
++	cd "${objtree}"
++
++	${MAKE} headers_install INSTALL_HDR_PATH="${pkgdir}/usr"
++}
++
++for _p in "${pkgname[@]}"; do
++	eval "package_$_p() {
++		$(declare -f "_package${_p#$pkgbase}")
++		_package${_p#$pkgbase}
++	}"
++done
 -- 
-2.45.2
+2.46.0.rc1
 

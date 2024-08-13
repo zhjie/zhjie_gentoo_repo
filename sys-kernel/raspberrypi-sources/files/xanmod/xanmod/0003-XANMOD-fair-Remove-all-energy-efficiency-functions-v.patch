@@ -1,19 +1,19 @@
-From 2c7e0a96dd3afdc19f18a5f60246afa27b8a6f8d Mon Sep 17 00:00:00 2001
+From aef28752085a47d05d33c98fe4820283265eb2bb Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
-Date: Sun, 7 Jan 2024 19:24:34 -0300
-Subject: [PATCH 03/18] XANMOD: fair: Remove all energy efficiency functions
- [v6.7.0+]
+Date: Mon, 15 Jul 2024 03:17:10 +0000
+Subject: [PATCH 03/20] XANMOD: fair: Remove all energy efficiency functions
+ [v6.10.0+]
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
 ---
- kernel/sched/fair.c | 260 +-------------------------------------------
- 1 file changed, 3 insertions(+), 257 deletions(-)
+ kernel/sched/fair.c | 256 --------------------------------------------
+ 1 file changed, 256 deletions(-)
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index c62805dbd608..4955bc7f918a 100644
+index 24dda708b699..44d8108b27fd 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -7893,256 +7896,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
+@@ -7925,255 +7925,6 @@ eenv_pd_max_util(struct energy_env *eenv, struct cpumask *pd_cpus,
  	return min(max_util, eenv->cpu_cap);
  }
  
@@ -72,7 +72,7 @@ index c62805dbd608..4955bc7f918a 100644
 - * NOTE: Forkees are not accepted in the energy-aware wake-up path because
 - * they don't have any useful utilization data yet and it's not possible to
 - * forecast their impact on energy consumption. Consequently, they will be
-- * placed by find_idlest_cpu() on the least loaded CPU, which might turn out
+- * placed by sched_balance_find_dst_cpu() on the least loaded CPU, which might turn out
 - * to be energy-inefficient in some use-cases. The alternative would be to
 - * bias new tasks towards specific types of CPUs first, or to try to infer
 - * their util_avg from the parent task, but those heuristics could hurt
@@ -88,15 +88,15 @@ index c62805dbd608..4955bc7f918a 100644
 -	struct root_domain *rd = this_rq()->rd;
 -	int cpu, best_energy_cpu, target = -1;
 -	int prev_fits = -1, best_fits = -1;
--	unsigned long best_thermal_cap = 0;
--	unsigned long prev_thermal_cap = 0;
+-	unsigned long best_actual_cap = 0;
+-	unsigned long prev_actual_cap = 0;
 -	struct sched_domain *sd;
 -	struct perf_domain *pd;
 -	struct energy_env eenv;
 -
 -	rcu_read_lock();
 -	pd = rcu_dereference(rd->pd);
--	if (!pd || READ_ONCE(rd->overutilized))
+-	if (!pd)
 -		goto unlock;
 -
 -	/*
@@ -119,7 +119,7 @@ index c62805dbd608..4955bc7f918a 100644
 -
 -	for (; pd; pd = pd->next) {
 -		unsigned long util_min = p_util_min, util_max = p_util_max;
--		unsigned long cpu_cap, cpu_thermal_cap, util;
+-		unsigned long cpu_cap, cpu_actual_cap, util;
 -		long prev_spare_cap = -1, max_spare_cap = -1;
 -		unsigned long rq_util_min, rq_util_max;
 -		unsigned long cur_delta, base_energy;
@@ -131,18 +131,17 @@ index c62805dbd608..4955bc7f918a 100644
 -		if (cpumask_empty(cpus))
 -			continue;
 -
--		/* Account thermal pressure for the energy estimation */
+-		/* Account external pressure for the energy estimation */
 -		cpu = cpumask_first(cpus);
--		cpu_thermal_cap = arch_scale_cpu_capacity(cpu);
--		cpu_thermal_cap -= arch_scale_thermal_pressure(cpu);
+-		cpu_actual_cap = get_actual_cpu_capacity(cpu);
 -
--		eenv.cpu_cap = cpu_thermal_cap;
+-		eenv.cpu_cap = cpu_actual_cap;
 -		eenv.pd_cap = 0;
 -
 -		for_each_cpu(cpu, cpus) {
 -			struct rq *rq = cpu_rq(cpu);
 -
--			eenv.pd_cap += cpu_thermal_cap;
+-			eenv.pd_cap += cpu_actual_cap;
 -
 -			if (!cpumask_test_cpu(cpu, sched_domain_span(sd)))
 -				continue;
@@ -163,7 +162,7 @@ index c62805dbd608..4955bc7f918a 100644
 -			if (uclamp_is_used() && !uclamp_rq_is_idle(rq)) {
 -				/*
 -				 * Open code uclamp_rq_util_with() except for
--				 * the clamp() part. Ie: apply max aggregation
+-				 * the clamp() part. I.e.: apply max aggregation
 -				 * only. util_fits_cpu() logic requires to
 -				 * operate on non clamped util but must use the
 -				 * max-aggregated uclamp_{min, max}.
@@ -213,7 +212,7 @@ index c62805dbd608..4955bc7f918a 100644
 -			if (prev_delta < base_energy)
 -				goto unlock;
 -			prev_delta -= base_energy;
--			prev_thermal_cap = cpu_thermal_cap;
+-			prev_actual_cap = cpu_actual_cap;
 -			best_delta = min(best_delta, prev_delta);
 -		}
 -
@@ -228,7 +227,7 @@ index c62805dbd608..4955bc7f918a 100644
 -			 * but best energy cpu has better capacity.
 -			 */
 -			if ((max_fits < 0) &&
--			    (cpu_thermal_cap <= best_thermal_cap))
+-			    (cpu_actual_cap <= best_actual_cap))
 -				continue;
 -
 -			cur_delta = compute_energy(&eenv, pd, cpus, p,
@@ -249,14 +248,14 @@ index c62805dbd608..4955bc7f918a 100644
 -			best_delta = cur_delta;
 -			best_energy_cpu = max_spare_cap_cpu;
 -			best_fits = max_fits;
--			best_thermal_cap = cpu_thermal_cap;
+-			best_actual_cap = cpu_actual_cap;
 -		}
 -	}
 -	rcu_read_unlock();
 -
 -	if ((best_fits > prev_fits) ||
 -	    ((best_fits > 0) && (best_delta < prev_delta)) ||
--	    ((best_fits < 0) && (best_thermal_cap > prev_thermal_cap)))
+-	    ((best_fits < 0) && (best_actual_cap > prev_actual_cap)))
 -		target = best_energy_cpu;
 -
 -	return target;
@@ -270,11 +269,11 @@ index c62805dbd608..4955bc7f918a 100644
  /*
   * select_task_rq_fair: Select target runqueue for the waking task in domains
   * that have the relevant SD flag set. In practice, this is SD_BALANCE_WAKE,
-@@ -8175,13 +7928,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
+@@ -8206,13 +7957,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
  		    cpumask_test_cpu(cpu, p->cpus_ptr))
  			return cpu;
  
--		if (sched_energy_enabled()) {
+-		if (!is_rd_overutilized(this_rq()->rd)) {
 -			new_cpu = find_energy_efficient_cpu(p, prev_cpu);
 -			if (new_cpu >= 0)
 -				return new_cpu;
