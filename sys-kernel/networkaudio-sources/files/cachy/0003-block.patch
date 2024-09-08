@@ -1,7 +1,7 @@
-From 3e5745c6ee0038e4c888d08d93da04bc2ca22f1c Mon Sep 17 00:00:00 2001
+From d562880ab735996d03be79d4648db029bd4fbcad Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 1 Sep 2024 10:38:49 +0200
-Subject: [PATCH 03/11] block
+Date: Sun, 8 Sep 2024 10:19:33 +0200
+Subject: [PATCH 03/12] block
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -11,7 +11,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  3 files changed, 203 insertions(+), 43 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 36a4998c4b37..f9bc95f4488d 100644
+index 4b88a54a9b76c..88df08a246faa 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
 @@ -467,6 +467,21 @@ static struct bfq_io_cq *bfq_bic_lookup(struct request_queue *q)
@@ -144,7 +144,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  	bfq_update_dispatch_stats(hctx->queue, rq,
  			idle_timer_disabled ? in_serv_queue : NULL,
  				idle_timer_disabled);
-@@ -6238,27 +6316,21 @@ static inline void bfq_update_insert_stats(struct request_queue *q,
+@@ -6236,27 +6314,21 @@ static inline void bfq_update_insert_stats(struct request_queue *q,
  
  static struct bfq_queue *bfq_init_rq(struct request *rq);
  
@@ -175,7 +175,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  
  	trace_block_rq_insert(rq);
  
-@@ -6288,8 +6360,6 @@ static void bfq_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
+@@ -6286,8 +6358,6 @@ static void bfq_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
  	 * merge).
  	 */
  	cmd_flags = rq->cmd_flags;
@@ -184,7 +184,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  	bfq_update_insert_stats(q, bfqq, idle_timer_disabled,
  				cmd_flags);
  }
-@@ -6298,13 +6368,15 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
+@@ -6296,13 +6366,15 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
  				struct list_head *list,
  				blk_insert_t flags)
  {
@@ -206,7 +206,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  }
  
  static void bfq_update_hw_tag(struct bfq_data *bfqd)
-@@ -7213,6 +7285,12 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+@@ -7211,6 +7283,12 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
  	q->elevator = eq;
  	spin_unlock_irq(&q->queue_lock);
  
@@ -219,7 +219,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  	/*
  	 * Our fallback bfqq if bfq_find_alloc_queue() runs into OOM issues.
  	 * Grab a permanent reference to it, so that the normal code flow
-@@ -7331,8 +7409,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+@@ -7329,8 +7407,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
  	/* see comments on the definition of next field inside bfq_data */
  	bfqd->actuator_load_threshold = 4;
  
@@ -229,7 +229,7 @@ index 36a4998c4b37..f9bc95f4488d 100644
  	 * The invocation of the next bfq_create_group_hierarchy
  	 * function is the head of a chain of function calls
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 08ddf2cfae5b..a5cb9b643699 100644
+index 467e8cfc41a24..f44f5d4ec2f4a 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
 @@ -504,12 +504,26 @@ struct bfq_io_cq {
@@ -269,7 +269,7 @@ index 08ddf2cfae5b..a5cb9b643699 100644
  	 * bic associated with the task issuing current bio for
  	 * merging. This and the next field are used as a support to
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index acdc28756d9d..8b214233a061 100644
+index acdc28756d9d7..8b214233a061e 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
 @@ -79,10 +79,23 @@ struct dd_per_prio {

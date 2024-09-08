@@ -1,0 +1,51 @@
+From 339b41ec357c24c02ed4aed6267dbfd443ee1e8e Mon Sep 17 00:00:00 2001
+From: Helge Deller <deller@gmx.de>
+Date: Mon, 13 Nov 2023 16:06:18 +0100
+Subject: prctl: Temporarily disable prctl(PR_SET_MDWE) on parisc
+
+systemd-254 tries to use prctl(PR_SET_MDWE) for systemd's
+MemoryDenyWriteExecute functionality, but fails on PA-RISC/HPPA which
+still needs executable stacks.
+
+Temporarily disable prctl(PR_SET_MDWE) by returning -ENODEV on parisc
+for now. Note that we can't return -EINVAL since systemd will then try
+to use seccomp instead.
+
+Reported-by: Sam James <sam@gentoo.org>
+Signed-off-by: Helge Deller <deller@gmx.de>
+Link: https://lore.kernel.org/all/875y2jro9a.fsf@gentoo.org/
+Link: https://github.com/systemd/systemd/issues/29775.
+Cc: <stable@vger.kernel.org> # v6.3+
+---
+ kernel/sys.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/sys.c b/kernel/sys.c
+index 420d9cb9cc8e2..8e3eaf650d07d 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -2700,10 +2700,16 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+ 		break;
+ #endif
+ 	case PR_SET_MDWE:
+-		error = prctl_set_mdwe(arg2, arg3, arg4, arg5);
++		if (IS_ENABLED(CONFIG_PARISC))
++			error = -EINVAL;
++		else
++			error = prctl_set_mdwe(arg2, arg3, arg4, arg5);
+ 		break;
+ 	case PR_GET_MDWE:
+-		error = prctl_get_mdwe(arg2, arg3, arg4, arg5);
++		if (IS_ENABLED(CONFIG_PARISC))
++			error = -EINVAL;
++		else
++			error = prctl_get_mdwe(arg2, arg3, arg4, arg5);
+ 		break;
+ 	case PR_SET_VMA:
+ 		error = prctl_set_vma(arg2, arg3, arg4, arg5);
+-- 
+cgit
+Filename: fallback-exec-stack.patch. Size: 2kb. View raw, copy, hex, or download this file.
+View source code, the removal or expiry stories, or read the about page.
+
+This website does not claim ownership of, copyright on, and assumes no liability for provided content. Toggle color scheme.
