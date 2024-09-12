@@ -25,11 +25,10 @@ KV_MINOR="11"
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
-KERNEL_URI="https://git.kernel.org/torvalds/t/linux-6.11-rc6.tar.gz"
+KERNEL_URI="https://git.kernel.org/torvalds/t/linux-6.11-rc7.tar.gz"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${RT_URI}"
-#    https://cdn.kernel.org/pub/linux/kernel/projects/rt/6.11/patches-6.11-rc5-rt5.tar.xz
 
 KV_FULL="${KV_FULL}-rt"
 S="${WORKDIR}/linux-${KV_FULL}"
@@ -42,8 +41,8 @@ src_unpack() {
     UNIPATCH_EXCLUDE=""
     # kernel-2_src_unpack
 
-    unpack linux-6.11-rc6.tar.gz
-    mv "${WORKDIR}/linux-6.11-rc6" "${WORKDIR}/linux-6.11-rc6-networkaudio-rt"
+    unpack linux-6.11-rc7.tar.gz
+    mv "${WORKDIR}/linux-6.11-rc7" "${WORKDIR}/linux-6.11-rc7-networkaudio-rt"
 }
 
 src_prepare() {
