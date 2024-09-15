@@ -17,7 +17,7 @@ amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${M
 
 LICENSE="Signalyst"
 SLOT="0"
-KEYWORDS="amd64 arm64"
+KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd +upnp cuda cpu_flags_x86_avx2"
