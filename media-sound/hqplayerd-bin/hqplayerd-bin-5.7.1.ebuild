@@ -13,7 +13,6 @@ HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
 amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${PV}-${HQV}intel_amd64.deb ) )
 amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
-arm64? ( https://www.signalyst.eu/bins/hqplayerd/bookworm/${MY_PN}_${PV}-${HQV}_arm64.deb )
 "
 
 LICENSE="Signalyst"
@@ -57,11 +56,6 @@ src_prepare() {
 
 	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
 
-	if use arm64; then
-		patchelf --replace-needed libgupnp-1.2.so.0    libgupnp-1.2.so.1    usr/bin/hqplayerd || die
-		patchelf --replace-needed libgupnp-av-1.0.so.2 libgupnp-av-1.0.so.3 usr/bin/hqplayerd || die
-	fi
-
 	if ! use upnp; then
 		patchelf --remove-needed librygel-renderer-2.6.so.2 usr/bin/hqplayerd || die
 		patchelf --remove-needed librygel-core-2.6.so.2     usr/bin/hqplayerd || die
@@ -72,9 +66,6 @@ src_install() {
 	mv etc usr var "${D}" || die
 	if use amd64; then
 		dolib.so opt/hqplayerd/lib/libsgllnx64-2.29.02.so
-	fi
-	if use arm64; then
-		dolib.so opt/hqplayerd/lib/libsglarm64-2.31.0.0.so
 	fi
 	if use systemd; then
 		systemd_dounit "${FILESDIR}/${MY_PN}.service"
