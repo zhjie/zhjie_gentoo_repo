@@ -7,15 +7,15 @@ K_FROM_GIT="yes"
 ETYPE="sources"
 CKV="${PVR/-r/-git}"
 EGIT_BRANCH="rpi-${K_BASE_VER}.y"
-EGIT_COMMIT="1e607cf22bff1b2949b2e8284d5635cdcac18edc"
+EGIT_COMMIT="30dcc7ec2009395c3e671db6ef0ea4b3cc10f467"
 
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="13"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt"
-RT_VERSION="rc6-rt11"
-MINOR_VERSION="0"
+RT_VERSION="rt14"
+MINOR_VERSION="2"
 
 # only use this if it's not an _rc/_pre release
 [ "${PV/_pre}" == "${PV}" ] && [ "${PV/_rc}" == "${PV}" ] && OKV="${PV}"
@@ -28,7 +28,7 @@ DESCRIPTION="The very latest -git version of the Linux kernel"
 HOMEPAGE="https://www.kernel.org"
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 SRC_URI="${GENPATCHES_URI}
-    https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}-${RT_VERSION}.tar.xz
+    https://cdn.kernel.org/pub/linux/kernel/projects/rt/${K_BASE_VER}/older/patches-${K_BASE_VER}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 "
 
 KEYWORDS="amd64 arm arm64"
@@ -52,8 +52,8 @@ src_unpack() {
     mkdir "${WORKDIR}"/genpatch
     mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
 
-    # unpack patches-${K_BASE_VER}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
-    unpack patches-${K_BASE_VER}-${RT_VERSION}.tar.xz
+    unpack patches-${K_BASE_VER}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
+    # unpack patches-${K_BASE_VER}-${RT_VERSION}.tar.xz
 
     mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
     echo "${EXTRAVERSION}"
@@ -86,6 +86,7 @@ src_prepare() {
 0005-perf-Move-swevent_htable-recursion-into-task_struct.patch
 0006-perf-Don-t-disable-preemption-in-perf_pending_task.patch
 0007-perf-Split-__perf_pending_irq-out-of-perf_pending_ir.patch
+task_work-make-TWA_NMI_CURRENT-handling-conditional-.patch
 
 # locking.
 drm-ttm-tests-Let-ttm_bo_test-consider-different-ww_.patch
@@ -215,7 +216,8 @@ PREEMPT_AUTO.patch
 0002-net-Optimize-xdp_do_flush-with-bpf_net_context-infos.patch
 0003-net-Move-flush-list-retrieval-to-where-it-is-used.patch
 tun-Assign-missing-bpf_net_context.patch
-seg6-Ensure-that-seg6_bpf_srh_states-can-only-be-acc.patch
+tun-Add-missing-bpf_net_ctx_clear-in-do_xdp_generic.patch
+bpf-Remove-tst_run-from-lwt_seg6local_prog_ops.patch
 # tw_timer
 0001-net-tcp-dccp-prepare-for-tw_timer-un-pinning.patch
 0002-net-tcp-un-pin-the-tw_timer.patch
