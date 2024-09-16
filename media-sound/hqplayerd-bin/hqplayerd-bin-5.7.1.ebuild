@@ -22,7 +22,7 @@ RESTRICT="mirror bindist"
 
 IUSE="systemd +upnp cuda cpu_flags_x86_avx2"
 
-RDEPEND=">=dev-libs/glib-2.37.3
+RDEPEND=">=dev-libs/glib-2.78.0
 	>=media-libs/libgmpris-2.2.1
 	>=media-libs/alsa-lib-1.0.16
 	>=media-libs/flac-1.3.0
@@ -38,6 +38,7 @@ RDEPEND=">=dev-libs/glib-2.37.3
 	media-sound/lame
 	sys-libs/libomp
 	upnp? ( || ( net-misc/rygel-bin net-misc/rygel ) )
+    upnp? ( >=dev-libs/glib-2.80.0 )
 	cuda? ( dev-util/nvidia-cuda-toolkit )
 "
 

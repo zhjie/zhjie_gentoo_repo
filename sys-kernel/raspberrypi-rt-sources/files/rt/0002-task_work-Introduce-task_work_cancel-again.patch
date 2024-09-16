@@ -1,0 +1,50 @@
+From: Frederic Weisbecker <frederic@kernel.org>
+Date: Thu, 16 May 2024 16:09:34 +0200
+Subject: [PATCH 2/4] task_work: Introduce task_work_cancel() again
+
+Re-introduce task_work_cancel(), this time to cancel an actual callback
+and not *any* callback pointing to a given function. This is going to be
+needed for perf events event freeing.
+
+Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+Link: https://lore.kernel.org/r/20240516140936.13694-1-frederic@kernel.org
+Link: https://lore.kernel.org/r/20240516140936.13694-3-frederic@kernel.org
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ include/linux/task_work.h |    1 +
+ kernel/task_work.c        |   24 ++++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+
+--- a/kernel/task_work.c
++++ b/kernel/task_work.c
+@@ -136,6 +136,30 @@ task_work_cancel_func(struct task_struct
+ 	return task_work_cancel_match(task, task_work_func_match, func);
+ }
+ 
++static bool task_work_match(struct callback_head *cb, void *data)
++{
++	return cb == data;
++}
++
++/**
++ * task_work_cancel - cancel a pending work added by task_work_add()
++ * @task: the task which should execute the work
++ * @cb: the callback to remove if queued
++ *
++ * Remove a callback from a task's queue if queued.
++ *
++ * RETURNS:
++ * True if the callback was queued and got cancelled, false otherwise.
++ */
++bool task_work_cancel(struct task_struct *task, struct callback_head *cb)
++{
++	struct callback_head *ret;
++
++	ret = task_work_cancel_match(task, task_work_match, cb);
++
++	return ret == cb;
++}
++
+ /**
+  * task_work_run - execute the works added by task_work_add()
+  *
