@@ -1,7 +1,7 @@
-From 75719451edff6bd0e09ec5d9465f025e78c1ae26 Mon Sep 17 00:00:00 2001
+From bdd3f4dab12fd8eb06357b2b5593820eb3128651 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 8 Sep 2024 10:21:43 +0200
-Subject: [PATCH 10/12] perf-per-core
+Date: Sun, 15 Sep 2024 17:29:46 +0200
+Subject: [PATCH 09/11] perf-per-core
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -29,7 +29,7 @@ index 7352ab89a55a..c12837e61bda 100644
  
  System topology examples
 diff --git a/arch/x86/events/rapl.c b/arch/x86/events/rapl.c
-index 0c5e7a7c43ac..cd808b699ccc 100644
+index b985ca79cf97..8206038a01ac 100644
 --- a/arch/x86/events/rapl.c
 +++ b/arch/x86/events/rapl.c
 @@ -39,6 +39,10 @@
@@ -856,7 +856,7 @@ index 0c5e7a7c43ac..cd808b699ccc 100644
  }
  module_exit(intel_rapl_exit);
 diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index cb4f6c513c48..1ffe4260bef6 100644
+index 775acbdea1a9..86b22e7e5acb 100644
 --- a/arch/x86/include/asm/processor.h
 +++ b/arch/x86/include/asm/processor.h
 @@ -98,6 +98,7 @@ struct cpuinfo_topology {
@@ -904,5 +904,5 @@ index 9a6069e7133c..23722aa21e2f 100644
  
  	/* Package relative core ID */
 -- 
-2.46.0
+2.46.1
 

@@ -1,31 +1,10 @@
-diff -urpN linux-6.8-raspberrypi-a/kernel/Kconfig.hz linux-6.8-raspberrypi-b/kernel/Kconfig.hz
---- linux-6.8-raspberrypi-a/kernel/Kconfig.hz	2024-03-27 01:33:03.152685169 +0800
-+++ linux-6.8-raspberrypi-b/kernel/Kconfig.hz	2024-03-27 01:34:51.874705461 +0800
-@@ -40,12 +40,67 @@ choice
- 	 on SMP and NUMA systems and exactly dividing by both PAL and
- 	 NTSC frame rates for video and multimedia work.
+diff -urpN linux-6.7.10-networkaudio-a/kernel/Kconfig.hz linux-6.7.10-networkaudio-b/kernel/Kconfig.hz
+--- linux-6.7.10-networkaudio-a/kernel/Kconfig.hz	2024-03-25 20:32:31.446887312 +0800
++++ linux-6.7.10-networkaudio-b/kernel/Kconfig.hz	2024-03-25 20:40:35.478879535 +0800
+@@ -61,12 +61,46 @@ choice
+ 	 on desktops with good smoothness without increasing CPU power
+ 	 consumption and sacrificing the battery life on laptops.
  
-+	config HZ_500
-+		bool "500 HZ"
-+	help
-+	 500 Hz is a balanced timer frequency. Provides fast interactivity
-+	 on desktops with good smoothness without increasing CPU power
-+	 consumption and sacrificing the battery life on laptops.
-+
-+	config HZ_600
-+		bool "600 HZ"
-+	help
-+	 600 Hz is a balanced timer frequency. Provides fast interactivity
-+	 on desktops with good smoothness without increasing CPU power
-+	 consumption and sacrificing the battery life on laptops.
-+
-+	config HZ_750
-+		bool "750 HZ"
-+	help
-+	 750 Hz is a balanced timer frequency. Provides fast interactivity
-+	 on desktops with good smoothness without increasing CPU power
-+	 consumption and sacrificing the battery life on laptops.
-+
 +	config HZ_833
 +		bool "833 HZ"
 +	help
@@ -69,13 +48,10 @@ diff -urpN linux-6.8-raspberrypi-a/kernel/Kconfig.hz linux-6.8-raspberrypi-b/ker
  endchoice
  
  config HZ
-@@ -53,7 +108,13 @@ config HZ
- 	default 100 if HZ_100
- 	default 250 if HZ_250
- 	default 300 if HZ_300
-+	default 500 if HZ_500
-+	default 600 if HZ_600
-+	default 750 if HZ_750
+@@ -77,7 +111,10 @@ config HZ
+ 	default 500 if HZ_500
+ 	default 600 if HZ_600
+ 	default 750 if HZ_750
 +	default 833 if HZ_833
  	default 1000 if HZ_1000
 +	default 1666 if HZ_1666

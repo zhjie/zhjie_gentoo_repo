@@ -1,0 +1,120 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Timer Interrupt Frequency Configuration
+#
+
+choice
+	prompt "Timer frequency"
+	default HZ_250
+	help
+	 Allows the configuration of the timer frequency. It is customary
+	 to have the timer interrupt run at 1000 Hz but 100 Hz may be more
+	 beneficial for servers and NUMA systems that do not need to have
+	 a fast response for user interaction and that may experience bus
+	 contention and cacheline bounces as a result of timer interrupts.
+	 Note that the timer interrupt occurs on each processor in an SMP
+	 environment leading to NR_CPUS * HZ number of timer interrupts
+	 per second.
+
+
+	config HZ_100
+		bool "100 HZ"
+	help
+	  100 Hz is a typical choice for servers, SMP and NUMA systems
+	  with lots of processors that may show reduced performance if
+	  too many timer interrupts are occurring.
+
+	config HZ_250
+		bool "250 HZ"
+	help
+	 250 Hz is a good compromise choice allowing server performance
+	 while also showing good interactive responsiveness even
+	 on SMP and NUMA systems. If you are going to be using NTSC video
+	 or multimedia, selected 300Hz instead.
+
+	config HZ_300
+		bool "300 HZ"
+	help
+	 300 Hz is a good compromise choice allowing server performance
+	 while also showing good interactive responsiveness even
+	 on SMP and NUMA systems and exactly dividing by both PAL and
+	 NTSC frame rates for video and multimedia work.
+
+	config HZ_500
+		bool "500 HZ"
+	help
+	 500 Hz is a balanced timer frequency. Provides fast interactivity
+	 on desktops with good smoothness without increasing CPU power
+	 consumption and sacrificing the battery life on laptops.
+
+	config HZ_600
+		bool "600 HZ"
+	help
+	 600 Hz is a balanced timer frequency. Provides fast interactivity
+	 on desktops with good smoothness without increasing CPU power
+	 consumption and sacrificing the battery life on laptops.
+
+	config HZ_750
+		bool "750 HZ"
+	help
+	 750 Hz is a balanced timer frequency. Provides fast interactivity
+	 on desktops with good smoothness without increasing CPU power
+	 consumption and sacrificing the battery life on laptops.
+
+	config HZ_833
+		bool "833 HZ"
+	help
+	 Select 833 Hz as an alternative to 1000 Hz. This choice offers a balance between
+	 latency and performance, providing a slightly lower interrupt frequency that
+	 reduces interrupt overhead and improves system stability. It maintains satisfactory
+	 interactive responsiveness and is suitable for various applications where a
+	 lower interrupt frequency is desired without sacrificing overall system
+	 performance. Examples include audio workstations or video editing systems that
+	 require precise timing while minimizing system overhead.
+
+	config HZ_1000
+		bool "1000 HZ"
+	help
+	 1000 Hz is the preferred choice for desktop systems and other
+	 systems requiring fast interactive responses to events.
+
+	config HZ_1666
+		bool "1666 Hz"
+	help
+	 Select 1666 Hz for systems with low latency requirements. This choice prioritizes
+	 low latency over overall throughput and performance. It offers a snappier feel
+	 in response to interactive processes and is suitable for real-time systems,
+	 latency-sensitive workloads, and applications that demand quick response times,
+	 such as real-time audio or video processing. Examples include audio production
+	 systems, video streaming platforms, or real-time control systems. However, it
+	 may result in increased power consumption and slightly reduced overall system
+	 throughput.
+
+	config HZ_2000
+		bool "2000 Hz"
+	help
+	 Select 2000 Hz for demanding scenarios that require extremely fast timer interrupt
+	 responses. This choice offers exceptional interactive responsiveness and is ideal
+	 for ultra-low latency and real-time applications where precise timing is crucial,
+	 such as high-frequency trading or control systems. Examples include financial
+	 trading platforms or robotics control systems. However, it significantly increases
+	 interrupt overhead, power consumption, system load, and may negatively impact overall
+	 system stability.
+
+endchoice
+
+config HZ
+	int
+	default 100 if HZ_100
+	default 250 if HZ_250
+	default 300 if HZ_300
+	default 500 if HZ_500
+	default 600 if HZ_600
+	default 750 if HZ_750
+	default 833 if HZ_833
+	default 1000 if HZ_1000
+	default 1666 if HZ_1666
+	default 2000 if HZ_2000
+
+config SCHED_HRTICK
+	def_bool HIGH_RES_TIMERS

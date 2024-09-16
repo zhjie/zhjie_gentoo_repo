@@ -1,7 +1,7 @@
-From 90984a4f1e0c0ce2354448ea648bda14c57da75f Mon Sep 17 00:00:00 2001
+From b24e8834eb51bed12079009ec0ab23b16bc73198 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 8 Sep 2024 10:20:59 +0200
-Subject: [PATCH 07/12] intel-pstate
+Date: Sun, 15 Sep 2024 17:29:06 +0200
+Subject: [PATCH 06/11] intel-pstate
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -38,10 +38,10 @@ index abe3a8f22cbd..aef70336d624 100644
  static inline void freq_invariance_set_perf_ratio(u64 ratio, bool turbo_disabled) { }
  #endif
 diff --git a/arch/x86/kernel/cpu/aperfmperf.c b/arch/x86/kernel/cpu/aperfmperf.c
-index b3fa61d45352..f85d3f4233d4 100644
+index 0b69bfbf345d..ec07678c641b 100644
 --- a/arch/x86/kernel/cpu/aperfmperf.c
 +++ b/arch/x86/kernel/cpu/aperfmperf.c
-@@ -347,9 +347,89 @@ static DECLARE_WORK(disable_freq_invariance_work,
+@@ -349,9 +349,89 @@ static DECLARE_WORK(disable_freq_invariance_work,
  DEFINE_PER_CPU(unsigned long, arch_freq_scale) = SCHED_CAPACITY_SCALE;
  EXPORT_PER_CPU_SYMBOL_GPL(arch_freq_scale);
  
@@ -132,7 +132,7 @@ index b3fa61d45352..f85d3f4233d4 100644
  
  	if (!arch_scale_freq_invariant())
  		return;
-@@ -357,7 +437,12 @@ static void scale_freq_tick(u64 acnt, u64 mcnt)
+@@ -359,7 +439,12 @@ static void scale_freq_tick(u64 acnt, u64 mcnt)
  	if (check_shl_overflow(acnt, 2*SCHED_CAPACITY_SHIFT, &acnt))
  		goto error;
  
@@ -147,7 +147,7 @@ index b3fa61d45352..f85d3f4233d4 100644
  
  	freq_scale = div64_u64(acnt, mcnt);
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index cc54238596ed..4e59a5446861 100644
+index 7d92f16a430a..86ad1fed71f1 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -16,6 +16,7 @@
@@ -182,7 +182,7 @@ index cc54238596ed..4e59a5446861 100644
  
  static struct cpufreq_driver *intel_pstate_driver __read_mostly;
  
-@@ -933,6 +937,135 @@ static struct freq_attr *hwp_cpufreq_attrs[] = {
+@@ -934,6 +938,135 @@ static struct freq_attr *hwp_cpufreq_attrs[] = {
  	NULL,
  };
  
@@ -318,7 +318,7 @@ index cc54238596ed..4e59a5446861 100644
  static void __intel_pstate_get_hwp_cap(struct cpudata *cpu)
  {
  	u64 cap;
-@@ -961,6 +1094,43 @@ static void intel_pstate_get_hwp_cap(struct cpudata *cpu)
+@@ -962,6 +1095,43 @@ static void intel_pstate_get_hwp_cap(struct cpudata *cpu)
  	}
  }
  
@@ -362,7 +362,7 @@ index cc54238596ed..4e59a5446861 100644
  static void intel_pstate_hwp_set(unsigned int cpu)
  {
  	struct cpudata *cpu_data = all_cpu_data[cpu];
-@@ -1069,6 +1239,22 @@ static void intel_pstate_hwp_offline(struct cpudata *cpu)
+@@ -1070,6 +1240,22 @@ static void intel_pstate_hwp_offline(struct cpudata *cpu)
  		value |= HWP_ENERGY_PERF_PREFERENCE(HWP_EPP_POWERSAVE);
  
  	wrmsrl_on_cpu(cpu->cpu, MSR_HWP_REQUEST, value);
@@ -385,7 +385,7 @@ index cc54238596ed..4e59a5446861 100644
  }
  
  #define POWER_CTL_EE_ENABLE	1
-@@ -1164,21 +1350,46 @@ static void __intel_pstate_update_max_freq(struct cpudata *cpudata,
+@@ -1165,21 +1351,46 @@ static void __intel_pstate_update_max_freq(struct cpudata *cpudata,
  static void intel_pstate_update_limits(unsigned int cpu)
  {
  	struct cpufreq_policy *policy = cpufreq_cpu_acquire(cpu);
@@ -435,7 +435,7 @@ index cc54238596ed..4e59a5446861 100644
  }
  
  /************************** sysfs begin ************************/
-@@ -1617,6 +1828,13 @@ static void intel_pstate_notify_work(struct work_struct *work)
+@@ -1618,6 +1829,13 @@ static void intel_pstate_notify_work(struct work_struct *work)
  		__intel_pstate_update_max_freq(cpudata, policy);
  
  		cpufreq_cpu_release(policy);
@@ -449,7 +449,7 @@ index cc54238596ed..4e59a5446861 100644
  	}
  
  	wrmsrl_on_cpu(cpudata->cpu, MSR_HWP_STATUS, 0);
-@@ -2018,8 +2236,10 @@ static void intel_pstate_get_cpu_pstates(struct cpudata *cpu)
+@@ -2034,8 +2252,10 @@ static void intel_pstate_get_cpu_pstates(struct cpudata *cpu)
  
  		if (pstate_funcs.get_cpu_scaling) {
  			cpu->pstate.scaling = pstate_funcs.get_cpu_scaling(cpu->cpu);
@@ -461,7 +461,7 @@ index cc54238596ed..4e59a5446861 100644
  		} else {
  			cpu->pstate.scaling = perf_ctl_scaling;
  		}
-@@ -2687,6 +2907,8 @@ static int intel_pstate_cpu_online(struct cpufreq_policy *policy)
+@@ -2703,6 +2923,8 @@ static int intel_pstate_cpu_online(struct cpufreq_policy *policy)
  		 */
  		intel_pstate_hwp_reenable(cpu);
  		cpu->suspended = false;
@@ -470,7 +470,7 @@ index cc54238596ed..4e59a5446861 100644
  	}
  
  	return 0;
-@@ -3129,6 +3351,8 @@ static int intel_pstate_register_driver(struct cpufreq_driver *driver)
+@@ -3143,6 +3365,8 @@ static int intel_pstate_register_driver(struct cpufreq_driver *driver)
  
  	global.min_perf_pct = min_perf_pct_min();
  
@@ -480,5 +480,5 @@ index cc54238596ed..4e59a5446861 100644
  }
  
 -- 
-2.46.0
+2.46.1
 

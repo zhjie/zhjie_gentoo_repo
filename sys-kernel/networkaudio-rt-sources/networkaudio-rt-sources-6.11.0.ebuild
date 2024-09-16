@@ -7,7 +7,7 @@ K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="1"
 K_EXP_GENPATCHES_NOUSE="1"
 
-RT_VERSION="rc5-rt5"
+RT_VERSION="rt7"
 MINOR_VERSION="0"
 
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
@@ -55,6 +55,7 @@ crypto-x86-aes-gcm-fix-PREEMPT_RT-issue-in-gcm_crypt.patch
 ###########################################################################
 # John's printk queue
 ###########################################################################
+# printk-for-6.12 from the printk tree.
 0001-printk-Add-notation-to-console_srcu-locking.patch
 0002-printk-nbcon-Consolidate-alloc-and-init.patch
 0003-printk-Properly-deal-with-nbcon-consoles-on-seq-init.patch
@@ -90,23 +91,26 @@ crypto-x86-aes-gcm-fix-PREEMPT_RT-issue-in-gcm_crypt.patch
 0033-panic-Mark-emergency-section-in-oops.patch
 0034-rcu-Mark-emergency-sections-in-rcu-stalls.patch
 0035-lockdep-Mark-emergency-sections-in-lockdep-splats.patch
-0036-printk-nbcon-Add-function-for-printers-to-reacquire-.patch
-0037-printk-Fail-pr_flush-if-before-SYSTEM_SCHEDULING.patch
-0038-printk-Flush-console-on-unregister_console.patch
-0039-printk-nbcon-Add-context-to-usable-and-emit.patch
-0040-printk-nbcon-Init-nbcon_seq-to-highest-possible.patch
-0041-printk-nbcon-Introduce-printer-kthreads.patch
-0042-printk-nbcon-Relocate-nbcon_atomic_emit_one.patch
-0043-printk-nbcon-Use-thread-callback-if-in-task-context-.patch
-0044-printk-nbcon-Rely-on-kthreads-for-normal-operation.patch
-0045-printk-Provide-helper-for-message-prepending.patch
-0046-printk-nbcon-Show-replay-message-on-takeover.patch
-0047-proc-consoles-Add-notation-to-c_start-c_stop.patch
-0048-proc-Add-nbcon-support-for-proc-consoles.patch
-0049-tty-sysfs-Add-nbcon-support-for-active.patch
-0050-printk-Implement-legacy-printer-kthread-for-PREEMPT_.patch
-0051-printk-nbcon-Assign-nice-20-for-printing-threads.patch
-0052-printk-Avoid-false-positive-lockdep-report-for-legac.patch
+0036-printk-Use-the-BITS_PER_LONG-macro.patch
+0037-printk-nbcon-Use-raw_cpu_ptr-instead-of-open-coding.patch
+0038-printk-nbcon-Add-function-for-printers-to-reacquire-.patch
+0039-printk-Fail-pr_flush-if-before-SYSTEM_SCHEDULING.patch
+0040-printk-Flush-console-on-unregister_console.patch
+0041-printk-nbcon-Add-context-to-usable-and-emit.patch
+0042-printk-nbcon-Init-nbcon_seq-to-highest-possible.patch
+0043-printk-nbcon-Introduce-printer-kthreads.patch
+0044-printk-nbcon-Relocate-nbcon_atomic_emit_one.patch
+0045-printk-nbcon-Use-thread-callback-if-in-task-context-.patch
+0046-printk-nbcon-Rely-on-kthreads-for-normal-operation.patch
+0047-printk-Provide-helper-for-message-prepending.patch
+0048-printk-nbcon-Show-replay-message-on-takeover.patch
+0049-proc-consoles-Add-notation-to-c_start-c_stop.patch
+0050-proc-Add-nbcon-support-for-proc-consoles.patch
+0051-tty-sysfs-Add-nbcon-support-for-active.patch
+0052-printk-Implement-legacy-printer-kthread-for-PREEMPT_.patch
+0053-printk-nbcon-Assign-nice-20-for-printing-threads.patch
+0054-printk-Avoid-false-positive-lockdep-report-for-legac.patch
+# Atomic console
 0053-serial-8250-Switch-to-nbcon-console.patch
 0054-serial-8250-Revert-drop-lockdep-annotation-from-seri.patch
 
@@ -209,9 +213,6 @@ sysfs__Add__sys_kernel_realtime_entry.patch
     for p in "${rt_patches[@]}"; do
         eapply "${WORKDIR}/rtpatch/${p}"
     done
-
-    # gentoo patch
-    # eapply "${FILESDIR}"/gentoo/*.patch
 
     # naa patch
     if use naa; then

@@ -1,32 +1,33 @@
-From b503c9c8ebb5f8ab64d6238b83a4c57a78b3bc73 Mon Sep 17 00:00:00 2001
+From 8eb5e816f13a599dd0385bccc1df837664cc7233 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 8 Sep 2024 10:21:08 +0200
-Subject: [PATCH 08/12] ksm
+Date: Sun, 15 Sep 2024 17:29:23 +0200
+Subject: [PATCH 07/11] ksm
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
- arch/alpha/kernel/syscalls/syscall.tbl      |   3 +
- arch/arm/tools/syscall.tbl                  |   3 +
- arch/arm64/include/asm/unistd.h             |   2 +-
- arch/arm64/include/asm/unistd32.h           |   6 +
- arch/m68k/kernel/syscalls/syscall.tbl       |   3 +
- arch/microblaze/kernel/syscalls/syscall.tbl |   3 +
- arch/mips/kernel/syscalls/syscall_n32.tbl   |   3 +
- arch/mips/kernel/syscalls/syscall_n64.tbl   |   3 +
- arch/mips/kernel/syscalls/syscall_o32.tbl   |   3 +
- arch/parisc/kernel/syscalls/syscall.tbl     |   3 +
- arch/powerpc/kernel/syscalls/syscall.tbl    |   3 +
- arch/s390/kernel/syscalls/syscall.tbl       |   3 +
- arch/sh/kernel/syscalls/syscall.tbl         |   3 +
- arch/sparc/kernel/syscalls/syscall.tbl      |   3 +
- arch/x86/entry/syscalls/syscall_32.tbl      |   3 +
- arch/x86/entry/syscalls/syscall_64.tbl      |   3 +
- arch/xtensa/kernel/syscalls/syscall.tbl     |   3 +
- include/linux/syscalls.h                    |   3 +
- include/uapi/asm-generic/unistd.h           |  11 +-
- kernel/sys.c                                | 147 ++++++++++++++++++++
- kernel/sys_ni.c                             |   3 +
- 21 files changed, 215 insertions(+), 2 deletions(-)
+ arch/alpha/kernel/syscalls/syscall.tbl        |   3 +
+ arch/arm/tools/syscall.tbl                    |   3 +
+ arch/m68k/kernel/syscalls/syscall.tbl         |   3 +
+ arch/microblaze/kernel/syscalls/syscall.tbl   |   3 +
+ arch/mips/kernel/syscalls/syscall_n32.tbl     |   3 +
+ arch/mips/kernel/syscalls/syscall_n64.tbl     |   3 +
+ arch/mips/kernel/syscalls/syscall_o32.tbl     |   3 +
+ arch/parisc/kernel/syscalls/syscall.tbl       |   3 +
+ arch/powerpc/kernel/syscalls/syscall.tbl      |   3 +
+ arch/s390/kernel/syscalls/syscall.tbl         |   3 +
+ arch/sh/kernel/syscalls/syscall.tbl           |   3 +
+ arch/sparc/kernel/syscalls/syscall.tbl        |   3 +
+ arch/x86/entry/syscalls/syscall_32.tbl        |   3 +
+ arch/x86/entry/syscalls/syscall_64.tbl        |   3 +
+ arch/xtensa/kernel/syscalls/syscall.tbl       |   3 +
+ include/linux/syscalls.h                      |   3 +
+ include/uapi/asm-generic/unistd.h             |   9 +-
+ kernel/sys.c                                  | 147 ++++++++++++++++++
+ kernel/sys_ni.c                               |   3 +
+ scripts/syscall.tbl                           |   3 +
+ .../arch/powerpc/entry/syscalls/syscall.tbl   |   3 +
+ .../perf/arch/s390/entry/syscalls/syscall.tbl |   3 +
+ 22 files changed, 215 insertions(+), 1 deletion(-)
 
 diff --git a/arch/alpha/kernel/syscalls/syscall.tbl b/arch/alpha/kernel/syscalls/syscall.tbl
 index 74720667fe09..e6a11f3c0a2e 100644
@@ -40,46 +41,16 @@ index 74720667fe09..e6a11f3c0a2e 100644
 +574	common	process_ksm_disable		sys_process_ksm_disable
 +575	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/arm/tools/syscall.tbl b/arch/arm/tools/syscall.tbl
-index 2ed7d229c8f9..3f59e9c5c1ff 100644
+index 23c98203c40f..10a3099decbe 100644
 --- a/arch/arm/tools/syscall.tbl
 +++ b/arch/arm/tools/syscall.tbl
-@@ -476,3 +476,6 @@
+@@ -477,3 +477,6 @@
  460	common	lsm_set_self_attr		sys_lsm_set_self_attr
  461	common	lsm_list_modules		sys_lsm_list_modules
  462	common	mseal				sys_mseal
 +463	common	process_ksm_enable		sys_process_ksm_enable
 +464	common	process_ksm_disable		sys_process_ksm_disable
 +465	common	process_ksm_status		sys_process_ksm_status
-diff --git a/arch/arm64/include/asm/unistd.h b/arch/arm64/include/asm/unistd.h
-index 1346579f802f..f3a77719eb05 100644
---- a/arch/arm64/include/asm/unistd.h
-+++ b/arch/arm64/include/asm/unistd.h
-@@ -39,7 +39,7 @@
- #define __ARM_NR_compat_set_tls		(__ARM_NR_COMPAT_BASE + 5)
- #define __ARM_NR_COMPAT_END		(__ARM_NR_COMPAT_BASE + 0x800)
- 
--#define __NR_compat_syscalls		463
-+#define __NR_compat_syscalls		466
- #endif
- 
- #define __ARCH_WANT_SYS_CLONE
-diff --git a/arch/arm64/include/asm/unistd32.h b/arch/arm64/include/asm/unistd32.h
-index 1386e8e751f2..ccdc523fa4bd 100644
---- a/arch/arm64/include/asm/unistd32.h
-+++ b/arch/arm64/include/asm/unistd32.h
-@@ -931,6 +931,12 @@ __SYSCALL(__NR_lsm_set_self_attr, sys_lsm_set_self_attr)
- __SYSCALL(__NR_lsm_list_modules, sys_lsm_list_modules)
- #define __NR_mseal 462
- __SYSCALL(__NR_mseal, sys_mseal)
-+#define __NR_process_ksm_enable 463
-+__SYSCALL(__NR_process_ksm_enable, sys_process_ksm_enable)
-+#define __NR_process_ksm_disable 464
-+__SYSCALL(__NR_process_ksm_disable, sys_process_ksm_disable)
-+#define __NR_process_ksm_status 465
-+__SYSCALL(__NR_process_ksm_status, sys_process_ksm_status)
- 
- /*
-  * Please add new compat syscalls above this comment and update
 diff --git a/arch/m68k/kernel/syscalls/syscall.tbl b/arch/m68k/kernel/syscalls/syscall.tbl
 index 22a3cbd4c602..12d2c7594bf0 100644
 --- a/arch/m68k/kernel/syscalls/syscall.tbl
@@ -191,10 +162,10 @@ index cfdfb3707c16..0d79fd772854 100644
 +464	common	process_ksm_disable		sys_process_ksm_disable
 +465	common	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 4b71a2607bf5..812085b21a3f 100644
+index 534c74b14fab..c546a30575f1 100644
 --- a/arch/x86/entry/syscalls/syscall_32.tbl
 +++ b/arch/x86/entry/syscalls/syscall_32.tbl
-@@ -467,3 +467,6 @@
+@@ -468,3 +468,6 @@
  460	i386	lsm_set_self_attr	sys_lsm_set_self_attr
  461	i386	lsm_list_modules	sys_lsm_list_modules
  462	i386	mseal 			sys_mseal
@@ -202,10 +173,10 @@ index 4b71a2607bf5..812085b21a3f 100644
 +464	i386	process_ksm_disable		sys_process_ksm_disable
 +465	i386	process_ksm_status		sys_process_ksm_status
 diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index a8068f937290..bc2e635389cc 100644
+index 7093ee21c0d1..0fcd10ba8dfe 100644
 --- a/arch/x86/entry/syscalls/syscall_64.tbl
 +++ b/arch/x86/entry/syscalls/syscall_64.tbl
-@@ -384,6 +384,9 @@
+@@ -386,6 +386,9 @@
  460	common	lsm_set_self_attr	sys_lsm_set_self_attr
  461	common	lsm_list_modules	sys_lsm_list_modules
  462 	common  mseal			sys_mseal
@@ -227,7 +198,7 @@ index 67083fc1b2f5..c1aecee4ad9b 100644
 +464	common	process_ksm_disable		sys_process_ksm_disable
 +465	common	process_ksm_status		sys_process_ksm_status
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index fff820c3e93e..ab7d77ddc112 100644
+index 4bcf6754738d..b3ea08e920f7 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
 @@ -818,6 +818,9 @@ asmlinkage long sys_madvise(unsigned long start, size_t len, int behavior);
@@ -241,19 +212,17 @@ index fff820c3e93e..ab7d77ddc112 100644
  			unsigned long prot, unsigned long pgoff,
  			unsigned long flags);
 diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
-index d4cc26932ff4..d191548f6326 100644
+index 5bf6148cac2b..613e559ad6e0 100644
 --- a/include/uapi/asm-generic/unistd.h
 +++ b/include/uapi/asm-generic/unistd.h
-@@ -845,8 +845,17 @@ __SYSCALL(__NR_lsm_list_modules, sys_lsm_list_modules)
+@@ -841,8 +841,15 @@ __SYSCALL(__NR_lsm_list_modules, sys_lsm_list_modules)
  #define __NR_mseal 462
  __SYSCALL(__NR_mseal, sys_mseal)
  
 +#define __NR_process_ksm_enable 463
 +__SYSCALL(__NR_process_ksm_enable, sys_process_ksm_enable)
-+
 +#define __NR_process_ksm_disable 464
 +__SYSCALL(__NR_process_ksm_disable, sys_process_ksm_disable)
-+
 +#define __NR_process_ksm_status 465
 +__SYSCALL(__NR_process_ksm_status, sys_process_ksm_status)
 +
@@ -422,10 +391,10 @@ index 3a2df1bd9f64..86c6dd9d8c84 100644
  		struct getcpu_cache __user *, unused)
  {
 diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
-index b696b85ac63e..cf7f3d841b1e 100644
+index c00a86931f8c..d82213d68522 100644
 --- a/kernel/sys_ni.c
 +++ b/kernel/sys_ni.c
-@@ -188,6 +188,9 @@ COND_SYSCALL(mincore);
+@@ -186,6 +186,9 @@ COND_SYSCALL(mincore);
  COND_SYSCALL(madvise);
  COND_SYSCALL(process_madvise);
  COND_SYSCALL(process_mrelease);
@@ -435,6 +404,39 @@ index b696b85ac63e..cf7f3d841b1e 100644
  COND_SYSCALL(remap_file_pages);
  COND_SYSCALL(mbind);
  COND_SYSCALL(get_mempolicy);
+diff --git a/scripts/syscall.tbl b/scripts/syscall.tbl
+index 845e24eb372e..227d9cc12365 100644
+--- a/scripts/syscall.tbl
++++ b/scripts/syscall.tbl
+@@ -403,3 +403,6 @@
+ 460	common	lsm_set_self_attr		sys_lsm_set_self_attr
+ 461	common	lsm_list_modules		sys_lsm_list_modules
+ 462	common	mseal				sys_mseal
++463	common	process_ksm_enable			sys_process_ksm_enable
++464	common	process_ksm_disable			sys_process_ksm_disable
++465	common	process_ksm_status			sys_process_ksm_status
+diff --git a/tools/perf/arch/powerpc/entry/syscalls/syscall.tbl b/tools/perf/arch/powerpc/entry/syscalls/syscall.tbl
+index ebae8415dfbb..16f71bc2f6f0 100644
+--- a/tools/perf/arch/powerpc/entry/syscalls/syscall.tbl
++++ b/tools/perf/arch/powerpc/entry/syscalls/syscall.tbl
+@@ -553,3 +553,6 @@
+ 460	common	lsm_set_self_attr		sys_lsm_set_self_attr
+ 461	common	lsm_list_modules		sys_lsm_list_modules
+ 462	common	mseal				sys_mseal
++463	common	process_ksm_enable		sys_process_ksm_enable
++464	common	process_ksm_disable		sys_process_ksm_disable
++465	common	process_ksm_status		sys_process_ksm_status
+diff --git a/tools/perf/arch/s390/entry/syscalls/syscall.tbl b/tools/perf/arch/s390/entry/syscalls/syscall.tbl
+index 01071182763e..7394bad8178e 100644
+--- a/tools/perf/arch/s390/entry/syscalls/syscall.tbl
++++ b/tools/perf/arch/s390/entry/syscalls/syscall.tbl
+@@ -465,3 +465,6 @@
+ 460  common	lsm_set_self_attr	sys_lsm_set_self_attr		sys_lsm_set_self_attr
+ 461  common	lsm_list_modules	sys_lsm_list_modules		sys_lsm_list_modules
+ 462  common	mseal			sys_mseal			sys_mseal
++463  common	process_ksm_enable	sys_process_ksm_enable		sys_process_ksm_enable
++464  common	process_ksm_disable	sys_process_ksm_disable		sys_process_ksm_disable
++465  common	process_ksm_status	sys_process_ksm_status		sys_process_ksm_status
 -- 
-2.46.0
+2.46.1
 
