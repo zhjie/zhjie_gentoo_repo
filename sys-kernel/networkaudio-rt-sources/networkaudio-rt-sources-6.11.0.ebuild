@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="0"
+K_GENPATCHES_VER="1"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rc5-rt5"
@@ -19,16 +19,12 @@ inherit kernel-2
 detect_version
 EXTRAVERSION="-networkaudio-rt"
 
-KV_MINOR="11"
-
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
-KERNEL_URI="https://git.kernel.org/torvalds/t/linux-6.11-rc7.tar.gz"
-
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
-SRC_URI="${KERNEL_URI} ${RT_URI}"
+SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
 
 KV_FULL="${KV_FULL}-rt"
 S="${WORKDIR}/linux-${KV_FULL}"
@@ -39,10 +35,7 @@ src_unpack() {
 
     UNIPATCH_LIST_DEFAULT=""
     UNIPATCH_EXCLUDE=""
-    # kernel-2_src_unpack
-
-    unpack linux-6.11-rc7.tar.gz
-    mv "${WORKDIR}/linux-6.11-rc7" "${WORKDIR}/linux-6.11-rc7-networkaudio-rt"
+    kernel-2_src_unpack
 }
 
 src_prepare() {
@@ -218,7 +211,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
     done
 
     # gentoo patch
-    eapply "${FILESDIR}"/gentoo/*.patch
+    # eapply "${FILESDIR}"/gentoo/*.patch
 
     # naa patch
     if use naa; then
