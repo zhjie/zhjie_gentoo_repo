@@ -23,6 +23,7 @@ RESTRICT="mirror bindist"
 IUSE="systemd +rt"
 
 RDEPEND=">=media-libs/alsa-lib-1.0.16
+    >=sys-libs/glibc-2.38
 	systemd? ( sys-apps/systemd )
 	!media-sound/networkaudiod-bin
 "
