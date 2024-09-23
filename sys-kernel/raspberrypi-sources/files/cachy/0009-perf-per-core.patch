@@ -1,9 +1,9 @@
-From bdd3f4dab12fd8eb06357b2b5593820eb3128651 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:29:46 +0200
+From 1bf306ae3df8a0f8a4588cf278b01530d1979cd3 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:22:29 +0800
 Subject: [PATCH 09/11] perf-per-core
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  Documentation/arch/x86/topology.rst   |   4 +
  arch/x86/events/rapl.c                | 418 ++++++++++++++++++--------

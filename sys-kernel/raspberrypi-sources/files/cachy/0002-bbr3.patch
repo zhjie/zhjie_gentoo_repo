@@ -1,9 +1,9 @@
-From 2676833deb16654c45007f79fb6725a3409899ff Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:28:27 +0200
+From 5953215fa7b5cd9e6133a64341f9d11009c0b7ba Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:20:21 +0800
 Subject: [PATCH 02/11] bbr3
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  include/linux/tcp.h                |    4 +-
  include/net/inet_connection_sock.h |    4 +-

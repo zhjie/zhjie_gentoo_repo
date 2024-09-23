@@ -16,7 +16,7 @@ KEYWORDS="amd64"
 IUSE="naa bmq +bore"
 REQUIRED_USE="
     bmq? ( !bore )
-	bore? ( !bmq )
+    bore? ( !bmq )
 "
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"

@@ -1,9 +1,9 @@
-From e1cb9da59b75cd677cd7af9923864344099b0973 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:28:46 +0200
+From 42072fb3b6bd37efebe6085c790a114b394732a1 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:21:02 +0800
 Subject: [PATCH 04/11] cachy
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  .../admin-guide/kernel-parameters.txt         |   12 +
  Documentation/admin-guide/sysctl/vm.rst       |   72 +

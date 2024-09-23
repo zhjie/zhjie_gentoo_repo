@@ -1,9 +1,9 @@
-From d312d9b44e2d51dd64ceecf38fccbfbcc8944738 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:30:16 +0200
+From eedeea376c1cc453dc1d63b13ee1c68e36b1dac1 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:23:17 +0800
 Subject: [PATCH 11/11] zstd
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  include/linux/zstd.h                          |    2 +-
  include/linux/zstd_errors.h                   |   23 +-

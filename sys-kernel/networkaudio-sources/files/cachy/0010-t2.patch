@@ -1,9 +1,9 @@
-From f2a149176007718766b709be8299b005ddd6b158 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:30:08 +0200
+From 56faa02c031210ff953a42fe996da7c1ff25396a Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:23:04 +0800
 Subject: [PATCH 10/11] t2
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  .../ABI/testing/sysfs-driver-hid-appletb-kbd  |   13 +
  Documentation/core-api/printk-formats.rst     |   32 +

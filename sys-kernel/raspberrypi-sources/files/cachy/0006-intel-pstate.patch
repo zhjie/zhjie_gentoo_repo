@@ -1,9 +1,9 @@
-From b24e8834eb51bed12079009ec0ab23b16bc73198 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:29:06 +0200
+From bcd25ccd10f46e269dd7d9a2217af6a33bf7deaa Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:21:44 +0800
 Subject: [PATCH 06/11] intel-pstate
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  arch/x86/include/asm/topology.h  |  13 ++
  arch/x86/kernel/cpu/aperfmperf.c |  89 +++++++++++-

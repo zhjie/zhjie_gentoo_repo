@@ -1,9 +1,9 @@
-From 67efcf30522cda8a81d47d35a9a89c24f5cdd00a Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:28:12 +0200
+From b33a0dc63069a712b021e087147a5325228b44f6 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:20:03 +0800
 Subject: [PATCH 01/11] amd-pstate
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  Documentation/admin-guide/pm/amd-pstate.rst |  15 +-
  arch/x86/include/asm/processor.h            |   3 -

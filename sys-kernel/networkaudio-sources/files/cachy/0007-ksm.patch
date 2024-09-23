@@ -1,9 +1,9 @@
-From 8eb5e816f13a599dd0385bccc1df837664cc7233 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:29:23 +0200
+From eb003fb17cb5145d650125d3e52db93a6902524c Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:22:02 +0800
 Subject: [PATCH 07/11] ksm
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  arch/alpha/kernel/syscalls/syscall.tbl        |   3 +
  arch/arm/tools/syscall.tbl                    |   3 +

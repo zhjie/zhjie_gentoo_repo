@@ -1,16 +1,17 @@
-From c4201124b983cba28153bd6385dd44b26ffad1e7 Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:28:56 +0200
+From 72728b1ad0206a7eb9048237818eeed6c4a37119 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Thu, 19 Sep 2024 23:21:22 +0800
 Subject: [PATCH 05/11] fixes
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  arch/Kconfig                         |   4 +-
  arch/x86/include/asm/apic.h          |   8 --
  arch/x86/kernel/amd_nb.c             |   4 +
  arch/x86/kernel/apic/apic_flat_64.c  | 119 ++-------------------------
+ block/elevator.c                     |   4 +-
  drivers/powercap/intel_rapl_common.c |   1 +
- 5 files changed, 14 insertions(+), 122 deletions(-)
+ 6 files changed, 17 insertions(+), 123 deletions(-)
 
 diff --git a/arch/Kconfig b/arch/Kconfig
 index 975dd22a2dbd..de69b8f5b5be 100644
@@ -239,6 +240,21 @@ index f37ad3392fec..e0308d8c4e6c 100644
 -apic_drivers(apic_physflat, apic_flat);
 +struct apic *apic __ro_after_init = &apic_physflat;
 +EXPORT_SYMBOL_GPL(apic);
+diff --git a/block/elevator.c b/block/elevator.c
+index 41cf94c3671e..cd630e991eae 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -725,7 +725,9 @@ int elv_iosched_load_module(struct gendisk *disk, const char *buf,
+ 
+ 	strscpy(elevator_name, buf, sizeof(elevator_name));
+ 
+-	return request_module("%s-iosched", strstrip(elevator_name));
++	request_module("%s-iosched", strstrip(elevator_name));
++
++	return 0;
+ }
+ 
+ ssize_t elv_iosched_store(struct gendisk *disk, const char *buf,
 diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
 index 3cffa6c79538..8b7a5a31e8c1 100644
 --- a/drivers/powercap/intel_rapl_common.c
