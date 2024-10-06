@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt7"
@@ -17,7 +17,7 @@ IUSE="+naa"
 
 inherit kernel-2
 detect_version
-EXTRAVERSION="-networkaudio-rt"
+EXTRAVERSION="-networkaudio-${RT_VERSION}"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
@@ -50,7 +50,7 @@ src_prepare() {
 ###########################################################################
 # Posted
 ###########################################################################
-crypto-x86-aes-gcm-fix-PREEMPT_RT-issue-in-gcm_crypt.patch
+# crypto-x86-aes-gcm-fix-PREEMPT_RT-issue-in-gcm_crypt.patch
 
 ###########################################################################
 # John's printk queue
@@ -220,23 +220,17 @@ sysfs__Add__sys_kernel_realtime_entry.patch
     fi
 
     # cachy patch
-    eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
+    eapply "${FILESDIR}/cachy/0001-address-masking.patch"
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0003-block.patch"
-    eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
-    eapply "${FILESDIR}/cachy/0011-zstd.patch"
+    eapply "${FILESDIR}/cachy/0003-cachy.patch"
+    eapply "${FILESDIR}/cachy/0004-fixes.patch"
+    eapply "${FILESDIR}/cachy/0005-intel-pstate.patch"
+    eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
     # highhz patch
     eapply "${FILESDIR}"/highhz/*.patch
 
-    # xanmod patch
-    eapply "${FILESDIR}/xanmod/intel/0001-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-    eapply "${FILESDIR}/xanmod/intel/0002-firmware-Enable-stateless-firmware-loading.patch"
-    eapply "${FILESDIR}/xanmod/intel/0003-locking-rwsem-spin-faster.patch"
-    # eapply "${FILESDIR}/xanmod/intel/0004-drivers-initialize-ata-before-graphics.patch"
-
+    # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
     eapply_user

@@ -1,7 +1,7 @@
-From 2676833deb16654c45007f79fb6725a3409899ff Mon Sep 17 00:00:00 2001
+From 694e2eec893e51c71b3faa821f561b8c387b3bb7 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:28:27 +0200
-Subject: [PATCH 02/11] bbr3
+Date: Fri, 4 Oct 2024 17:06:44 +0200
+Subject: [PATCH 02/10] bbr3
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -54,7 +54,7 @@ index c0deaafebfdc..d53f042d936e 100644
  
  #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 2aac11e7e1cc..482dcea8f507 100644
+index 196c148fce8a..f37256b8abfd 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
 @@ -375,6 +375,8 @@ static inline void tcp_dec_quickack_mode(struct sock *sk)
@@ -3382,5 +3382,5 @@ index 4d40615dc8fc..f27941201ef2 100644
  	event = icsk->icsk_pending;
  
 -- 
-2.46.1
+2.47.0.rc0
 

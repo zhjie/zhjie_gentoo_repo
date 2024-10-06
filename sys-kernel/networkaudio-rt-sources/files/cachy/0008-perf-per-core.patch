@@ -1,7 +1,7 @@
-From bdd3f4dab12fd8eb06357b2b5593820eb3128651 Mon Sep 17 00:00:00 2001
+From f3788bc44e2875141e8cf16b36365cb2bac541a6 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 15 Sep 2024 17:29:46 +0200
-Subject: [PATCH 09/11] perf-per-core
+Date: Fri, 4 Oct 2024 17:08:44 +0200
+Subject: [PATCH 08/10] perf-per-core
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -856,7 +856,7 @@ index b985ca79cf97..8206038a01ac 100644
  }
  module_exit(intel_rapl_exit);
 diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index 775acbdea1a9..86b22e7e5acb 100644
+index a75a07f4931f..5a59713ec62b 100644
 --- a/arch/x86/include/asm/processor.h
 +++ b/arch/x86/include/asm/processor.h
 @@ -98,6 +98,7 @@ struct cpuinfo_topology {
@@ -904,5 +904,5 @@ index 9a6069e7133c..23722aa21e2f 100644
  
  	/* Package relative core ID */
 -- 
-2.46.1
+2.47.0.rc0
 
