@@ -1,9 +1,9 @@
-From bcd25ccd10f46e269dd7d9a2217af6a33bf7deaa Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:21:44 +0800
-Subject: [PATCH 06/11] intel-pstate
+From aadc07fef91ef7043a87858eff872f608649e5ee Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Fri, 4 Oct 2024 17:07:08 +0200
+Subject: [PATCH 05/10] intel-pstate
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  arch/x86/include/asm/topology.h  |  13 ++
  arch/x86/kernel/cpu/aperfmperf.c |  89 +++++++++++-
@@ -480,5 +480,5 @@ index 7d92f16a430a..86ad1fed71f1 100644
  }
  
 -- 
-2.46.1
+2.47.0.rc0
 

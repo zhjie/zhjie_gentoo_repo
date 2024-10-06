@@ -1,9 +1,9 @@
-From eedeea376c1cc453dc1d63b13ee1c68e36b1dac1 Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:23:17 +0800
-Subject: [PATCH 11/11] zstd
+From cf0e4ae5c086f49c71b2a5aad50a589d8aa1799e Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Fri, 4 Oct 2024 17:09:19 +0200
+Subject: [PATCH 10/10] zstd
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  include/linux/zstd.h                          |    2 +-
  include/linux/zstd_errors.h                   |   23 +-
@@ -18648,5 +18648,5 @@ index f4ed952ed485..7d31518e9d5a 100644
  EXPORT_SYMBOL(zstd_reset_dstream);
  
 -- 
-2.46.1
+2.47.0.rc0
 

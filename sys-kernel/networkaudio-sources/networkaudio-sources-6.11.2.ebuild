@@ -4,7 +4,8 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="3"
+K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
 detect_version
@@ -22,32 +23,31 @@ REQUIRED_USE="
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
 
 src_unpack() {
-	UNIPATCH_LIST_DEFAULT=""
+    UNIPATCH_LIST_DEFAULT=""
     UNIPATCH_EXCLUDE=""
-	kernel-2_src_unpack
+    kernel-2_src_unpack
 }
 
 src_prepare() {
-	# naa patch
-	if use naa; then
-		eapply "${FILESDIR}"/naa/*.patch
-	fi
+    # naa patch
+    if use naa; then
+        eapply "${FILESDIR}"/naa/*.patch
+    fi
 
     # cachy patch
-    eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
+    eapply "${FILESDIR}/cachy/0001-address-masking.patch"
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0003-block.patch"
-    eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
-    eapply "${FILESDIR}/cachy/0011-zstd.patch"
+    eapply "${FILESDIR}/cachy/0003-cachy.patch"
+    eapply "${FILESDIR}/cachy/0004-fixes.patch"
+    eapply "${FILESDIR}/cachy/0005-intel-pstate.patch"
+    eapply "${FILESDIR}/cachy/0010-zstd.patch"
 
     # highhz patch
     eapply "${FILESDIR}"/highhz/*.patch
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/prjc-6.11-r0.patch"
+        eapply "${FILESDIR}/bmq/prjc-6.11-r1.patch"
     fi
 
     # bore scheduler
@@ -55,12 +55,7 @@ src_prepare() {
         eapply "${FILESDIR}/bore/0001-bore-cachy.patch"
     fi
 
-    # xanmod patch
-    eapply "${FILESDIR}/xanmod/intel/0001-sched-wait-Do-accept-in-LIFO-order-for-cache-efficie.patch"
-    eapply "${FILESDIR}/xanmod/intel/0002-firmware-Enable-stateless-firmware-loading.patch"
-    eapply "${FILESDIR}/xanmod/intel/0003-locking-rwsem-spin-faster.patch"
-    # eapply "${FILESDIR}/xanmod/intel/0004-drivers-initialize-ata-before-graphics.patch"
-
+    # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
     eapply_user

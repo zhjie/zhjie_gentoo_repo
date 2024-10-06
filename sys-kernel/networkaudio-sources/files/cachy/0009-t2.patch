@@ -1,9 +1,9 @@
-From 56faa02c031210ff953a42fe996da7c1ff25396a Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:23:04 +0800
-Subject: [PATCH 10/11] t2
+From 07f18266f273138cab1a5cb27517d6a954c5fb34 Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Fri, 4 Oct 2024 17:09:09 +0200
+Subject: [PATCH 09/10] t2
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  .../ABI/testing/sysfs-driver-hid-appletb-kbd  |   13 +
  Documentation/core-api/printk-formats.rst     |   32 +
@@ -176,10 +176,10 @@ index 2cd7168dc401..16df466c205d 100644
  S:	Orphan
  T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index cddc33970d75..30a18ebd05ba 100644
+index ad5c05ee92f3..09c82a3e83f2 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -2236,6 +2236,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
+@@ -2237,6 +2237,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
  	int ret, retry = 0, i;
  	bool supports_atomic = false;
  
@@ -10411,5 +10411,5 @@ index 4427572b2477..b60c99d61882 100755
  						last;
  					}
 -- 
-2.46.1
+2.47.0.rc0
 

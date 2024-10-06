@@ -1,9 +1,9 @@
-From eb003fb17cb5145d650125d3e52db93a6902524c Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:22:02 +0800
-Subject: [PATCH 07/11] ksm
+From 21b43327f8469d705fd68b20773dac3e9b554a8e Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Fri, 4 Oct 2024 17:07:18 +0200
+Subject: [PATCH 06/10] ksm
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  arch/alpha/kernel/syscalls/syscall.tbl        |   3 +
  arch/arm/tools/syscall.tbl                    |   3 +
@@ -22,12 +22,12 @@ Signed-off-by: Eric Naim <dnaim@cachyos.org>
  arch/xtensa/kernel/syscalls/syscall.tbl       |   3 +
  include/linux/syscalls.h                      |   3 +
  include/uapi/asm-generic/unistd.h             |   9 +-
- kernel/sys.c                                  | 147 ++++++++++++++++++
+ kernel/sys.c                                  | 138 ++++++++++++++++++
  kernel/sys_ni.c                               |   3 +
  scripts/syscall.tbl                           |   3 +
  .../arch/powerpc/entry/syscalls/syscall.tbl   |   3 +
  .../perf/arch/s390/entry/syscalls/syscall.tbl |   3 +
- 22 files changed, 215 insertions(+), 1 deletion(-)
+ 22 files changed, 206 insertions(+), 1 deletion(-)
 
 diff --git a/arch/alpha/kernel/syscalls/syscall.tbl b/arch/alpha/kernel/syscalls/syscall.tbl
 index 74720667fe09..e6a11f3c0a2e 100644
@@ -233,10 +233,10 @@ index 5bf6148cac2b..613e559ad6e0 100644
  /*
   * 32 bit systems traditionally used different
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 3a2df1bd9f64..86c6dd9d8c84 100644
+index 3a2df1bd9f64..bc77dc784527 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
-@@ -2789,6 +2789,153 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+@@ -2789,6 +2789,144 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
  	return error;
  }
  
@@ -250,21 +250,14 @@ index 3a2df1bd9f64..86c6dd9d8c84 100644
 +static long do_process_ksm_control(int pidfd, enum pkc_action action)
 +{
 +	long ret;
-+	struct pid *pid;
 +	struct task_struct *task;
 +	struct mm_struct *mm;
 +	unsigned int f_flags;
 +
-+	pid = pidfd_get_pid(pidfd, &f_flags);
-+	if (IS_ERR(pid)) {
-+		ret = PTR_ERR(pid);
++	task = pidfd_get_task(pidfd, &f_flags);
++	if (IS_ERR(task)) {
++		ret = PTR_ERR(task);
 +		goto out;
-+	}
-+
-+	task = get_pid_task(pid, PIDTYPE_PID);
-+	if (!task) {
-+		ret = -ESRCH;
-+		goto put_pid;
 +	}
 +
 +	/* Require PTRACE_MODE_READ to avoid leaking ASLR metadata. */
@@ -303,8 +296,6 @@ index 3a2df1bd9f64..86c6dd9d8c84 100644
 +	mmput(mm);
 +release_task:
 +	put_task_struct(task);
-+put_pid:
-+	put_pid(pid);
 +out:
 +	return ret;
 +}
@@ -438,5 +429,5 @@ index 01071182763e..7394bad8178e 100644
 +464  common	process_ksm_disable	sys_process_ksm_disable		sys_process_ksm_disable
 +465  common	process_ksm_status	sys_process_ksm_status		sys_process_ksm_status
 -- 
-2.46.1
+2.47.0.rc0
 

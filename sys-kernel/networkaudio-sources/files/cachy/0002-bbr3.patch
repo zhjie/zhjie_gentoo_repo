@@ -1,9 +1,9 @@
-From 5953215fa7b5cd9e6133a64341f9d11009c0b7ba Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:20:21 +0800
-Subject: [PATCH 02/11] bbr3
+From 694e2eec893e51c71b3faa821f561b8c387b3bb7 Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Fri, 4 Oct 2024 17:06:44 +0200
+Subject: [PATCH 02/10] bbr3
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  include/linux/tcp.h                |    4 +-
  include/net/inet_connection_sock.h |    4 +-
@@ -54,7 +54,7 @@ index c0deaafebfdc..d53f042d936e 100644
  
  #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
 diff --git a/include/net/tcp.h b/include/net/tcp.h
-index 2aac11e7e1cc..482dcea8f507 100644
+index 196c148fce8a..f37256b8abfd 100644
 --- a/include/net/tcp.h
 +++ b/include/net/tcp.h
 @@ -375,6 +375,8 @@ static inline void tcp_dec_quickack_mode(struct sock *sk)
@@ -3382,5 +3382,5 @@ index 4d40615dc8fc..f27941201ef2 100644
  	event = icsk->icsk_pending;
  
 -- 
-2.46.1
+2.47.0.rc0
 
