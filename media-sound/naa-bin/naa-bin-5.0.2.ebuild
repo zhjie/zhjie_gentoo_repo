@@ -7,23 +7,24 @@ EAPI=8
 inherit unpacker systemd
 
 MY_PN=${PN/-bin/}
-VN="62"
+VN="61"
 
 DESCRIPTION="Network Audio Daemon"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
-    amd64? ( https://www.signalyst.eu/bins/naa/linux/noble/networkaudiod_${PV}-${VN}_amd64.deb )
+    amd64? ( https://www.signalyst.eu/bins/naa/linux/bookworm/networkaudiod_${PV}-${VN}_amd64.deb )
+    arm64? ( https://www.signalyst.eu/bins/naa/linux/bookworm/networkaudiod_${PV}-${VN}_arm64.deb )
+    arm? ( https://www.signalyst.eu/bins/naa/linux/bookworm/networkaudiod_${PV}-${VN}_armhf.deb )
 "
 
 LICENSE="Signalyst"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm arm64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd +rt"
 
 RDEPEND=">=media-libs/alsa-lib-1.0.16
-    >=sys-libs/glibc-2.38
 	systemd? ( sys-apps/systemd )
 	!media-sound/networkaudiod-bin
 "
@@ -38,7 +39,7 @@ src_unpack() {
 }
 
 src_install() {
-	mv usr etc "${D}" || die
+	mv usr etc lib "${D}" || die
 	rm -rf  "${D}usr/share/doc/networkaudiod/"
 	if use systemd; then
 		systemd_dounit "${FILESDIR}/${MY_PN}.service"
