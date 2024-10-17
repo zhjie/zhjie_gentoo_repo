@@ -1,9 +1,9 @@
-From bcd25ccd10f46e269dd7d9a2217af6a33bf7deaa Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:21:44 +0800
-Subject: [PATCH 06/11] intel-pstate
+From 930ee8a1316744d23b11a48f1bce730d2c60111e Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Thu, 10 Oct 2024 12:37:26 +0200
+Subject: [PATCH 06/12] intel-pstate
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  arch/x86/include/asm/topology.h  |  13 ++
  arch/x86/kernel/cpu/aperfmperf.c |  89 +++++++++++-
@@ -147,7 +147,7 @@ index 0b69bfbf345d..ec07678c641b 100644
  
  	freq_scale = div64_u64(acnt, mcnt);
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 7d92f16a430a..86ad1fed71f1 100644
+index 348a330678bd..c11be253bfa3 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -16,6 +16,7 @@
@@ -480,5 +480,5 @@ index 7d92f16a430a..86ad1fed71f1 100644
  }
  
 -- 
-2.46.1
+2.47.0.rc0
 

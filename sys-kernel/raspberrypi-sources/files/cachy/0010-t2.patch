@@ -1,9 +1,9 @@
-From 56faa02c031210ff953a42fe996da7c1ff25396a Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Thu, 19 Sep 2024 23:23:04 +0800
-Subject: [PATCH 10/11] t2
+From 348b265bf5998d951b5aa07f5c2e6b62577209de Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Thu, 10 Oct 2024 12:39:01 +0200
+Subject: [PATCH 10/12] t2
 
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  .../ABI/testing/sysfs-driver-hid-appletb-kbd  |   13 +
  Documentation/core-api/printk-formats.rst     |   32 +
@@ -159,10 +159,10 @@ index 4451ef501936..c726a846f752 100644
  ----
  
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 2cd7168dc401..16df466c205d 100644
+index 0bcfbc58a9ab..affc58245cc1 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -6895,6 +6895,12 @@ S:	Supported
+@@ -6903,6 +6903,12 @@ S:	Supported
  T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
  F:	drivers/gpu/drm/sun4i/sun8i*
  
@@ -176,10 +176,10 @@ index 2cd7168dc401..16df466c205d 100644
  S:	Orphan
  T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index cddc33970d75..30a18ebd05ba 100644
+index ad5c05ee92f3..09c82a3e83f2 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -2236,6 +2236,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
+@@ -2237,6 +2237,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
  	int ret, retry = 0, i;
  	bool supports_atomic = false;
  
@@ -262,7 +262,7 @@ index b1be458ed4dd..28c0e76a1e88 100644
  			drm_fb_xrgb8888_to_argb8888(dst, dst_pitch, src, fb, clip, state);
  			return 0;
 diff --git a/drivers/gpu/drm/i915/display/intel_ddi.c b/drivers/gpu/drm/i915/display/intel_ddi.c
-index a07aca96e551..210e20b03aab 100644
+index 5b6aabce4c32..fafc673d508e 100644
 --- a/drivers/gpu/drm/i915/display/intel_ddi.c
 +++ b/drivers/gpu/drm/i915/display/intel_ddi.c
 @@ -4640,6 +4640,7 @@ intel_ddi_init_hdmi_connector(struct intel_digital_port *dig_port)
@@ -2023,7 +2023,7 @@ index 6e4ebc349e45..4e79fafeeafa 100644
  }
  
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 99812c0f830b..bb845947585f 100644
+index c4a6908bbe54..30df701af5da 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -72,6 +72,7 @@ MODULE_LICENSE("GPL");
@@ -2184,7 +2184,7 @@ index 99812c0f830b..bb845947585f 100644
  	if (mtclass->quirks & MT_QUIRK_FIX_CONST_CONTACT_ID)
  		mt_fix_const_fields(hdev, HID_DG_CONTACTID);
  
-@@ -2267,6 +2294,11 @@ static const struct hid_device_id mt_devices[] = {
+@@ -2273,6 +2300,11 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_XIROKU,
  			USB_DEVICE_ID_XIROKU_CSR2) },
  
@@ -10411,5 +10411,5 @@ index 4427572b2477..b60c99d61882 100755
  						last;
  					}
 -- 
-2.46.1
+2.47.0.rc0
 
