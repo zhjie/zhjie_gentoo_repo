@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_GENPATCHES_VER="4"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt7"
@@ -26,7 +26,7 @@ RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MIN
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
 
-KV_FULL="${KV_FULL}-rt"
+KV_FULL="${KV_FULL}-${RT_VERSION}"
 S="${WORKDIR}/linux-${KV_FULL}"
 
 src_unpack() {
@@ -221,11 +221,14 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0003-cachy.patch"
-    eapply "${FILESDIR}/cachy/0004-fixes.patch"
-    eapply "${FILESDIR}/cachy/0005-intel-pstate.patch"
-    eapply "${FILESDIR}/cachy/0010-zstd.patch"
+    eapply "${FILESDIR}/cachy/0002-amd-cache-optimzer.patch"
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0005-fixes.patch"
+    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
+    eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
+    eapply "${FILESDIR}/cachy/0011-thp-shrinker.patch"
+    eapply "${FILESDIR}/cachy/0012-zstd.patch"
 
     # highhz patch
     eapply "${FILESDIR}"/highhz/*.patch

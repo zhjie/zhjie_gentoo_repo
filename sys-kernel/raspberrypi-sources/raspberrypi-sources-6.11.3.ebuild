@@ -62,11 +62,9 @@ src_prepare() {
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0002-amd-cache-optimzer.patch"
     eapply "${FILESDIR}/cachy/0003-bbr3.patch"
     eapply "${FILESDIR}/cachy/0004-cachy.patch"
     eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
     eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
     eapply "${FILESDIR}/cachy/0011-thp-shrinker.patch"
     eapply "${FILESDIR}/cachy/0012-zstd.patch"

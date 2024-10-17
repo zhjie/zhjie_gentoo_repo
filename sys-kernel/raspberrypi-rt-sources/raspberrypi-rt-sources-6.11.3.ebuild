@@ -29,7 +29,7 @@ RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MIN
 SRC_URI="${GENPATCHES_URI} ${RT_URI}"
 
 S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi-rt"
-EXTRAVERSION="-networkaudio-rt${RT_VERSION}"
+EXTRAVERSION="-networkaudio-${RT_VERSION}"
 
 src_unpack() {
     git-r3_src_unpack
@@ -239,11 +239,9 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0002-amd-cache-optimzer.patch"
     eapply "${FILESDIR}/cachy/0003-bbr3.patch"
     eapply "${FILESDIR}/cachy/0004-cachy.patch"
     eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
     eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
     eapply "${FILESDIR}/cachy/0011-thp-shrinker.patch"
     eapply "${FILESDIR}/cachy/0012-zstd.patch"
