@@ -21,7 +21,7 @@ REQUIRED_USE="
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
-EGIT_COMMIT="8e24a758d14c0b1cd42ab0aea980a1030eea811f"
+EGIT_COMMIT="fcc85627d0046ca8ca2b812e53aaee7ed6b8dd30"
 
 SRC_URI="${GENPATCHES_URI}"
 
@@ -62,12 +62,12 @@ src_prepare() {
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
-    eapply "${FILESDIR}/cachy/0011-thp-shrinker.patch"
-    eapply "${FILESDIR}/cachy/0012-zstd.patch"
+    eapply "${FILESDIR}/cachy/0005-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-fixes.patch"
+    eapply "${FILESDIR}/cachy/0011-perf-per-core.patch"
+    eapply "${FILESDIR}/cachy/0013-thp-shrinker.patch"
+    eapply "${FILESDIR}/cachy/0014-zstd.patch"
 
     # bmq scheduler
     if use bmq; then
