@@ -5,7 +5,7 @@
 EAPI=8
 inherit systemd
 
-VN="1462"
+VN="1470"
 DESCRIPTION="THE ULTIMATE MUSIC PLAYER FOR MUSIC FANATICS"
 HOMEPAGE="https://roonlabs.com"
 SRC_URI="http://download.roonlabs.net/updates/production/RoonServer_linuxx64_20000${VN}.tar.bz2 -> ${PF}.tar.bz2"
@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg system-dotnet web alsa rt taskset4 trace mp3"
+IUSE="systemd samba ffmpeg system-dotnet web alsa rt server-gc taskset4 trace mp3"
 
 RDEPEND="dev-libs/icu
     alsa? ( media-libs/alsa-lib )
@@ -52,6 +52,13 @@ src_prepare() {
 #    patchelf --remove-needed libasound.so.2 "${S}"/RoonServer/Appliance/libraatmanager.so || die
 #    # rm -vrf "${S}"/RoonServer/Appliance/libraatmanager.so || die
 #  fi
+
+  if use server-gc; then
+    sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Appliance/RAATServer.runtimeconfig.json
+    sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Appliance/RoonAppliance.runtimeconfig.json
+    sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Appliance/remoting_codegen.runtimeconfig.json
+    sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Server/RoonServer.runtimeconfig.json
+  fi
 
   if use taskset4; then
     cp "${S}"/RoonServer/Appliance/RoonAppliance "${S}"/RoonServer/Appliance/RoonAppliance.orig
