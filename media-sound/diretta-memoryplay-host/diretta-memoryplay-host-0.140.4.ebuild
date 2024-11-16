@@ -5,10 +5,9 @@ EAPI=8
 
 inherit unpacker
 
-DESCRIPTION="Linux Diretta Alsa Host"
+DESCRIPTION="Linux Diretta MemoryPlay Host"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-# DIRETTA_ALSA_HOST="diretta-alsa-daemon-2024.11.09-1-x86_64.pkg.tar.zst"
 SRC_URI="https://www.diretta.link/preview/MemoryPlayHostLinux.tar.zst"
 
 KEYWORDS="~amd64"
