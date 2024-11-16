@@ -4,26 +4,27 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="9"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt7"
 MINOR_VERSION="0"
 
+inherit kernel-2
+detect_version
+
+DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="+naa"
+IUSE="+naa diretta"
 
-inherit kernel-2
-detect_version
 EXTRAVERSION="-networkaudio-${RT_VERSION}"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
-DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
 
 KV_FULL="${KV_FULL}-${RT_VERSION}"
@@ -221,17 +222,22 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0002-amd-cache-optimzer.patch"
-    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0005-fixes.patch"
-    eapply "${FILESDIR}/cachy/0006-intel-pstate.patch"
-    eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
-    eapply "${FILESDIR}/cachy/0011-thp-shrinker.patch"
-    eapply "${FILESDIR}/cachy/0012-zstd.patch"
+    eapply "${FILESDIR}/cachy/0002-amd-cache-optimizer.patch"
+    eapply "${FILESDIR}/cachy/0003-amd-pstate.patch"
+    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0005-cachy.patch"
+    # eapply "${FILESDIR}/cachy/0006-fixes.patch"
+    eapply "${FILESDIR}/cachy/0007-intel-pstate.patch"
+    eapply "${FILESDIR}/cachy/0010-perf-per-core.patch"
+    eapply "${FILESDIR}/cachy/0012-thp-shrinker.patch"
+    eapply "${FILESDIR}/cachy/0013-zstd.patch"
 
     # highhz patch
     eapply "${FILESDIR}"/highhz/*.patch
+
+    if use diretta; then
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_09.patch"
+    fi
 
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"

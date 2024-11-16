@@ -16,7 +16,7 @@ SLOT="0"
 LICENSE="CDDL"
 IUSE=""
 
-BDEPEND="sys-kernel/networkaudio-sources[diretta]"
+BDEPEND="|| ( sys-kernel/networkaudio-sources[diretta] sys-kernel/networkaudio-rt-sources[diretta] )"
 
 src_unpack() {
         _unpacker "${DIRETTA_ALSA_HOST}"
