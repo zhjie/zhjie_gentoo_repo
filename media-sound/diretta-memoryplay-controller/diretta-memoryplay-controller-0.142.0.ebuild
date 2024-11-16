@@ -14,7 +14,7 @@ KEYWORDS="~amd64"
 SLOT="0"
 LICENSE="CDDL"
 IUSE="cpu_flags_x86_avx cpu_flags_x86_avx2 cpu_flags_x86_avx512"
-DEPEND="media-libs/flac[cxx]"
+DEPEND="media-libs/flac[cxx,include]"
 
 src_unpack() {
 	_unpacker MemoryPlayControllerSDK.tar.zst
