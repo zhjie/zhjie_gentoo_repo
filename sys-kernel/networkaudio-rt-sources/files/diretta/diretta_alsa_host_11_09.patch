@@ -1098,9 +1098,9 @@ diff '--color=auto' -urN a/sound/drivers/Kconfig b/sound/drivers/Kconfig
 +config ALSA_BRIDGE
 +	bool "Diretta ALSA driver"
 +	default y
-+	depends on SND && SND_PCM && CRC16
-+	help
-+	  Support for Diretta ALSA driver
++	depends on SOUND && SND && CRC16
++	select SND_PCM
++
 +
  config SND_MPU401_UART
  	tristate
