@@ -1,6 +1,6 @@
-From f75fb6bf2396dbc37335298fe042fad859df9fa8 Mon Sep 17 00:00:00 2001
+From 9001aa3709fdcb60967ed205910b873f14eed07b Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 14 Nov 2024 17:01:43 +0100
+Date: Mon, 11 Nov 2024 09:20:32 +0100
 Subject: [PATCH 08/13] ksm
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -198,7 +198,7 @@ index 67083fc1b2f5..c1aecee4ad9b 100644
 +464	common	process_ksm_disable		sys_process_ksm_disable
 +465	common	process_ksm_status		sys_process_ksm_status
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 4bcf6754738d..b3ea08e920f7 100644
+index 5758104921e6..cc9c4fac2412 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
 @@ -818,6 +818,9 @@ asmlinkage long sys_madvise(unsigned long start, size_t len, int behavior);
@@ -233,10 +233,10 @@ index 5bf6148cac2b..613e559ad6e0 100644
  /*
   * 32 bit systems traditionally used different
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 3a2df1bd9f64..bc77dc784527 100644
+index 4da31f28fda8..fcd3aeaddd05 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
-@@ -2789,6 +2789,144 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+@@ -2791,6 +2791,144 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
  	return error;
  }
  

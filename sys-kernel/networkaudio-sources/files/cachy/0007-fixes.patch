@@ -1,0 +1,971 @@
+From 10b2f8b54a3363a982c4d021ed29a191bea5c0b3 Mon Sep 17 00:00:00 2001
+From: Peter Jung <admin@ptr1337.dev>
+Date: Mon, 11 Nov 2024 09:20:20 +0100
+Subject: [PATCH 07/13] fixes
+
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
+---
+ arch/Kconfig                                  |   4 +-
+ arch/x86/mm/tlb.c                             |  22 ++--
+ drivers/misc/lkdtm/bugs.c                     |   2 +-
+ fs/ntfs3/attrib.c                             |   9 +-
+ fs/ntfs3/bitmap.c                             |  62 +++-------
+ fs/ntfs3/file.c                               |  34 +++---
+ fs/ntfs3/frecord.c                            | 104 +++--------------
+ fs/ntfs3/fsntfs.c                             |   2 +-
+ fs/ntfs3/ntfs_fs.h                            |   3 +-
+ fs/ntfs3/record.c                             |  16 ++-
+ fs/ntfs3/run.c                                |  40 +++++--
+ include/linux/compiler_attributes.h           |  13 ---
+ include/linux/compiler_types.h                |  19 +++
+ include/linux/mm_types.h                      |   1 +
+ init/Kconfig                                  |   8 ++
+ kernel/sched/core.c                           |  46 +++++---
+ kernel/sched/sched.h                          |   5 +
+ lib/overflow_kunit.c                          |   2 +-
+ scripts/package/PKGBUILD                      |   5 +
+ 34 files changed, 376 insertions(+), 386 deletions(-)
+
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 00551f340dbe..833b2344ce79 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -1128,7 +1128,7 @@ config ARCH_MMAP_RND_BITS
+ 	int "Number of bits to use for ASLR of mmap base address" if EXPERT
+ 	range ARCH_MMAP_RND_BITS_MIN ARCH_MMAP_RND_BITS_MAX
+ 	default ARCH_MMAP_RND_BITS_DEFAULT if ARCH_MMAP_RND_BITS_DEFAULT
+-	default ARCH_MMAP_RND_BITS_MIN
++	default ARCH_MMAP_RND_BITS_MAX
+ 	depends on HAVE_ARCH_MMAP_RND_BITS
+ 	help
+ 	  This value can be used to select the number of bits to use to
+@@ -1162,7 +1162,7 @@ config ARCH_MMAP_RND_COMPAT_BITS
+ 	int "Number of bits to use for ASLR of mmap base address for compatible applications" if EXPERT
+ 	range ARCH_MMAP_RND_COMPAT_BITS_MIN ARCH_MMAP_RND_COMPAT_BITS_MAX
+ 	default ARCH_MMAP_RND_COMPAT_BITS_DEFAULT if ARCH_MMAP_RND_COMPAT_BITS_DEFAULT
+-	default ARCH_MMAP_RND_COMPAT_BITS_MIN
++	default ARCH_MMAP_RND_COMPAT_BITS_MAX
+ 	depends on HAVE_ARCH_MMAP_RND_COMPAT_BITS
+ 	help
+ 	  This value can be used to select the number of bits to use to
+ 
+diff --git a/arch/x86/mm/tlb.c b/arch/x86/mm/tlb.c
+index 86593d1b787d..1aac4fa90d3d 100644
+--- a/arch/x86/mm/tlb.c
++++ b/arch/x86/mm/tlb.c
+@@ -568,7 +568,7 @@ void switch_mm_irqs_off(struct mm_struct *unused, struct mm_struct *next,
+ 		 * mm_cpumask. The TLB shootdown code can figure out from
+ 		 * cpu_tlbstate_shared.is_lazy whether or not to send an IPI.
+ 		 */
+-		if (WARN_ON_ONCE(prev != &init_mm &&
++		if (IS_ENABLED(CONFIG_DEBUG_VM) && WARN_ON_ONCE(prev != &init_mm &&
+ 				 !cpumask_test_cpu(cpu, mm_cpumask(next))))
+ 			cpumask_set_cpu(cpu, mm_cpumask(next));
+ 
+@@ -606,18 +606,15 @@ void switch_mm_irqs_off(struct mm_struct *unused, struct mm_struct *next,
+ 		cond_mitigation(tsk);
+ 
+ 		/*
+-		 * Stop remote flushes for the previous mm.
+-		 * Skip kernel threads; we never send init_mm TLB flushing IPIs,
+-		 * but the bitmap manipulation can cause cache line contention.
++		 * Leave this CPU in prev's mm_cpumask. Atomic writes to
++		 * mm_cpumask can be expensive under contention. The CPU
++		 * will be removed lazily at TLB flush time.
+ 		 */
+-		if (prev != &init_mm) {
+-			VM_WARN_ON_ONCE(!cpumask_test_cpu(cpu,
+-						mm_cpumask(prev)));
+-			cpumask_clear_cpu(cpu, mm_cpumask(prev));
+-		}
++		VM_WARN_ON_ONCE(prev != &init_mm && !cpumask_test_cpu(cpu,
++				mm_cpumask(prev)));
+ 
+ 		/* Start receiving IPIs and then read tlb_gen (and LAM below) */
+-		if (next != &init_mm)
++		if (next != &init_mm && !cpumask_test_cpu(cpu, mm_cpumask(next)))
+ 			cpumask_set_cpu(cpu, mm_cpumask(next));
+ 		next_tlb_gen = atomic64_read(&next->context.tlb_gen);
+ 
+@@ -761,8 +758,11 @@ static void flush_tlb_func(void *info)
+ 		count_vm_tlb_event(NR_TLB_REMOTE_FLUSH_RECEIVED);
+ 
+ 		/* Can only happen on remote CPUs */
+-		if (f->mm && f->mm != loaded_mm)
++		if (f->mm && f->mm != loaded_mm) {
++			cpumask_clear_cpu(raw_smp_processor_id(), mm_cpumask(f->mm));
++			trace_tlb_flush(TLB_REMOTE_WRONG_CPU, 0);
+ 			return;
++		}
+ 	}
+ 
+ 	if (unlikely(loaded_mm == &init_mm))
+ 
+diff --git a/drivers/misc/lkdtm/bugs.c b/drivers/misc/lkdtm/bugs.c
+index 62ba01525479..376047beea3d 100644
+--- a/drivers/misc/lkdtm/bugs.c
++++ b/drivers/misc/lkdtm/bugs.c
+@@ -445,7 +445,7 @@ static void lkdtm_FAM_BOUNDS(void)
+ 
+ 	pr_err("FAIL: survived access of invalid flexible array member index!\n");
+ 
+-	if (!__has_attribute(__counted_by__))
++	if (!IS_ENABLED(CONFIG_CC_HAS_COUNTED_BY))
+ 		pr_warn("This is expected since this %s was built with a compiler that does not support __counted_by\n",
+ 			lkdtm_kernel_info);
+ 	else if (IS_ENABLED(CONFIG_UBSAN_BOUNDS))
+diff --git a/fs/ntfs3/attrib.c b/fs/ntfs3/attrib.c
+index 0763202d00c9..8d789b017fa9 100644
+--- a/fs/ntfs3/attrib.c
++++ b/fs/ntfs3/attrib.c
+@@ -977,7 +977,7 @@ int attr_data_get_block(struct ntfs_inode *ni, CLST vcn, CLST clen, CLST *lcn,
+ 
+ 	/* Check for compressed frame. */
+ 	err = attr_is_frame_compressed(ni, attr_b, vcn >> NTFS_LZNT_CUNIT,
+-				       &hint);
++				       &hint, run);
+ 	if (err)
+ 		goto out;
+ 
+@@ -1521,16 +1521,16 @@ int attr_wof_frame_info(struct ntfs_inode *ni, struct ATTRIB *attr,
+  * attr_is_frame_compressed - Used to detect compressed frame.
+  *
+  * attr - base (primary) attribute segment.
++ * run  - run to use, usually == &ni->file.run.
+  * Only base segments contains valid 'attr->nres.c_unit'
+  */
+ int attr_is_frame_compressed(struct ntfs_inode *ni, struct ATTRIB *attr,
+-			     CLST frame, CLST *clst_data)
++			     CLST frame, CLST *clst_data, struct runs_tree *run)
+ {
+ 	int err;
+ 	u32 clst_frame;
+ 	CLST clen, lcn, vcn, alen, slen, vcn_next;
+ 	size_t idx;
+-	struct runs_tree *run;
+ 
+ 	*clst_data = 0;
+ 
+@@ -1542,7 +1542,6 @@ int attr_is_frame_compressed(struct ntfs_inode *ni, struct ATTRIB *attr,
+ 
+ 	clst_frame = 1u << attr->nres.c_unit;
+ 	vcn = frame * clst_frame;
+-	run = &ni->file.run;
+ 
+ 	if (!run_lookup_entry(run, vcn, &lcn, &clen, &idx)) {
+ 		err = attr_load_runs_vcn(ni, attr->type, attr_name(attr),
+@@ -1678,7 +1677,7 @@ int attr_allocate_frame(struct ntfs_inode *ni, CLST frame, size_t compr_size,
+ 	if (err)
+ 		goto out;
+ 
+-	err = attr_is_frame_compressed(ni, attr_b, frame, &clst_data);
++	err = attr_is_frame_compressed(ni, attr_b, frame, &clst_data, run);
+ 	if (err)
+ 		goto out;
+ 
+diff --git a/fs/ntfs3/bitmap.c b/fs/ntfs3/bitmap.c
+index cf4fe21a5039..04107b950717 100644
+--- a/fs/ntfs3/bitmap.c
++++ b/fs/ntfs3/bitmap.c
+@@ -710,20 +710,17 @@ int wnd_set_free(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ {
+ 	int err = 0;
+ 	struct super_block *sb = wnd->sb;
+-	size_t bits0 = bits;
+ 	u32 wbits = 8 * sb->s_blocksize;
+ 	size_t iw = bit >> (sb->s_blocksize_bits + 3);
+ 	u32 wbit = bit & (wbits - 1);
+ 	struct buffer_head *bh;
++	u32 op;
+ 
+-	while (iw < wnd->nwnd && bits) {
+-		u32 tail, op;
+-
++	for (; iw < wnd->nwnd && bits; iw++, bit += op, bits -= op, wbit = 0) {
+ 		if (iw + 1 == wnd->nwnd)
+ 			wbits = wnd->bits_last;
+ 
+-		tail = wbits - wbit;
+-		op = min_t(u32, tail, bits);
++		op = min_t(u32, wbits - wbit, bits);
+ 
+ 		bh = wnd_map(wnd, iw);
+ 		if (IS_ERR(bh)) {
+@@ -736,20 +733,15 @@ int wnd_set_free(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 		ntfs_bitmap_clear_le(bh->b_data, wbit, op);
+ 
+ 		wnd->free_bits[iw] += op;
++		wnd->total_zeroes += op;
+ 
+ 		set_buffer_uptodate(bh);
+ 		mark_buffer_dirty(bh);
+ 		unlock_buffer(bh);
+ 		put_bh(bh);
+ 
+-		wnd->total_zeroes += op;
+-		bits -= op;
+-		wbit = 0;
+-		iw += 1;
++		wnd_add_free_ext(wnd, bit, op, false);
+ 	}
+-
+-	wnd_add_free_ext(wnd, bit, bits0, false);
+-
+ 	return err;
+ }
+ 
+@@ -760,20 +752,17 @@ int wnd_set_used(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ {
+ 	int err = 0;
+ 	struct super_block *sb = wnd->sb;
+-	size_t bits0 = bits;
+ 	size_t iw = bit >> (sb->s_blocksize_bits + 3);
+ 	u32 wbits = 8 * sb->s_blocksize;
+ 	u32 wbit = bit & (wbits - 1);
+ 	struct buffer_head *bh;
++	u32 op;
+ 
+-	while (iw < wnd->nwnd && bits) {
+-		u32 tail, op;
+-
++	for (; iw < wnd->nwnd && bits; iw++, bit += op, bits -= op, wbit = 0) {
+ 		if (unlikely(iw + 1 == wnd->nwnd))
+ 			wbits = wnd->bits_last;
+ 
+-		tail = wbits - wbit;
+-		op = min_t(u32, tail, bits);
++		op = min_t(u32, wbits - wbit, bits);
+ 
+ 		bh = wnd_map(wnd, iw);
+ 		if (IS_ERR(bh)) {
+@@ -785,21 +774,16 @@ int wnd_set_used(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 
+ 		ntfs_bitmap_set_le(bh->b_data, wbit, op);
+ 		wnd->free_bits[iw] -= op;
++		wnd->total_zeroes -= op;
+ 
+ 		set_buffer_uptodate(bh);
+ 		mark_buffer_dirty(bh);
+ 		unlock_buffer(bh);
+ 		put_bh(bh);
+ 
+-		wnd->total_zeroes -= op;
+-		bits -= op;
+-		wbit = 0;
+-		iw += 1;
++		if (!RB_EMPTY_ROOT(&wnd->start_tree))
++			wnd_remove_free_ext(wnd, bit, op);
+ 	}
+-
+-	if (!RB_EMPTY_ROOT(&wnd->start_tree))
+-		wnd_remove_free_ext(wnd, bit, bits0);
+-
+ 	return err;
+ }
+ 
+@@ -852,15 +836,13 @@ static bool wnd_is_free_hlp(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 	size_t iw = bit >> (sb->s_blocksize_bits + 3);
+ 	u32 wbits = 8 * sb->s_blocksize;
+ 	u32 wbit = bit & (wbits - 1);
++	u32 op;
+ 
+-	while (iw < wnd->nwnd && bits) {
+-		u32 tail, op;
+-
++	for (; iw < wnd->nwnd && bits; iw++, bits -= op, wbit = 0) {
+ 		if (unlikely(iw + 1 == wnd->nwnd))
+ 			wbits = wnd->bits_last;
+ 
+-		tail = wbits - wbit;
+-		op = min_t(u32, tail, bits);
++		op = min_t(u32, wbits - wbit, bits);
+ 
+ 		if (wbits != wnd->free_bits[iw]) {
+ 			bool ret;
+@@ -875,10 +857,6 @@ static bool wnd_is_free_hlp(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 			if (!ret)
+ 				return false;
+ 		}
+-
+-		bits -= op;
+-		wbit = 0;
+-		iw += 1;
+ 	}
+ 
+ 	return true;
+@@ -928,6 +906,7 @@ bool wnd_is_used(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 	size_t iw = bit >> (sb->s_blocksize_bits + 3);
+ 	u32 wbits = 8 * sb->s_blocksize;
+ 	u32 wbit = bit & (wbits - 1);
++	u32 op;
+ 	size_t end;
+ 	struct rb_node *n;
+ 	struct e_node *e;
+@@ -945,14 +924,11 @@ bool wnd_is_used(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 		return false;
+ 
+ use_wnd:
+-	while (iw < wnd->nwnd && bits) {
+-		u32 tail, op;
+-
++	for (; iw < wnd->nwnd && bits; iw++, bits -= op, wbit = 0) {
+ 		if (unlikely(iw + 1 == wnd->nwnd))
+ 			wbits = wnd->bits_last;
+ 
+-		tail = wbits - wbit;
+-		op = min_t(u32, tail, bits);
++		op = min_t(u32, wbits - wbit, bits);
+ 
+ 		if (wnd->free_bits[iw]) {
+ 			bool ret;
+@@ -966,10 +942,6 @@ bool wnd_is_used(struct wnd_bitmap *wnd, size_t bit, size_t bits)
+ 			if (!ret)
+ 				goto out;
+ 		}
+-
+-		bits -= op;
+-		wbit = 0;
+-		iw += 1;
+ 	}
+ 	ret = true;
+ 
+diff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c
+index e370eaf9bfe2..3f96a11804c9 100644
+--- a/fs/ntfs3/file.c
++++ b/fs/ntfs3/file.c
+@@ -182,13 +182,15 @@ static int ntfs_extend_initialized_size(struct file *file,
+ 	loff_t pos = valid;
+ 	int err;
+ 
++	if (valid >= new_valid)
++		return 0;
++
+ 	if (is_resident(ni)) {
+ 		ni->i_valid = new_valid;
+ 		return 0;
+ 	}
+ 
+ 	WARN_ON(is_compressed(ni));
+-	WARN_ON(valid >= new_valid);
+ 
+ 	for (;;) {
+ 		u32 zerofrom, len;
+@@ -222,7 +224,7 @@ static int ntfs_extend_initialized_size(struct file *file,
+ 		if (err)
+ 			goto out;
+ 
+-		folio_zero_range(folio, zerofrom, folio_size(folio));
++		folio_zero_range(folio, zerofrom, folio_size(folio) - zerofrom);
+ 
+ 		err = ntfs_write_end(file, mapping, pos, len, len, folio, NULL);
+ 		if (err < 0)
+@@ -987,6 +989,7 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 	u64 frame_vbo;
+ 	pgoff_t index;
+ 	bool frame_uptodate;
++	struct folio *folio;
+ 
+ 	if (frame_size < PAGE_SIZE) {
+ 		/*
+@@ -1041,8 +1044,9 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 			if (err) {
+ 				for (ip = 0; ip < pages_per_frame; ip++) {
+ 					page = pages[ip];
+-					unlock_page(page);
+-					put_page(page);
++					folio = page_folio(page);
++					folio_unlock(folio);
++					folio_put(folio);
+ 				}
+ 				goto out;
+ 			}
+@@ -1052,9 +1056,10 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 		off = offset_in_page(valid);
+ 		for (; ip < pages_per_frame; ip++, off = 0) {
+ 			page = pages[ip];
++			folio = page_folio(page);
+ 			zero_user_segment(page, off, PAGE_SIZE);
+ 			flush_dcache_page(page);
+-			SetPageUptodate(page);
++			folio_mark_uptodate(folio);
+ 		}
+ 
+ 		ni_lock(ni);
+@@ -1063,9 +1068,10 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 
+ 		for (ip = 0; ip < pages_per_frame; ip++) {
+ 			page = pages[ip];
+-			SetPageUptodate(page);
+-			unlock_page(page);
+-			put_page(page);
++			folio = page_folio(page);
++			folio_mark_uptodate(folio);
++			folio_unlock(folio);
++			folio_put(folio);
+ 		}
+ 
+ 		if (err)
+@@ -1107,8 +1113,9 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 					for (ip = 0; ip < pages_per_frame;
+ 					     ip++) {
+ 						page = pages[ip];
+-						unlock_page(page);
+-						put_page(page);
++						folio = page_folio(page);
++						folio_unlock(folio);
++						folio_put(folio);
+ 					}
+ 					goto out;
+ 				}
+@@ -1149,9 +1156,10 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
+ 		for (ip = 0; ip < pages_per_frame; ip++) {
+ 			page = pages[ip];
+ 			ClearPageDirty(page);
+-			SetPageUptodate(page);
+-			unlock_page(page);
+-			put_page(page);
++			folio = page_folio(page);
++			folio_mark_uptodate(folio);
++			folio_unlock(folio);
++			folio_put(folio);
+ 		}
+ 
+ 		if (err)
+diff --git a/fs/ntfs3/frecord.c b/fs/ntfs3/frecord.c
+index 41c7ffad2790..8b39d0ce5f28 100644
+--- a/fs/ntfs3/frecord.c
++++ b/fs/ntfs3/frecord.c
+@@ -1900,46 +1900,6 @@ enum REPARSE_SIGN ni_parse_reparse(struct ntfs_inode *ni, struct ATTRIB *attr,
+ 	return REPARSE_LINK;
+ }
+ 
+-/*
+- * fiemap_fill_next_extent_k - a copy of fiemap_fill_next_extent
+- * but it uses 'fe_k' instead of fieinfo->fi_extents_start
+- */
+-static int fiemap_fill_next_extent_k(struct fiemap_extent_info *fieinfo,
+-				     struct fiemap_extent *fe_k, u64 logical,
+-				     u64 phys, u64 len, u32 flags)
+-{
+-	struct fiemap_extent extent;
+-
+-	/* only count the extents */
+-	if (fieinfo->fi_extents_max == 0) {
+-		fieinfo->fi_extents_mapped++;
+-		return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
+-	}
+-
+-	if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
+-		return 1;
+-
+-	if (flags & FIEMAP_EXTENT_DELALLOC)
+-		flags |= FIEMAP_EXTENT_UNKNOWN;
+-	if (flags & FIEMAP_EXTENT_DATA_ENCRYPTED)
+-		flags |= FIEMAP_EXTENT_ENCODED;
+-	if (flags & (FIEMAP_EXTENT_DATA_TAIL | FIEMAP_EXTENT_DATA_INLINE))
+-		flags |= FIEMAP_EXTENT_NOT_ALIGNED;
+-
+-	memset(&extent, 0, sizeof(extent));
+-	extent.fe_logical = logical;
+-	extent.fe_physical = phys;
+-	extent.fe_length = len;
+-	extent.fe_flags = flags;
+-
+-	memcpy(fe_k + fieinfo->fi_extents_mapped, &extent, sizeof(extent));
+-
+-	fieinfo->fi_extents_mapped++;
+-	if (fieinfo->fi_extents_mapped == fieinfo->fi_extents_max)
+-		return 1;
+-	return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
+-}
+-
+ /*
+  * ni_fiemap - Helper for file_fiemap().
+  *
+@@ -1950,11 +1910,9 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 	      __u64 vbo, __u64 len)
+ {
+ 	int err = 0;
+-	struct fiemap_extent *fe_k = NULL;
+ 	struct ntfs_sb_info *sbi = ni->mi.sbi;
+ 	u8 cluster_bits = sbi->cluster_bits;
+-	struct runs_tree *run;
+-	struct rw_semaphore *run_lock;
++	struct runs_tree run;
+ 	struct ATTRIB *attr;
+ 	CLST vcn = vbo >> cluster_bits;
+ 	CLST lcn, clen;
+@@ -1965,13 +1923,11 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 	u32 flags;
+ 	bool ok;
+ 
++	run_init(&run);
+ 	if (S_ISDIR(ni->vfs_inode.i_mode)) {
+-		run = &ni->dir.alloc_run;
+ 		attr = ni_find_attr(ni, NULL, NULL, ATTR_ALLOC, I30_NAME,
+ 				    ARRAY_SIZE(I30_NAME), NULL, NULL);
+-		run_lock = &ni->dir.run_lock;
+ 	} else {
+-		run = &ni->file.run;
+ 		attr = ni_find_attr(ni, NULL, NULL, ATTR_DATA, NULL, 0, NULL,
+ 				    NULL);
+ 		if (!attr) {
+@@ -1986,7 +1942,6 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 				"fiemap is not supported for compressed file (cp -r)");
+ 			goto out;
+ 		}
+-		run_lock = &ni->file.run_lock;
+ 	}
+ 
+ 	if (!attr || !attr->non_res) {
+@@ -1998,51 +1953,32 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * To avoid lock problems replace pointer to user memory by pointer to kernel memory.
+-	 */
+-	fe_k = kmalloc_array(fieinfo->fi_extents_max,
+-			     sizeof(struct fiemap_extent),
+-			     GFP_NOFS | __GFP_ZERO);
+-	if (!fe_k) {
+-		err = -ENOMEM;
+-		goto out;
+-	}
+-
+ 	end = vbo + len;
+ 	alloc_size = le64_to_cpu(attr->nres.alloc_size);
+ 	if (end > alloc_size)
+ 		end = alloc_size;
+ 
+-	down_read(run_lock);
+-
+ 	while (vbo < end) {
+ 		if (idx == -1) {
+-			ok = run_lookup_entry(run, vcn, &lcn, &clen, &idx);
++			ok = run_lookup_entry(&run, vcn, &lcn, &clen, &idx);
+ 		} else {
+ 			CLST vcn_next = vcn;
+ 
+-			ok = run_get_entry(run, ++idx, &vcn, &lcn, &clen) &&
++			ok = run_get_entry(&run, ++idx, &vcn, &lcn, &clen) &&
+ 			     vcn == vcn_next;
+ 			if (!ok)
+ 				vcn = vcn_next;
+ 		}
+ 
+ 		if (!ok) {
+-			up_read(run_lock);
+-			down_write(run_lock);
+-
+ 			err = attr_load_runs_vcn(ni, attr->type,
+ 						 attr_name(attr),
+-						 attr->name_len, run, vcn);
+-
+-			up_write(run_lock);
+-			down_read(run_lock);
++						 attr->name_len, &run, vcn);
+ 
+ 			if (err)
+ 				break;
+ 
+-			ok = run_lookup_entry(run, vcn, &lcn, &clen, &idx);
++			ok = run_lookup_entry(&run, vcn, &lcn, &clen, &idx);
+ 
+ 			if (!ok) {
+ 				err = -EINVAL;
+@@ -2067,8 +2003,9 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 		} else if (is_attr_compressed(attr)) {
+ 			CLST clst_data;
+ 
+-			err = attr_is_frame_compressed(
+-				ni, attr, vcn >> attr->nres.c_unit, &clst_data);
++			err = attr_is_frame_compressed(ni, attr,
++						       vcn >> attr->nres.c_unit,
++						       &clst_data, &run);
+ 			if (err)
+ 				break;
+ 			if (clst_data < NTFS_LZNT_CLUSTERS)
+@@ -2097,8 +2034,8 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 			if (vbo + dlen >= end)
+ 				flags |= FIEMAP_EXTENT_LAST;
+ 
+-			err = fiemap_fill_next_extent_k(fieinfo, fe_k, vbo, lbo,
+-							dlen, flags);
++			err = fiemap_fill_next_extent(fieinfo, vbo, lbo, dlen,
++						      flags);
+ 
+ 			if (err < 0)
+ 				break;
+@@ -2119,8 +2056,7 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 		if (vbo + bytes >= end)
+ 			flags |= FIEMAP_EXTENT_LAST;
+ 
+-		err = fiemap_fill_next_extent_k(fieinfo, fe_k, vbo, lbo, bytes,
+-						flags);
++		err = fiemap_fill_next_extent(fieinfo, vbo, lbo, bytes, flags);
+ 		if (err < 0)
+ 			break;
+ 		if (err == 1) {
+@@ -2131,19 +2067,8 @@ int ni_fiemap(struct ntfs_inode *ni, struct fiemap_extent_info *fieinfo,
+ 		vbo += bytes;
+ 	}
+ 
+-	up_read(run_lock);
+-
+-	/*
+-	 * Copy to user memory out of lock
+-	 */
+-	if (copy_to_user(fieinfo->fi_extents_start, fe_k,
+-			 fieinfo->fi_extents_max *
+-				 sizeof(struct fiemap_extent))) {
+-		err = -EFAULT;
+-	}
+-
+ out:
+-	kfree(fe_k);
++	run_close(&run);
+ 	return err;
+ }
+ 
+@@ -2672,7 +2597,8 @@ int ni_read_frame(struct ntfs_inode *ni, u64 frame_vbo, struct page **pages,
+ 		down_write(&ni->file.run_lock);
+ 		run_truncate_around(run, le64_to_cpu(attr->nres.svcn));
+ 		frame = frame_vbo >> (cluster_bits + NTFS_LZNT_CUNIT);
+-		err = attr_is_frame_compressed(ni, attr, frame, &clst_data);
++		err = attr_is_frame_compressed(ni, attr, frame, &clst_data,
++					       run);
+ 		up_write(&ni->file.run_lock);
+ 		if (err)
+ 			goto out1;
+diff --git a/fs/ntfs3/fsntfs.c b/fs/ntfs3/fsntfs.c
+index 0fa636038b4e..03471bc9371c 100644
+--- a/fs/ntfs3/fsntfs.c
++++ b/fs/ntfs3/fsntfs.c
+@@ -2699,4 +2699,4 @@ int ntfs_set_label(struct ntfs_sb_info *sbi, u8 *label, int len)
+ out:
+ 	__putname(uni);
+ 	return err;
+-}
+\ No newline at end of file
++}
+diff --git a/fs/ntfs3/ntfs_fs.h b/fs/ntfs3/ntfs_fs.h
+index 26e1e1379c04..cd8e8374bb5a 100644
+--- a/fs/ntfs3/ntfs_fs.h
++++ b/fs/ntfs3/ntfs_fs.h
+@@ -446,7 +446,8 @@ int attr_wof_frame_info(struct ntfs_inode *ni, struct ATTRIB *attr,
+ 			struct runs_tree *run, u64 frame, u64 frames,
+ 			u8 frame_bits, u32 *ondisk_size, u64 *vbo_data);
+ int attr_is_frame_compressed(struct ntfs_inode *ni, struct ATTRIB *attr,
+-			     CLST frame, CLST *clst_data);
++			     CLST frame, CLST *clst_data,
++			     struct runs_tree *run);
+ int attr_allocate_frame(struct ntfs_inode *ni, CLST frame, size_t compr_size,
+ 			u64 new_valid);
+ int attr_collapse_range(struct ntfs_inode *ni, u64 vbo, u64 bytes);
+diff --git a/fs/ntfs3/record.c b/fs/ntfs3/record.c
+index f810f0419d25..61d53d39f3b9 100644
+--- a/fs/ntfs3/record.c
++++ b/fs/ntfs3/record.c
+@@ -212,7 +212,7 @@ struct ATTRIB *mi_enum_attr(struct mft_inode *mi, struct ATTRIB *attr)
+ 			return NULL;
+ 
+ 		if (off >= used || off < MFTRECORD_FIXUP_OFFSET_1 ||
+-		    !IS_ALIGNED(off, 4)) {
++		    !IS_ALIGNED(off, 8)) {
+ 			return NULL;
+ 		}
+ 
+@@ -236,8 +236,11 @@ struct ATTRIB *mi_enum_attr(struct mft_inode *mi, struct ATTRIB *attr)
+ 		off += asize;
+ 	}
+ 
+-	/* Can we use the first field (attr->type). */
+-	/* NOTE: this code also checks attr->size availability. */
++	/*
++	 * Can we use the first fields:
++	 * attr->type,
++	 * attr->size
++	 */
+ 	if (off + 8 > used) {
+ 		static_assert(ALIGN(sizeof(enum ATTR_TYPE), 8) == 8);
+ 		return NULL;
+@@ -259,10 +262,17 @@ struct ATTRIB *mi_enum_attr(struct mft_inode *mi, struct ATTRIB *attr)
+ 
+ 	asize = le32_to_cpu(attr->size);
+ 
++	if (!IS_ALIGNED(asize, 8))
++		return NULL;
++
+ 	/* Check overflow and boundary. */
+ 	if (off + asize < off || off + asize > used)
+ 		return NULL;
+ 
++	/* Can we use the field attr->non_res. */
++	if (off + 9 > used)
++		return NULL;
++
+ 	/* Check size of attribute. */
+ 	if (!attr->non_res) {
+ 		/* Check resident fields. */
+diff --git a/fs/ntfs3/run.c b/fs/ntfs3/run.c
+index 58e988cd8049..6e86d66197ef 100644
+--- a/fs/ntfs3/run.c
++++ b/fs/ntfs3/run.c
+@@ -1055,8 +1055,8 @@ int run_unpack_ex(struct runs_tree *run, struct ntfs_sb_info *sbi, CLST ino,
+ {
+ 	int ret, err;
+ 	CLST next_vcn, lcn, len;
+-	size_t index;
+-	bool ok;
++	size_t index, done;
++	bool ok, zone;
+ 	struct wnd_bitmap *wnd;
+ 
+ 	ret = run_unpack(run, sbi, ino, svcn, evcn, vcn, run_buf, run_buf_size);
+@@ -1087,8 +1087,9 @@ int run_unpack_ex(struct runs_tree *run, struct ntfs_sb_info *sbi, CLST ino,
+ 			continue;
+ 
+ 		down_read_nested(&wnd->rw_lock, BITMAP_MUTEX_CLUSTERS);
++		zone = max(wnd->zone_bit, lcn) < min(wnd->zone_end, lcn + len);
+ 		/* Check for free blocks. */
+-		ok = wnd_is_used(wnd, lcn, len);
++		ok = !zone && wnd_is_used(wnd, lcn, len);
+ 		up_read(&wnd->rw_lock);
+ 		if (ok)
+ 			continue;
+@@ -1096,14 +1097,33 @@ int run_unpack_ex(struct runs_tree *run, struct ntfs_sb_info *sbi, CLST ino,
+ 		/* Looks like volume is corrupted. */
+ 		ntfs_set_state(sbi, NTFS_DIRTY_ERROR);
+ 
+-		if (down_write_trylock(&wnd->rw_lock)) {
+-			/* Mark all zero bits as used in range [lcn, lcn+len). */
+-			size_t done;
+-			err = wnd_set_used_safe(wnd, lcn, len, &done);
+-			up_write(&wnd->rw_lock);
+-			if (err)
+-				return err;
++		if (!down_write_trylock(&wnd->rw_lock))
++			continue;
++
++		if (zone) {
++			/*
++			 * Range [lcn, lcn + len) intersects with zone.
++			 * To avoid complex with zone just turn it off.
++			 */
++			wnd_zone_set(wnd, 0, 0);
++		}
++
++		/* Mark all zero bits as used in range [lcn, lcn+len). */
++		err = wnd_set_used_safe(wnd, lcn, len, &done);
++		if (zone) {
++			/* Restore zone. Lock mft run. */
++			struct rw_semaphore *lock =
++				is_mounted(sbi) ? &sbi->mft.ni->file.run_lock :
++						  NULL;
++			if (lock)
++				down_read(lock);
++			ntfs_refresh_zone(sbi);
++			if (lock)
++				up_read(lock);
+ 		}
++		up_write(&wnd->rw_lock);
++		if (err)
++			return err;
+ 	}
+ 
+ 	return ret;
+diff --git a/include/linux/compiler_attributes.h b/include/linux/compiler_attributes.h
+index 32284cd26d52..c16d4199bf92 100644
+--- a/include/linux/compiler_attributes.h
++++ b/include/linux/compiler_attributes.h
+@@ -94,19 +94,6 @@
+ # define __copy(symbol)
+ #endif
+ 
+-/*
+- * Optional: only supported since gcc >= 15
+- * Optional: only supported since clang >= 18
+- *
+- *   gcc: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108896
+- * clang: https://github.com/llvm/llvm-project/pull/76348
+- */
+-#if __has_attribute(__counted_by__)
+-# define __counted_by(member)		__attribute__((__counted_by__(member)))
+-#else
+-# define __counted_by(member)
+-#endif
+-
+ /*
+  * Optional: not supported by gcc
+  * Optional: only supported since clang >= 14.0
+diff --git a/include/linux/compiler_types.h b/include/linux/compiler_types.h
+index 1a957ea2f4fe..639be0f30b45 100644
+--- a/include/linux/compiler_types.h
++++ b/include/linux/compiler_types.h
+@@ -323,6 +323,25 @@ struct ftrace_likely_data {
+ #define __no_sanitize_or_inline __always_inline
+ #endif
+ 
++/*
++ * Optional: only supported since gcc >= 15
++ * Optional: only supported since clang >= 18
++ *
++ *   gcc: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108896
++ * clang: https://github.com/llvm/llvm-project/pull/76348
++ *
++ * __bdos on clang < 19.1.2 can erroneously return 0:
++ * https://github.com/llvm/llvm-project/pull/110497
++ *
++ * __bdos on clang < 19.1.3 can be off by 4:
++ * https://github.com/llvm/llvm-project/pull/112636
++ */
++#ifdef CONFIG_CC_HAS_COUNTED_BY
++# define __counted_by(member)		__attribute__((__counted_by__(member)))
++#else
++# define __counted_by(member)
++#endif
++
+ /*
+  * Apply __counted_by() when the Endianness matches to increase test coverage.
+  */
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 6e3bdf8e38bc..6b6f05404304 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -1335,6 +1335,7 @@ enum tlb_flush_reason {
+ 	TLB_LOCAL_SHOOTDOWN,
+ 	TLB_LOCAL_MM_SHOOTDOWN,
+ 	TLB_REMOTE_SEND_IPI,
++	TLB_REMOTE_WRONG_CPU,
+ 	NR_TLB_FLUSH_REASONS,
+ };
+ 
+diff --git a/init/Kconfig b/init/Kconfig
+index 38dbd16da6a9..504e8a7c4e2a 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -120,6 +120,14 @@ config CC_HAS_ASM_INLINE
+ config CC_HAS_NO_PROFILE_FN_ATTR
+ 	def_bool $(success,echo '__attribute__((no_profile_instrument_function)) int x();' | $(CC) -x c - -c -o /dev/null -Werror)
+ 
++# clang needs to be at least 19.1.3 to avoid __bdos miscalculations
++# https://github.com/llvm/llvm-project/pull/110497
++# https://github.com/llvm/llvm-project/pull/112636
++# TODO: when gcc 15 is released remove the build test and add gcc version check
++config CC_HAS_COUNTED_BY
++	def_bool $(success,echo 'struct flex { int count; int array[] __attribute__((__counted_by__(count))); };' | $(CC) $(CLANG_FLAGS) -x c - -c -o /dev/null -Werror)
++	depends on !(CC_IS_CLANG && CLANG_VERSION < 190103)
++
+ config PAHOLE_VERSION
+ 	int
+ 	default $(shell,$(srctree)/scripts/pahole-version.sh $(PAHOLE))
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 719e0ed1e976..b35752fdbcc0 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3734,28 +3734,38 @@ ttwu_do_activate(struct rq *rq, struct task_struct *p, int wake_flags,
+  */
+ static int ttwu_runnable(struct task_struct *p, int wake_flags)
+ {
+-	struct rq_flags rf;
+-	struct rq *rq;
+-	int ret = 0;
++	CLASS(__task_rq_lock, rq_guard)(p);
++	struct rq *rq = rq_guard.rq;
+ 
+-	rq = __task_rq_lock(p, &rf);
+-	if (task_on_rq_queued(p)) {
+-		update_rq_clock(rq);
+-		if (p->se.sched_delayed)
+-			enqueue_task(rq, p, ENQUEUE_NOCLOCK | ENQUEUE_DELAYED);
+-		if (!task_on_cpu(rq, p)) {
+-			/*
+-			 * When on_rq && !on_cpu the task is preempted, see if
+-			 * it should preempt the task that is current now.
+-			 */
+-			wakeup_preempt(rq, p, wake_flags);
++	if (!task_on_rq_queued(p))
++		return 0;
++
++	update_rq_clock(rq);
++	if (p->se.sched_delayed) {
++		int queue_flags = ENQUEUE_DELAYED | ENQUEUE_NOCLOCK;
++
++		/*
++		 * Since sched_delayed means we cannot be current anywhere,
++		 * dequeue it here and have it fall through to the
++		 * select_task_rq() case further along the ttwu() path.
++		 */
++		if (rq->nr_running > 1 && p->nr_cpus_allowed > 1) {
++			dequeue_task(rq, p, DEQUEUE_SLEEP | queue_flags);
++			return 0;
+ 		}
+-		ttwu_do_wakeup(p);
+-		ret = 1;
++
++		enqueue_task(rq, p, queue_flags);
+ 	}
+-	__task_rq_unlock(rq, &rf);
++	if (!task_on_cpu(rq, p)) {
++		/*
++		 * When on_rq && !on_cpu the task is preempted, see if
++		 * it should preempt the task that is current now.
++		 */
++		wakeup_preempt(rq, p, wake_flags);
++	}
++	ttwu_do_wakeup(p);
+ 
+-	return ret;
++	return 1;
+ }
+ 
+ #ifdef CONFIG_SMP
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index f610df2e0811..e7fbb1d0f316 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -1779,6 +1779,11 @@ task_rq_unlock(struct rq *rq, struct task_struct *p, struct rq_flags *rf)
+ 	raw_spin_unlock_irqrestore(&p->pi_lock, rf->flags);
+ }
+ 
++DEFINE_LOCK_GUARD_1(__task_rq_lock, struct task_struct,
++		    _T->rq = __task_rq_lock(_T->lock, &_T->rf),
++		    __task_rq_unlock(_T->rq, &_T->rf),
++		    struct rq *rq; struct rq_flags rf)
++
+ DEFINE_LOCK_GUARD_1(task_rq_lock, struct task_struct,
+ 		    _T->rq = task_rq_lock(_T->lock, &_T->rf),
+ 		    task_rq_unlock(_T->rq, _T->lock, &_T->rf),
+diff --git a/lib/overflow_kunit.c b/lib/overflow_kunit.c
+index 2abc78367dd1..5222c6393f11 100644
+--- a/lib/overflow_kunit.c
++++ b/lib/overflow_kunit.c
+@@ -1187,7 +1187,7 @@ static void DEFINE_FLEX_test(struct kunit *test)
+ {
+ 	/* Using _RAW_ on a __counted_by struct will initialize "counter" to zero */
+ 	DEFINE_RAW_FLEX(struct foo, two_but_zero, array, 2);
+-#if __has_attribute(__counted_by__)
++#ifdef CONFIG_CC_HAS_COUNTED_BY
+ 	int expected_raw_size = sizeof(struct foo);
+ #else
+ 	int expected_raw_size = sizeof(struct foo) + 2 * sizeof(s16);
+diff --git a/scripts/package/PKGBUILD b/scripts/package/PKGBUILD
+index f83493838cf9..4010899652b8 100644
+--- a/scripts/package/PKGBUILD
++++ b/scripts/package/PKGBUILD
+@@ -91,6 +91,11 @@ _package-headers() {
+ 		"${srctree}/scripts/package/install-extmod-build" "${builddir}"
+ 	fi
+ 
++	# required when DEBUG_INFO_BTF_MODULES is enabled
++	if [ -f tools/bpf/resolve_btfids/resolve_btfids ]; then
++		install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
++	fi
++
+ 	echo "Installing System.map and config..."
+ 	mkdir -p "${builddir}"
+ 	cp System.map "${builddir}/System.map"
+-- 
+2.47.0
+

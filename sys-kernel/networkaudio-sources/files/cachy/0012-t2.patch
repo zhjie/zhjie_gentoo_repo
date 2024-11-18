@@ -1,7 +1,7 @@
-From a2687434017f228f18a7159b0b9af7f7ab2ef86a Mon Sep 17 00:00:00 2001
+From 063003cdcfa118a0e75173a1c02094c2978bc532 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 14 Nov 2024 17:03:40 +0100
-Subject: [PATCH 11/13] t2
+Date: Mon, 11 Nov 2024 09:22:19 +0100
+Subject: [PATCH 12/13] t2
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -22,9 +22,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/hid/Kconfig                           |   22 +
  drivers/hid/Makefile                          |    2 +
  drivers/hid/hid-appletb-bl.c                  |  207 +++
- drivers/hid/hid-appletb-kbd.c                 |  501 ++++++++
- drivers/hid/hid-core.c                        |   25 +
- drivers/hid/hid-google-hammer.c               |   27 +-
+ drivers/hid/hid-appletb-kbd.c                 |  432 +++++++
  drivers/hid/hid-multitouch.c                  |   60 +-
  drivers/hid/hid-quirks.c                      |    8 +-
  drivers/hwmon/applesmc.c                      | 1138 ++++++++++++-----
@@ -60,11 +58,10 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/staging/apple-bce/vhci/vhci.c         |  759 +++++++++++
  drivers/staging/apple-bce/vhci/vhci.h         |   52 +
  include/drm/drm_format_helper.h               |    3 +
- include/linux/hid.h                           |    2 +
  lib/test_printf.c                             |   20 +-
  lib/vsprintf.c                                |   36 +-
  scripts/checkpatch.pl                         |    2 +-
- 59 files changed, 8368 insertions(+), 361 deletions(-)
+ 56 files changed, 8270 insertions(+), 336 deletions(-)
  create mode 100644 Documentation/ABI/testing/sysfs-driver-hid-appletb-kbd
  create mode 100644 drivers/gpu/drm/tiny/appletbdrm.c
  create mode 100644 drivers/hid/hid-appletb-bl.c
@@ -116,10 +113,10 @@ index 000000000000..2a19584d091e
 +		3  None
 +		== =================
 diff --git a/Documentation/core-api/printk-formats.rst b/Documentation/core-api/printk-formats.rst
-index 4451ef501936..c726a846f752 100644
+index 14e093da3ccd..ccd7bd29a6d6 100644
 --- a/Documentation/core-api/printk-formats.rst
 +++ b/Documentation/core-api/printk-formats.rst
-@@ -632,6 +632,38 @@ Examples::
+@@ -630,6 +630,38 @@ Examples::
  	%p4cc	Y10  little-endian (0x20303159)
  	%p4cc	NV12 big-endian (0xb231564e)
  
@@ -159,10 +156,10 @@ index 4451ef501936..c726a846f752 100644
  ----
  
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 0bcfbc58a9ab..affc58245cc1 100644
+index f509050e63ed..a3bbf3d5fb9e 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -6903,6 +6903,12 @@ S:	Supported
+@@ -7013,6 +7013,12 @@ S:	Supported
  T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
  F:	drivers/gpu/drm/sun4i/sun8i*
  
@@ -176,10 +173,10 @@ index 0bcfbc58a9ab..affc58245cc1 100644
  S:	Orphan
  T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index ad5c05ee92f3..09c82a3e83f2 100644
+index f6a6fc6a4f5c..e71b6dfad958 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -2237,6 +2237,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
+@@ -2260,6 +2260,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
  	int ret, retry = 0, i;
  	bool supports_atomic = false;
  
@@ -262,10 +259,10 @@ index b1be458ed4dd..28c0e76a1e88 100644
  			drm_fb_xrgb8888_to_argb8888(dst, dst_pitch, src, fb, clip, state);
  			return 0;
 diff --git a/drivers/gpu/drm/i915/display/intel_ddi.c b/drivers/gpu/drm/i915/display/intel_ddi.c
-index 5b6aabce4c32..fafc673d508e 100644
+index b1c294236cc8..21e23ba5391e 100644
 --- a/drivers/gpu/drm/i915/display/intel_ddi.c
 +++ b/drivers/gpu/drm/i915/display/intel_ddi.c
-@@ -4640,6 +4640,7 @@ intel_ddi_init_hdmi_connector(struct intel_digital_port *dig_port)
+@@ -4641,6 +4641,7 @@ intel_ddi_init_hdmi_connector(struct intel_digital_port *dig_port)
  
  static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
  {
@@ -273,7 +270,7 @@ index 5b6aabce4c32..fafc673d508e 100644
  	struct drm_i915_private *dev_priv = to_i915(dig_port->base.base.dev);
  
  	if (dig_port->base.port != PORT_A)
-@@ -4648,6 +4649,9 @@ static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
+@@ -4649,6 +4650,9 @@ static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
  	if (dig_port->saved_port_bits & DDI_A_4_LANES)
  		return false;
  
@@ -302,7 +299,7 @@ index 49a1ac4f5491..c8c10a6104c4 100644
  			    fb->base.width, fb->base.height,
  			    sizes->fb_width, sizes->fb_height);
 diff --git a/drivers/gpu/drm/i915/display/intel_quirks.c b/drivers/gpu/drm/i915/display/intel_quirks.c
-index dfd8b4960e6d..7232f9acd0a0 100644
+index 29b56d53a340..7226ec8fdd9c 100644
 --- a/drivers/gpu/drm/i915/display/intel_quirks.c
 +++ b/drivers/gpu/drm/i915/display/intel_quirks.c
 @@ -64,6 +64,18 @@ static void quirk_increase_ddi_disabled_time(struct intel_display *display)
@@ -522,7 +519,7 @@ index 76dde89a044b..9a1b412e764a 100644
  obj-$(CONFIG_DRM_CIRRUS_QEMU)		+= cirrus.o
 diff --git a/drivers/gpu/drm/tiny/appletbdrm.c b/drivers/gpu/drm/tiny/appletbdrm.c
 new file mode 100644
-index 000000000000..b9440ce0064e
+index 000000000000..7a74c8ad37cd
 --- /dev/null
 +++ b/drivers/gpu/drm/tiny/appletbdrm.c
 @@ -0,0 +1,624 @@
@@ -535,7 +532,7 @@ index 000000000000..b9440ce0064e
 +
 +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 +
-+#include <asm/unaligned.h>
++#include <linux/unaligned.h>
 +
 +#include <linux/usb.h>
 +#include <linux/module.h>
@@ -1151,7 +1148,7 @@ index 000000000000..b9440ce0064e
 +MODULE_DESCRIPTION("Apple Touch Bar DRM Driver");
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
-index 365e6ddbe90f..cf357cd3389d 100644
+index 18f2c92beff8..3de1bca45ed2 100644
 --- a/drivers/gpu/vga/vga_switcheroo.c
 +++ b/drivers/gpu/vga/vga_switcheroo.c
 @@ -438,12 +438,7 @@ find_active_client(struct list_head *head)
@@ -1169,7 +1166,7 @@ index 365e6ddbe90f..cf357cd3389d 100644
  	}
  
 diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index 08446c89eff6..35ef5d4ef068 100644
+index f8a56d631242..6c8e9e004907 100644
 --- a/drivers/hid/Kconfig
 +++ b/drivers/hid/Kconfig
 @@ -148,6 +148,27 @@ config HID_APPLEIR
@@ -1200,7 +1197,7 @@ index 08446c89eff6..35ef5d4ef068 100644
  config HID_ASUS
  	tristate "Asus"
  	depends on USB_HID
-@@ -723,6 +744,7 @@ config HID_MULTITOUCH
+@@ -729,6 +750,7 @@ config HID_MULTITOUCH
  	  Say Y here if you have one of the following devices:
  	  - 3M PCT touch screens
  	  - ActionStar dual touch panels
@@ -1209,7 +1206,7 @@ index 08446c89eff6..35ef5d4ef068 100644
  	  - Cando dual touch panels
  	  - Chunghwa panels
 diff --git a/drivers/hid/Makefile b/drivers/hid/Makefile
-index e40f1ddebbb7..d903c9a2629d 100644
+index 496dab54c73a..13d32f55e5d4 100644
 --- a/drivers/hid/Makefile
 +++ b/drivers/hid/Makefile
 @@ -29,6 +29,8 @@ obj-$(CONFIG_HID_ALPS)		+= hid-alps.o
@@ -1436,10 +1433,10 @@ index 000000000000..819157686e59
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/hid/hid-appletb-kbd.c b/drivers/hid/hid-appletb-kbd.c
 new file mode 100644
-index 000000000000..c26b7a19a5e4
+index 000000000000..442c4d8848df
 --- /dev/null
 +++ b/drivers/hid/hid-appletb-kbd.c
-@@ -0,0 +1,501 @@
+@@ -0,0 +1,432 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Apple Touch Bar Keyboard Mode Driver
@@ -1458,8 +1455,6 @@ index 000000000000..c26b7a19a5e4
 +#include <linux/bitops.h>
 +#include <linux/module.h>
 +#include <linux/string.h>
-+#include <linux/backlight.h>
-+#include <linux/timer.h>
 +#include <linux/input/sparse-keymap.h>
 +
 +#include "hid-ids.h"
@@ -1471,7 +1466,6 @@ index 000000000000..c26b7a19a5e4
 +#define APPLETB_KBD_MODE_MAX	APPLETB_KBD_MODE_OFF
 +
 +#define APPLETB_DEVID_KEYBOARD	1
-+#define APPLETB_DEVID_TRACKPAD	2
 +
 +#define HID_USAGE_MODE		0x00ff0004
 +
@@ -1486,29 +1480,14 @@ index 000000000000..c26b7a19a5e4
 +module_param_named(fntoggle, appletb_tb_fn_toggle, bool, 0644);
 +MODULE_PARM_DESC(fntoggle, "Switch between Fn and media controls on pressing Fn key");
 +
-+static bool appletb_tb_autodim = true;
-+module_param_named(autodim, appletb_tb_autodim, bool, 0644);
-+MODULE_PARM_DESC(autodim, "Automatically dim touchbar if left idle");
-+
-+static int appletb_tb_dim_timeout = 60;
-+module_param_named(dim_timeout, appletb_tb_dim_timeout, int, 0644);
-+MODULE_PARM_DESC(dim_timeout, "Dim timeout in sec");
-+
-+static int appletb_tb_idle_timeout = 15;
-+module_param_named(idle_timeout, appletb_tb_idle_timeout, int, 0644);
-+MODULE_PARM_DESC(idle_timeout, "Idle timeout in sec");
-+
 +struct appletb_kbd {
 +	struct hid_field *mode_field;
-+	struct input_handler inp_handler;
-+	struct input_handle kbd_handle;
-+	struct input_handle tpd_handle;
-+	struct backlight_device *backlight_dev;
-+	struct timer_list inactivity_timer;
-+	bool has_dimmed;
-+	bool has_turned_off;
++
 +	u8 saved_mode;
 +	u8 current_mode;
++	struct input_handler inp_handler;
++	struct input_handle kbd_handle;
++
 +};
 +
 +static const struct key_entry appletb_kbd_keymap[] = {
@@ -1606,34 +1585,6 @@ index 000000000000..c26b7a19a5e4
 +	}
 +}
 +
-+static void appletb_inactivity_timer(struct timer_list *t)
-+{
-+	struct appletb_kbd *kbd = from_timer(kbd, t, inactivity_timer);
-+
-+	if (kbd->backlight_dev && appletb_tb_autodim) {
-+		if (!kbd->has_dimmed) {
-+			backlight_device_set_brightness(kbd->backlight_dev, 1);
-+			kbd->has_dimmed = true;
-+			mod_timer(&kbd->inactivity_timer, jiffies + msecs_to_jiffies(appletb_tb_idle_timeout * 1000));
-+		} else if (!kbd->has_turned_off) {
-+			backlight_device_set_brightness(kbd->backlight_dev, 0);
-+			kbd->has_turned_off = true;
-+		}
-+	}
-+}
-+
-+static void reset_inactivity_timer(struct appletb_kbd *kbd)
-+{
-+	if ((kbd->has_dimmed || kbd->has_turned_off) && kbd->backlight_dev) {
-+		backlight_device_set_brightness(kbd->backlight_dev, 2);
-+		if (appletb_tb_autodim) {
-+			kbd->has_dimmed = false;
-+			kbd->has_turned_off = false;
-+			mod_timer(&kbd->inactivity_timer, jiffies + msecs_to_jiffies(appletb_tb_dim_timeout * 1000));
-+		}
-+	}
-+}
-+
 +static int appletb_kbd_hid_event(struct hid_device *hdev, struct hid_field *field,
 +				      struct hid_usage *usage, __s32 value)
 +{
@@ -1658,8 +1609,6 @@ index 000000000000..c26b7a19a5e4
 +	if (slot < 0)
 +		return 0;
 +
-+	reset_inactivity_timer(kbd);
-+
 +	translation = sparse_keymap_entry_from_scancode(input, usage->code);
 +
 +	if (translation && kbd->current_mode == APPLETB_KBD_MODE_SPCL) {
@@ -1675,8 +1624,6 @@ index 000000000000..c26b7a19a5e4
 +			      unsigned int code, int value)
 +{
 +	struct appletb_kbd *kbd = handle->private;
-+
-+	reset_inactivity_timer(kbd);
 +
 +	if (type == EV_KEY && code == KEY_FN && appletb_tb_fn_toggle) {
 +		if (value == 1) {
@@ -1703,9 +1650,6 @@ index 000000000000..c26b7a19a5e4
 +	if (id->driver_info == APPLETB_DEVID_KEYBOARD) {
 +		handle = &kbd->kbd_handle;
 +		handle->name = "tbkbd";
-+	} else if (id->driver_info == APPLETB_DEVID_TRACKPAD) {
-+		handle = &kbd->tpd_handle;
-+		handle->name = "tbtpd";
 +	} else {
 +		return -ENOENT;
 +	}
@@ -1779,15 +1723,6 @@ index 000000000000..c26b7a19a5e4
 +		.keybit = { [BIT_WORD(KEY_FN)] = BIT_MASK(KEY_FN) },
 +		.driver_info = APPLETB_DEVID_KEYBOARD,
 +	},
-+	{
-+		.flags = INPUT_DEVICE_ID_MATCH_BUS |
-+			INPUT_DEVICE_ID_MATCH_VENDOR |
-+			INPUT_DEVICE_ID_MATCH_KEYBIT,
-+		.bustype = BUS_USB,
-+		.vendor = USB_VENDOR_ID_APPLE,
-+		.keybit = { [BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH) },
-+		.driver_info = APPLETB_DEVID_TRACKPAD,
-+	},
 +	{ }
 +};
 +
@@ -1844,12 +1779,6 @@ index 000000000000..c26b7a19a5e4
 +		goto stop_hw;
 +	}
 +
-+	timer_setup(&kbd->inactivity_timer, appletb_inactivity_timer, 0);
-+	mod_timer(&kbd->inactivity_timer, jiffies + msecs_to_jiffies(appletb_tb_dim_timeout * 1000));
-+	kbd->backlight_dev = backlight_device_get_by_name("appletb_backlight");
-+		if (!kbd->backlight_dev)
-+			dev_err_probe(dev, ret, "Failed to get backlight device\n");
-+
 +	kbd->inp_handler.event = appletb_kbd_inp_event;
 +	kbd->inp_handler.connect = appletb_kbd_inp_connect;
 +	kbd->inp_handler.disconnect = appletb_kbd_inp_disconnect;
@@ -1888,7 +1817,6 @@ index 000000000000..c26b7a19a5e4
 +	appletb_kbd_set_mode(kbd, APPLETB_KBD_MODE_OFF);
 +
 +	input_unregister_handler(&kbd->inp_handler);
-+	del_timer_sync(&kbd->inactivity_timer);
 +
 +	hid_hw_close(hdev);
 +	hid_hw_stop(hdev);
@@ -1941,89 +1869,8 @@ index 000000000000..c26b7a19a5e4
 +MODULE_AUTHOR("Kerem Karabay <kekrby@gmail.com>");
 +MODULE_DESCRIPTION("MacBookPro Touch Bar Keyboard Mode Driver");
 +MODULE_LICENSE("GPL");
-diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
-index 3fcf098f4f56..a7ff0840afb5 100644
---- a/drivers/hid/hid-core.c
-+++ b/drivers/hid/hid-core.c
-@@ -1912,6 +1912,31 @@ int hid_set_field(struct hid_field *field, unsigned offset, __s32 value)
- }
- EXPORT_SYMBOL_GPL(hid_set_field);
- 
-+struct hid_field *hid_find_field(struct hid_device *hdev, unsigned int report_type,
-+				 unsigned int application, unsigned int usage)
-+{
-+	struct list_head *report_list = &hdev->report_enum[report_type].report_list;
-+	struct hid_report *report;
-+	int i, j;
-+
-+	list_for_each_entry(report, report_list, list) {
-+		if (report->application != application)
-+			continue;
-+
-+		for (i = 0; i < report->maxfield; i++) {
-+			struct hid_field *field = report->field[i];
-+
-+			for (j = 0; j < field->maxusage; j++) {
-+				if (field->usage[j].hid == usage)
-+					return field;
-+			}
-+		}
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(hid_find_field);
-+
- static struct hid_report *hid_get_report(struct hid_report_enum *report_enum,
- 		const u8 *data)
- {
-diff --git a/drivers/hid/hid-google-hammer.c b/drivers/hid/hid-google-hammer.c
-index 6e4ebc349e45..4e79fafeeafa 100644
---- a/drivers/hid/hid-google-hammer.c
-+++ b/drivers/hid/hid-google-hammer.c
-@@ -418,38 +418,15 @@ static int hammer_event(struct hid_device *hid, struct hid_field *field,
- 	return 0;
- }
- 
--static bool hammer_has_usage(struct hid_device *hdev, unsigned int report_type,
--			unsigned application, unsigned usage)
--{
--	struct hid_report_enum *re = &hdev->report_enum[report_type];
--	struct hid_report *report;
--	int i, j;
--
--	list_for_each_entry(report, &re->report_list, list) {
--		if (report->application != application)
--			continue;
--
--		for (i = 0; i < report->maxfield; i++) {
--			struct hid_field *field = report->field[i];
--
--			for (j = 0; j < field->maxusage; j++)
--				if (field->usage[j].hid == usage)
--					return true;
--		}
--	}
--
--	return false;
--}
--
- static bool hammer_has_folded_event(struct hid_device *hdev)
- {
--	return hammer_has_usage(hdev, HID_INPUT_REPORT,
-+	return !!hid_find_field(hdev, HID_INPUT_REPORT,
- 				HID_GD_KEYBOARD, HID_USAGE_KBD_FOLDED);
- }
- 
- static bool hammer_has_backlight_control(struct hid_device *hdev)
- {
--	return hammer_has_usage(hdev, HID_OUTPUT_REPORT,
-+	return !!hid_find_field(hdev, HID_OUTPUT_REPORT,
- 				HID_GD_KEYBOARD, HID_AD_BRIGHTNESS);
- }
- 
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 847462650549..6c4cb3883955 100644
+index e936019d21fe..0d5382e965de 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -72,6 +72,7 @@ MODULE_LICENSE("GPL");
@@ -2047,10 +1894,10 @@ index 847462650549..6c4cb3883955 100644
  #define MT_CLS_RAZER_BLADE_STEALTH		0x0112
  #define MT_CLS_SMART_TECH			0x0113
 +#define MT_CLS_APPLE_TOUCHBAR			0x0114
+ #define MT_CLS_SIS				0x0457
  
  #define MT_DEFAULT_MAXCONTACT	10
- #define MT_MAX_MAXCONTACT	250
-@@ -396,6 +399,13 @@ static const struct mt_class mt_classes[] = {
+@@ -397,6 +400,13 @@ static const struct mt_class mt_classes[] = {
  			MT_QUIRK_CONTACT_CNT_ACCURATE |
  			MT_QUIRK_SEPARATE_APP_REPORT,
  	},
@@ -2061,10 +1908,10 @@ index 847462650549..6c4cb3883955 100644
 +		.is_direct = true,
 +		.maxcontacts = 11,
 +	},
- 	{ }
- };
- 
-@@ -489,9 +499,6 @@ static void mt_feature_mapping(struct hid_device *hdev,
+ 	{ .name = MT_CLS_SIS,
+ 		.quirks = MT_QUIRK_NOT_SEEN_MEANS_UP |
+ 			MT_QUIRK_ALWAYS_VALID |
+@@ -495,9 +505,6 @@ static void mt_feature_mapping(struct hid_device *hdev,
  		if (!td->maxcontacts &&
  		    field->logical_maximum <= MT_MAX_MAXCONTACT)
  			td->maxcontacts = field->logical_maximum;
@@ -2074,7 +1921,7 @@ index 847462650549..6c4cb3883955 100644
  
  		break;
  	case HID_DG_BUTTONTYPE:
-@@ -565,13 +572,13 @@ static struct mt_application *mt_allocate_application(struct mt_device *td,
+@@ -571,13 +578,13 @@ static struct mt_application *mt_allocate_application(struct mt_device *td,
  	mt_application->application = application;
  	INIT_LIST_HEAD(&mt_application->mt_usages);
  
@@ -2090,7 +1937,7 @@ index 847462650549..6c4cb3883955 100644
  		mt_application->mt_flags |= INPUT_MT_POINTER;
  		td->inputmode_value = MT_INPUTMODE_TOUCHPAD;
  	}
-@@ -635,7 +642,9 @@ static struct mt_report_data *mt_allocate_report_data(struct mt_device *td,
+@@ -641,7 +648,9 @@ static struct mt_report_data *mt_allocate_report_data(struct mt_device *td,
  
  		if (field->logical == HID_DG_FINGER || td->hdev->group != HID_GROUP_MULTITOUCH_WIN_8) {
  			for (n = 0; n < field->report_count; n++) {
@@ -2101,7 +1948,7 @@ index 847462650549..6c4cb3883955 100644
  					rdata->is_mt_collection = true;
  					break;
  				}
-@@ -807,6 +816,15 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
+@@ -813,6 +822,15 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
  
  			MT_STORE_FIELD(confidence_state);
  			return 1;
@@ -2117,7 +1964,7 @@ index 847462650549..6c4cb3883955 100644
  		case HID_DG_TIPSWITCH:
  			if (field->application != HID_GD_SYSTEM_MULTIAXIS)
  				input_set_capability(hi->input,
-@@ -814,6 +832,7 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
+@@ -820,6 +838,7 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
  			MT_STORE_FIELD(tip_state);
  			return 1;
  		case HID_DG_CONTACTID:
@@ -2125,7 +1972,7 @@ index 847462650549..6c4cb3883955 100644
  			MT_STORE_FIELD(contactid);
  			app->touches_by_report++;
  			return 1;
-@@ -869,10 +888,6 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
+@@ -875,10 +894,6 @@ static int mt_touch_input_mapping(struct hid_device *hdev, struct hid_input *hi,
  		case HID_DG_CONTACTMAX:
  			/* contact max are global to the report */
  			return -1;
@@ -2136,7 +1983,7 @@ index 847462650549..6c4cb3883955 100644
  		}
  		/* let hid-input decide for the others */
  		return 0;
-@@ -1300,6 +1315,10 @@ static int mt_touch_input_configured(struct hid_device *hdev,
+@@ -1306,6 +1321,10 @@ static int mt_touch_input_configured(struct hid_device *hdev,
  	struct input_dev *input = hi->input;
  	int ret;
  
@@ -2147,7 +1994,7 @@ index 847462650549..6c4cb3883955 100644
  	if (!td->maxcontacts)
  		td->maxcontacts = MT_DEFAULT_MAXCONTACT;
  
-@@ -1307,6 +1326,9 @@ static int mt_touch_input_configured(struct hid_device *hdev,
+@@ -1313,6 +1332,9 @@ static int mt_touch_input_configured(struct hid_device *hdev,
  	if (td->serial_maybe)
  		mt_post_parse_default_settings(td, app);
  
@@ -2157,7 +2004,7 @@ index 847462650549..6c4cb3883955 100644
  	if (cls->is_indirect)
  		app->mt_flags |= INPUT_MT_POINTER;
  
-@@ -1758,6 +1780,15 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1764,6 +1786,15 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  		}
  	}
  
@@ -2173,7 +2020,7 @@ index 847462650549..6c4cb3883955 100644
  	td = devm_kzalloc(&hdev->dev, sizeof(struct mt_device), GFP_KERNEL);
  	if (!td) {
  		dev_err(&hdev->dev, "cannot allocate multitouch data\n");
-@@ -1805,10 +1836,6 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1811,10 +1842,6 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  
  	timer_setup(&td->release_timer, mt_expired_timeout, 0);
  
@@ -2184,7 +2031,7 @@ index 847462650549..6c4cb3883955 100644
  	if (mtclass->quirks & MT_QUIRK_FIX_CONST_CONTACT_ID)
  		mt_fix_const_fields(hdev, HID_DG_CONTACTID);
  
-@@ -2277,6 +2304,11 @@ static const struct hid_device_id mt_devices[] = {
+@@ -2299,6 +2326,11 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_XIROKU,
  			USB_DEVICE_ID_XIROKU_CSR2) },
  
@@ -4209,7 +4056,7 @@ index fc6d6a9053ce..698f44794453 100644
  MODULE_LICENSE("GPL v2");
  MODULE_DEVICE_TABLE(dmi, applesmc_whitelist);
 diff --git a/drivers/input/mouse/bcm5974.c b/drivers/input/mouse/bcm5974.c
-index 10a03a566905..8c3ccd98ba93 100644
+index dfdfb59cc8b5..e0da70576167 100644
 --- a/drivers/input/mouse/bcm5974.c
 +++ b/drivers/input/mouse/bcm5974.c
 @@ -83,6 +83,24 @@
@@ -4427,10 +4274,10 @@ index 1417e230edbd..e69785af8e1d 100644
  	 * Retina MacBook Pros cannot switch the panel's AUX separately
  	 * and need eDP pre-calibration. They are distinguishable from
 diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-index db4a392841b1..580df4ce4f9f 100644
+index 3fb68d60dfc1..7337f658fe96 100644
 --- a/drivers/staging/Kconfig
 +++ b/drivers/staging/Kconfig
-@@ -66,4 +66,6 @@ source "drivers/staging/fieldbus/Kconfig"
+@@ -64,4 +64,6 @@ source "drivers/staging/fieldbus/Kconfig"
  
  source "drivers/staging/vme_user/Kconfig"
  
@@ -4438,10 +4285,10 @@ index db4a392841b1..580df4ce4f9f 100644
 +
  endif # STAGING
 diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-index 5390879b5d1b..528be2d3b546 100644
+index c977aa13fad4..241ea7562045 100644
 --- a/drivers/staging/Makefile
 +++ b/drivers/staging/Makefile
-@@ -22,3 +22,4 @@ obj-$(CONFIG_GREYBUS)		+= greybus/
+@@ -21,3 +21,4 @@ obj-$(CONFIG_GREYBUS)		+= greybus/
  obj-$(CONFIG_BCM2835_VCHIQ)	+= vc04_services/
  obj-$(CONFIG_XIL_AXIS_FIFO)	+= axis-fifo/
  obj-$(CONFIG_FIELDBUS_DEV)     += fieldbus/
@@ -10278,24 +10125,11 @@ index 428d81afe215..aa1604d92c1a 100644
  void drm_fb_xrgb8888_to_argb8888(struct iosys_map *dst, const unsigned int *dst_pitch,
  				 const struct iosys_map *src, const struct drm_framebuffer *fb,
  				 const struct drm_rect *clip, struct drm_format_conv_state *state);
-diff --git a/include/linux/hid.h b/include/linux/hid.h
-index 1533c9dcd3a6..2deff79f39a1 100644
---- a/include/linux/hid.h
-+++ b/include/linux/hid.h
-@@ -940,6 +940,8 @@ extern void hidinput_report_event(struct hid_device *hid, struct hid_report *rep
- extern int hidinput_connect(struct hid_device *hid, unsigned int force);
- extern void hidinput_disconnect(struct hid_device *);
- 
-+struct hid_field *hid_find_field(struct hid_device *hdev, unsigned int report_type,
-+				 unsigned int application, unsigned int usage);
- int hid_set_field(struct hid_field *, unsigned, __s32);
- int hid_input_report(struct hid_device *hid, enum hid_report_type type, u8 *data, u32 size,
- 		     int interrupt);
 diff --git a/lib/test_printf.c b/lib/test_printf.c
-index 965cb6f28527..db99014b8c13 100644
+index 8448b6d02bd9..f63591b3ee69 100644
 --- a/lib/test_printf.c
 +++ b/lib/test_printf.c
-@@ -745,18 +745,26 @@ static void __init fwnode_pointer(void)
+@@ -719,18 +719,26 @@ static void __init fwnode_pointer(void)
  static void __init fourcc_pointer(void)
  {
  	struct {
@@ -10329,7 +10163,7 @@ index 965cb6f28527..db99014b8c13 100644
  
  static void __init
 diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 2d71b1115916..5274e3c881de 100644
+index c5e2ec9303c5..874e3af8104c 100644
 --- a/lib/vsprintf.c
 +++ b/lib/vsprintf.c
 @@ -1760,27 +1760,50 @@ char *fourcc_string(char *buf, char *end, const u32 *fourcc,
@@ -10389,7 +10223,7 @@ index 2d71b1115916..5274e3c881de 100644
  
  	*p++ = ' ';
  	*p++ = '(';
-@@ -2355,6 +2378,7 @@ char *rust_fmt_argument(char *buf, char *end, void *ptr);
+@@ -2334,6 +2357,7 @@ char *rust_fmt_argument(char *buf, char *end, void *ptr);
   *       read the documentation (path below) first.
   * - 'NF' For a netdev_features_t
   * - '4cc' V4L2 or DRM FourCC code, with endianness and raw numerical value.

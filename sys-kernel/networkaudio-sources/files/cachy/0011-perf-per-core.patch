@@ -1,7 +1,7 @@
-From 5f6d644590a3af5cc049db4d4b0c74d2ee29b58d Mon Sep 17 00:00:00 2001
+From df5fd664d8ea01bad5af3ff4c6575bda0917383c Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 14 Nov 2024 17:08:15 +0100
-Subject: [PATCH 10/13] perf-per-core
+Date: Mon, 11 Nov 2024 09:22:05 +0100
+Subject: [PATCH 11/13] perf-per-core
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -838,7 +838,7 @@ index a481a939862e..6b405bf46781 100644
  }
  module_exit(intel_rapl_exit);
 diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index e17f4d733e44..7e53b701bc27 100644
+index c0975815980c..cfd8a5591421 100644
 --- a/arch/x86/include/asm/processor.h
 +++ b/arch/x86/include/asm/processor.h
 @@ -98,6 +98,7 @@ struct cpuinfo_topology {
@@ -850,7 +850,7 @@ index e17f4d733e44..7e53b701bc27 100644
  	// AMD Node ID and Nodes per Package info
  	u32			amd_node_id;
 diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index 7f6c39b3be7b..f21f7979dd12 100644
+index fd41103ad342..3973cb9bb2e6 100644
 --- a/arch/x86/include/asm/topology.h
 +++ b/arch/x86/include/asm/topology.h
 @@ -143,6 +143,7 @@ extern const struct cpumask *cpu_clustergroup_mask(int cpu);
