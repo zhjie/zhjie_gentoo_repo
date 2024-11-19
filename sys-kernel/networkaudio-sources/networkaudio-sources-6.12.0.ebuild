@@ -62,6 +62,7 @@ src_prepare() {
         eapply "${FILESDIR}/bore/0001-bore-cachy.patch"
     fi
 
+    # diretta alsa host drive
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host_11_09.patch"
     fi

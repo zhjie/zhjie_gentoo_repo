@@ -4,7 +4,8 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="1"
+K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
 detect_version
@@ -13,7 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
-IUSE="+naa bmq +bore"
+IUSE="+naa bmq +bore +diretta"
 REQUIRED_USE="
     bmq? ( !bore )
     bore? ( !bmq )
@@ -21,16 +22,12 @@ REQUIRED_USE="
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
-EGIT_COMMIT="fcc85627d0046ca8ca2b812e53aaee7ed6b8dd30"
+EGIT_COMMIT="12856cc6850854a062b7aa2ee55786257e266168"
 
 SRC_URI="${GENPATCHES_URI}"
 
 S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi"
 EXTRAVERSION="-networkaudio"
-
-REQUIRED_USE="
-    bore? ( !bmq )
-"
 
 src_unpack() {
     git-r3_src_unpack
@@ -41,6 +38,7 @@ src_unpack() {
 
     rm -rfv "${WORKDIR}"/10*.patch
     rm -rfv "${S}/.git"
+
     mkdir "${WORKDIR}"/genpatch
     mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
     unpack_set_extraversion
@@ -52,26 +50,26 @@ src_prepare() {
 
     # naa patch
     if use naa; then
-        eapply "${FILESDIR}"/naa/*.patch
+        eapply "${FILESDIR}/naa/0005-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
+        eapply "${FILESDIR}/naa/0006-Adjust-USB-isochronous-packet-size.patch"
+        eapply "${FILESDIR}/naa/0007-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
     fi
 
-    # high-hz patch
+    # cachy patch
+    eapply "${FILESDIR}/cachy/0003-autofdo.patch"
+    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0005-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-fixes.patch"
+    eapply "${FILESDIR}/cachy/0012-zstd.patch"
+
+    # highhz patch
     eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
     eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
-    # eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
-
-    # cachy patch
-    eapply "${FILESDIR}/cachy/0001-address-masking.patch"
-    eapply "${FILESDIR}/cachy/0005-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0007-fixes.patch"
-    eapply "${FILESDIR}/cachy/0011-perf-per-core.patch"
-    eapply "${FILESDIR}/cachy/0013-thp-shrinker.patch"
-    eapply "${FILESDIR}/cachy/0014-zstd.patch"
+    eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/prjc-6.11-r1.patch"
+        eapply "${FILESDIR}/bmq/0001-prjc-cachy.patch"
     fi
 
     # bore scheduler
@@ -79,10 +77,13 @@ src_prepare() {
         eapply "${FILESDIR}/bore/0001-bore-cachy.patch"
     fi
 
+    # diretta alsa host driver
+    if use diretta; then
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_09.patch"
+    fi
+
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
-
-    cp -vf "${FILESDIR}/highhz/Kconfig.hz" "${S}/kernel/Kconfig.hz"
 
     eapply_user
 }
