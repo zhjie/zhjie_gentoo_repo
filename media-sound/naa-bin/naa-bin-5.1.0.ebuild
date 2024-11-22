@@ -38,8 +38,9 @@ src_unpack() {
 }
 
 src_install() {
-	mv usr etc lib "${D}" || die
-	rm -rf  "${D}usr/share/doc/networkaudiod/"
+	rm -rf usr/share/
+	rm -rf usr/lib/
+	mv usr etc "${D}" || die
 	if use systemd; then
 		systemd_dounit "${FILESDIR}/${MY_PN}.service"
 	elif use rt; then
