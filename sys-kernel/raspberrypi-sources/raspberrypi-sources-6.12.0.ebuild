@@ -14,7 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
-IUSE="+naa bmq +bore +diretta"
+IUSE="+naa +bmq bore +diretta"
 REQUIRED_USE="
     bmq? ( !bore )
     bore? ( !bmq )
@@ -22,7 +22,7 @@ REQUIRED_USE="
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
-EGIT_COMMIT="12856cc6850854a062b7aa2ee55786257e266168"
+# EGIT_COMMIT="12856cc6850854a062b7aa2ee55786257e266168"
 
 SRC_URI="${GENPATCHES_URI}"
 
