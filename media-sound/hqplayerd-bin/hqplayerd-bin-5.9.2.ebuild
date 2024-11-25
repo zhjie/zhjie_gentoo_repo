@@ -6,7 +6,7 @@ EAPI=8
 inherit systemd unpacker
 
 MY_PN=${PN/-bin/}
-HQV=23
+HQV=27
 
 DESCRIPTION="HQPlayer Embedded - upsampling multichannel audio player"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
