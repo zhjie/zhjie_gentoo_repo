@@ -1,64 +1,3 @@
-From edd7b8fd326e8513c645ece753620e9721a9afc7 Mon Sep 17 00:00:00 2001
-From: Eric Naim <dnaim@cachyos.org>
-Date: Mon, 18 Nov 2024 16:50:58 +0800
-Subject: [PATCH] prjc-cachy
-
-Signed-off-by: Eric Naim <dnaim@cachyos.org>
----
- Documentation/admin-guide/sysctl/kernel.rst |    9 +
- Documentation/scheduler/sched-BMQ.txt       |  110 +
- fs/proc/base.c                              |    2 +-
- include/asm-generic/resource.h              |    2 +-
- include/linux/sched.h                       |   34 +-
- include/linux/sched/deadline.h              |   20 +
- include/linux/sched/prio.h                  |   22 +
- include/linux/sched/rt.h                    |    2 +
- include/linux/sched/topology.h              |    3 +-
- init/Kconfig                                |   35 +
- init/init_task.c                            |   18 +
- kernel/Kconfig.preempt                      |    4 +-
- kernel/cgroup/cpuset.c                      |   10 +-
- kernel/delayacct.c                          |    2 +-
- kernel/exit.c                               |    4 +-
- kernel/locking/rtmutex.c                    |   16 +-
- kernel/locking/ww_mutex.h                   |    2 +
- kernel/sched/Makefile                       |    5 +
- kernel/sched/alt_core.c                     | 7458 +++++++++++++++++++
- kernel/sched/alt_core.h                     |  213 +
- kernel/sched/alt_debug.c                    |   32 +
- kernel/sched/alt_sched.h                    |  971 +++
- kernel/sched/alt_topology.c                 |  350 +
- kernel/sched/alt_topology.h                 |    6 +
- kernel/sched/bmq.h                          |  103 +
- kernel/sched/build_policy.c                 |    6 +
- kernel/sched/build_utility.c                |    6 +
- kernel/sched/cpufreq_schedutil.c            |    8 +
- kernel/sched/cputime.c                      |   10 +-
- kernel/sched/debug.c                        |   14 +
- kernel/sched/idle.c                         |    2 +
- kernel/sched/pds.h                          |  139 +
- kernel/sched/pelt.c                         |    6 +-
- kernel/sched/pelt.h                         |    8 +-
- kernel/sched/sched.h                        |    9 +
- kernel/sched/stats.c                        |    4 +
- kernel/sched/stats.h                        |    2 +
- kernel/sched/syscalls.c                     |  279 +-
- kernel/sched/topology.c                     |   30 +
- kernel/sysctl.c                             |   15 +
- kernel/time/posix-cpu-timers.c              |   10 +-
- kernel/trace/trace_selftest.c               |    5 +
- kernel/workqueue.c                          |   15 +
- 43 files changed, 9976 insertions(+), 25 deletions(-)
- create mode 100644 Documentation/scheduler/sched-BMQ.txt
- create mode 100644 kernel/sched/alt_core.c
- create mode 100644 kernel/sched/alt_core.h
- create mode 100644 kernel/sched/alt_debug.c
- create mode 100644 kernel/sched/alt_sched.h
- create mode 100644 kernel/sched/alt_topology.c
- create mode 100644 kernel/sched/alt_topology.h
- create mode 100644 kernel/sched/bmq.h
- create mode 100644 kernel/sched/pds.h
-
 diff --git a/Documentation/admin-guide/sysctl/kernel.rst b/Documentation/admin-guide/sysctl/kernel.rst
 index f8bc1630eba0..1b90768a0916 100644
 --- a/Documentation/admin-guide/sysctl/kernel.rst
@@ -402,10 +341,10 @@ index 4237daa5ac7a..3cebd93c49c8 100644
  #else
  static inline void rebuild_sched_domains_energy(void)
 diff --git a/init/Kconfig b/init/Kconfig
-index 504e8a7c4e2a..a94dac1dfe28 100644
+index c521e1421ad4..131a599fcde2 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
-@@ -664,6 +664,7 @@ config TASK_IO_ACCOUNTING
+@@ -652,6 +652,7 @@ config TASK_IO_ACCOUNTING
  
  config PSI
  	bool "Pressure stall information tracking"
@@ -413,7 +352,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  	select KERNFS
  	help
  	  Collect metrics that indicate how overcommitted the CPU, memory,
-@@ -829,6 +830,7 @@ menu "Scheduler features"
+@@ -817,6 +818,7 @@ menu "Scheduler features"
  config UCLAMP_TASK
  	bool "Enable utilization clamping for RT/FAIR tasks"
  	depends on CPU_FREQ_GOV_SCHEDUTIL
@@ -421,7 +360,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  	help
  	  This feature enables the scheduler to track the clamped utilization
  	  of each CPU based on RUNNABLE tasks scheduled on that CPU.
-@@ -875,6 +877,35 @@ config UCLAMP_BUCKETS_COUNT
+@@ -863,6 +865,35 @@ config UCLAMP_BUCKETS_COUNT
  
  	  If in doubt, use the default value.
  
@@ -457,7 +396,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  endmenu
  
  #
-@@ -940,6 +971,7 @@ config NUMA_BALANCING
+@@ -928,6 +959,7 @@ config NUMA_BALANCING
  	depends on ARCH_SUPPORTS_NUMA_BALANCING
  	depends on !ARCH_WANT_NUMA_VARIABLE_LOCALITY
  	depends on SMP && NUMA && MIGRATION && !PREEMPT_RT
@@ -465,7 +404,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  	help
  	  This option adds support for automatic NUMA aware memory/task placement.
  	  The mechanism is quite primitive and is based on migrating memory when
-@@ -1048,6 +1080,7 @@ menuconfig CGROUP_SCHED
+@@ -1036,6 +1068,7 @@ menuconfig CGROUP_SCHED
  	  tasks.
  
  if CGROUP_SCHED
@@ -473,7 +412,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  config GROUP_SCHED_WEIGHT
  	def_bool n
  
-@@ -1085,6 +1118,7 @@ config EXT_GROUP_SCHED
+@@ -1073,6 +1106,7 @@ config EXT_GROUP_SCHED
  	select GROUP_SCHED_WEIGHT
  	default y
  
@@ -481,7 +420,7 @@ index 504e8a7c4e2a..a94dac1dfe28 100644
  endif #CGROUP_SCHED
  
  config SCHED_MM_CID
-@@ -1362,6 +1396,7 @@ config CHECKPOINT_RESTORE
+@@ -1334,6 +1368,7 @@ config CHECKPOINT_RESTORE
  
  config SCHED_AUTOGROUP
  	bool "Automatic process group scheduling"
@@ -536,7 +475,7 @@ index 136a8231355a..03770079619a 100644
  #ifdef CONFIG_SMP
  	.pushable_tasks	= PLIST_NODE_INIT(init_task.pushable_tasks, MAX_PRIO),
 diff --git a/kernel/Kconfig.preempt b/kernel/Kconfig.preempt
-index f415983be9d4..a9a73a428601 100644
+index fe782cd77388..d27d2154d71a 100644
 --- a/kernel/Kconfig.preempt
 +++ b/kernel/Kconfig.preempt
 @@ -117,7 +117,7 @@ config PREEMPT_DYNAMIC
@@ -654,7 +593,7 @@ index 619f0014c33b..7dc53ddd45a8 100644
  	__unhash_process(tsk, group_dead);
  	write_sequnlock(&sig->stats_lock);
 diff --git a/kernel/locking/rtmutex.c b/kernel/locking/rtmutex.c
-index d3b72c2f983f..40121b5dd1a9 100644
+index ebebd0eec7f6..802112207855 100644
 --- a/kernel/locking/rtmutex.c
 +++ b/kernel/locking/rtmutex.c
 @@ -363,7 +363,7 @@ waiter_update_prio(struct rt_mutex_waiter *waiter, struct task_struct *task)
@@ -10417,7 +10356,7 @@ index f4f6a0875c66..ee780f2b6c17 100644
  static inline int
  update_hw_load_avg(u64 now, struct rq *rq, u64 capacity)
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index c5d6012794de..6d6f57395907 100644
+index c03b3d7b320e..08ee4a9cd6a5 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -5,6 +5,10 @@
@@ -11078,10 +11017,10 @@ index 9748a4c8d668..1e2bdd70d69a 100644
 +#endif /* CONFIG_NUMA */
 +#endif
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 676e89dc38c3..e44c3bd61e48 100644
+index 79e6cb1d5c48..61bc0352e233 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -95,6 +95,10 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
+@@ -92,6 +92,10 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
  
  /* Constants used for minimum and maximum */
  
@@ -11092,7 +11031,7 @@ index 676e89dc38c3..e44c3bd61e48 100644
  #ifdef CONFIG_PERF_EVENTS
  static const int six_hundred_forty_kb = 640 * 1024;
  #endif
-@@ -1919,6 +1923,17 @@ static struct ctl_table kern_table[] = {
+@@ -1907,6 +1911,17 @@ static struct ctl_table kern_table[] = {
  		.proc_handler	= proc_dointvec,
  	},
  #endif
@@ -11191,7 +11130,7 @@ index 1469dd8075fa..803527a0e48a 100644
  	struct wakeup_test_data *x = data;
  
 diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 8b07576814a5..b78e1d22abd4 100644
+index 9949ffad8df0..90eac9d802a8 100644
 --- a/kernel/workqueue.c
 +++ b/kernel/workqueue.c
 @@ -1247,6 +1247,7 @@ static bool kick_pool(struct worker_pool *pool)
@@ -11247,6 +11186,3 @@ index 8b07576814a5..b78e1d22abd4 100644
  	work_data = *work_data_bits(work);
  	worker->current_color = get_work_color(work_data);
  
--- 
-2.47.0
-

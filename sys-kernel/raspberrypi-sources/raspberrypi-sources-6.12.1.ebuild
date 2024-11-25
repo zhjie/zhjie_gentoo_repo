@@ -4,13 +4,13 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
 detect_version
 
-DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset and naa patches"
+DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
@@ -69,7 +69,7 @@ src_prepare() {
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/0001-prjc-cachy.patch"
+        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r0.patch"
     fi
 
     # bore scheduler
@@ -85,5 +85,6 @@ src_prepare() {
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
+    rm "${S}/tools/testing/selftests/tc-testing/action-ebpf"
     eapply_user
 }
