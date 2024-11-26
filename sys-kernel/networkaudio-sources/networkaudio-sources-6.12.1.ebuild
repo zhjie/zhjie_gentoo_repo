@@ -45,6 +45,7 @@ src_prepare() {
     eapply "${FILESDIR}/cachy/0006-crypto.patch"
     eapply "${FILESDIR}/cachy/0007-fixes.patch"
     eapply "${FILESDIR}/cachy/0011-perf-per-core.patch"
+    eapply "${FILESDIR}/cachy/0012-t2.patch"
     eapply "${FILESDIR}/cachy/0013-zstd.patch"
 
     # highhz patch
