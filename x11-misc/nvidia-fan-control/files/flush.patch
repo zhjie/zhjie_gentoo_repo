@@ -1,0 +1,23 @@
+diff '--color=auto' -urN orig/nvidia_fan_control.py new/nvidia_fan_control.py
+--- orig/nvidia_fan_control.py	2024-11-27 16:11:17.275707840 +0800
++++ new/nvidia_fan_control.py	2024-11-27 16:15:59.858497195 +0800
+@@ -1,3 +1,8 @@
++#!/usr/bin/env python
++
++from functools import partial
++print = partial(print, flush=True)
++
+ import time
+ from pynvml import *
+ import os
+@@ -180,8 +185,8 @@
+ ============================================================"""
+ 
+                 # Clear previous output
+-                if last_lines > 0:
+-                    clear_lines(last_lines)
++                # if last_lines > 0:
++                #     clear_lines(last_lines)
+ 
+                 # Print new information and record number of lines
+                 last_lines = print_info(info)
