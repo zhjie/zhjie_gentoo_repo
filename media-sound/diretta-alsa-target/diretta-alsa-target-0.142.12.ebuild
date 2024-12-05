@@ -8,8 +8,8 @@ inherit unpacker
 DESCRIPTION="Linux Diretta Alsa Target"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-ARM_TARGET="diretta-alsa-target-16k-2024.10.18-1-aarch64.pkg.tar.xz"
-X86_TARGET="diretta-alsa-target-2024.10.18-1-x86_64.pkg.tar.zst"
+ARM_TARGET="diretta-alsa-target-16k-2024.11.25-1-aarch64.pkg.tar.xz"
+X86_TARGET="diretta-alsa-target-2024.11.25-1-x86_64.pkg.tar.zst"
 
 SRC_URI="
     amd64? ( https://www.audio-linux.com/repo/${X86_TARGET} )
