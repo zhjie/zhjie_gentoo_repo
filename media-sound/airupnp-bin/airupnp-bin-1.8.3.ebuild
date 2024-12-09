@@ -7,11 +7,11 @@ inherit systemd
 
 DESCRIPTION="AirConnect: Send audio to UPnP players using AirPlay"
 HOMEPAGE="https://github.com/philippe44/AirConnect"
-SRC_URI="https://github.com/philippe44/AirConnect/raw/4f391a9b62f2591af495ed668f31d67515ea32b9/AirConnect-1.8.3.zip -> ${P}.zip"
+SRC_URI="https://github.com/philippe44/AirConnect/releases/download/1.8.3/AirConnect-1.8.3.zip -> ${P}.zip"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE="systemd"
 
 DEPEND="systemd? ( sys-apps/systemd )"

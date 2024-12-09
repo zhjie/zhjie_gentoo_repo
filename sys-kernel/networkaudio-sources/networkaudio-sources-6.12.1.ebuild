@@ -65,7 +65,8 @@ src_prepare() {
 
     # diretta alsa host drive
     if use diretta; then
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_09.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_22.patch"
     fi
 
     # cloudflare patch
