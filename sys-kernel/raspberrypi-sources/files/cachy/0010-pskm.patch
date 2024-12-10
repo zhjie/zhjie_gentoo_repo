@@ -1,7 +1,7 @@
-From 56c63974139208510b818be3671cd81f53477e9b Mon Sep 17 00:00:00 2001
+From 45606cc9ced5adecd6c8629df5e7ea887c51a659 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 21 Nov 2024 22:01:17 +0100
-Subject: [PATCH 10/12] pksm
+Date: Mon, 9 Dec 2024 15:06:31 +0100
+Subject: [PATCH 10/12] pskm
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -429,5 +429,5 @@ index 01071182763e..7394bad8178e 100644
 +464  common	process_ksm_disable	sys_process_ksm_disable		sys_process_ksm_disable
 +465  common	process_ksm_status	sys_process_ksm_status		sys_process_ksm_status
 -- 
-2.47.0
+2.47.1
 

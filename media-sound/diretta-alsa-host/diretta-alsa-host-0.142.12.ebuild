@@ -19,14 +19,14 @@ SLOT="0"
 LICENSE="CDDL"
 IUSE=""
 
-BDEPEND="|| ( sys-kernel/networkaudio-sources[diretta] sys-kernel/raspberrypi-sources[diretta] )"
+# BDEPEND="|| ( sys-kernel/networkaudio-sources[diretta] sys-kernel/raspberrypi-sources[diretta] )"
 
 src_unpack() {
     if use amd64; then
         _unpacker "${X86_HOST}"
     fi
     if use arm64; then
-        _unpacker "%{ARM_HOST}"
+        _unpacker "${ARM_HOST}"
     fi
 
     mv ./opt/diretta-alsa/ "${WORKDIR}/${P}"

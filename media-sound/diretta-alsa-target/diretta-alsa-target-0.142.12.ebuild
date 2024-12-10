@@ -24,8 +24,6 @@ IUSE=""
 RDEPEND=">=dev-libs/openssl-3.0
 	net-misc/curl
 	media-libs/alsa-lib
-	>=net-dns/c-ares-1.33.1
-	net-libs/libpsl
 	sys-libs/zlib
 	net-dns/libidn2
 	>=dev-libs/libunistring-1.2

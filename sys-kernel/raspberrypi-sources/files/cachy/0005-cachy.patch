@@ -1,17 +1,18 @@
-From f3a6d6d71bfb323d55631f442c8ef5a33448bf92 Mon Sep 17 00:00:00 2001
+From 20395e8ad251d4e7f456bd74ef7a83627970b709 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 21 Nov 2024 21:59:58 +0100
+Date: Mon, 9 Dec 2024 15:05:06 +0100
 Subject: [PATCH 05/12] cachy
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
  .../admin-guide/kernel-parameters.txt         |   12 +
+ Documentation/admin-guide/sysctl/vm.rst       |   72 +
  Documentation/gpu/amdgpu/thermal.rst          |   12 +
  Makefile                                      |    8 +
- arch/x86/Kconfig.cpu                          |  359 +-
- arch/x86/Makefile                             |   87 +-
+ arch/x86/Kconfig.cpu                          |  367 +-
+ arch/x86/Makefile                             |   89 +-
  arch/x86/include/asm/pci.h                    |    6 +
- arch/x86/include/asm/vermagic.h               |   70 +
+ arch/x86/include/asm/vermagic.h               |   72 +
  arch/x86/pci/common.c                         |    7 +-
  drivers/Makefile                              |   13 +-
  drivers/ata/ahci.c                            |   23 +-
@@ -46,29 +47,30 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/scsi/vhba/Kconfig                     |    9 +
  drivers/scsi/vhba/Makefile                    |    4 +
  drivers/scsi/vhba/vhba.c                      | 1130 ++++++
+ include/linux/mm.h                            |    8 +
  include/linux/pagemap.h                       |    2 +-
  include/linux/user_namespace.h                |    4 +
  include/linux/wait.h                          |    2 +
  init/Kconfig                                  |   26 +
  kernel/Kconfig.hz                             |   24 +
- kernel/Kconfig.preempt                        |    2 +-
  kernel/fork.c                                 |   14 +
  kernel/locking/rwsem.c                        |    4 +-
  kernel/sched/fair.c                           |   13 +
  kernel/sched/sched.h                          |    2 +-
  kernel/sched/wait.c                           |   24 +
- kernel/sysctl.c                               |   12 +
+ kernel/sysctl.c                               |   46 +
  kernel/user_namespace.c                       |    7 +
- mm/Kconfig                                    |    2 +-
+ mm/Kconfig                                    |   65 +-
  mm/compaction.c                               |    4 +
  mm/huge_memory.c                              |    4 +
+ mm/mm_init.c                                  |    1 +
  mm/page-writeback.c                           |    8 +
  mm/page_alloc.c                               |    4 +
  mm/swap.c                                     |    5 +
  mm/vmpressure.c                               |    4 +
- mm/vmscan.c                                   |    8 +
+ mm/vmscan.c                                   |  143 +
  net/ipv4/inet_connection_sock.c               |    2 +-
- 63 files changed, 6591 insertions(+), 67 deletions(-)
+ 65 files changed, 6915 insertions(+), 66 deletions(-)
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.h
  create mode 100644 drivers/media/v4l2-core/v4l2loopback_formats.h
@@ -107,6 +109,103 @@ index d401577b5a6a..e6ec15a89924 100644
  		noioapicquirk	[APIC] Disable all boot interrupt quirks.
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
+diff --git a/Documentation/admin-guide/sysctl/vm.rst b/Documentation/admin-guide/sysctl/vm.rst
+index f48eaa98d22d..fc777c14cff6 100644
+--- a/Documentation/admin-guide/sysctl/vm.rst
++++ b/Documentation/admin-guide/sysctl/vm.rst
+@@ -25,6 +25,9 @@ files can be found in mm/swap.c.
+ Currently, these files are in /proc/sys/vm:
+ 
+ - admin_reserve_kbytes
++- anon_min_ratio
++- clean_low_ratio
++- clean_min_ratio
+ - compact_memory
+ - compaction_proactiveness
+ - compact_unevictable_allowed
+@@ -108,6 +111,67 @@ On x86_64 this is about 128MB.
+ Changing this takes effect whenever an application requests memory.
+ 
+ 
++anon_min_ratio
++==============
++
++This knob provides *hard* protection of anonymous pages. The anonymous pages
++on the current node won't be reclaimed under any conditions when their amount
++is below vm.anon_min_ratio.
++
++This knob may be used to prevent excessive swap thrashing when anonymous
++memory is low (for example, when memory is going to be overfilled by
++compressed data of zram module).
++
++Setting this value too high (close to 100) can result in inability to
++swap and can lead to early OOM under memory pressure.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 15.
++
++
++clean_low_ratio
++================
++
++This knob provides *best-effort* protection of clean file pages. The file pages
++on the current node won't be reclaimed under memory pressure when the amount of
++clean file pages is below vm.clean_low_ratio *unless* we threaten to OOM.
++
++Protection of clean file pages using this knob may be used when swapping is
++still possible to
++  - prevent disk I/O thrashing under memory pressure;
++  - improve performance in disk cache-bound tasks under memory pressure.
++
++Setting it to a high value may result in a early eviction of anonymous pages
++into the swap space by attempting to hold the protected amount of clean file
++pages in memory.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 0.
++
++
++clean_min_ratio
++================
++
++This knob provides *hard* protection of clean file pages. The file pages on the
++current node won't be reclaimed under memory pressure when the amount of clean
++file pages is below vm.clean_min_ratio.
++
++Hard protection of clean file pages using this knob may be used to
++  - prevent disk I/O thrashing under memory pressure even with no free swap space;
++  - improve performance in disk cache-bound tasks under memory pressure;
++  - avoid high latency and prevent livelock in near-OOM conditions.
++
++Setting it to a high value may result in a early out-of-memory condition due to
++the inability to reclaim the protected amount of clean file pages when other
++types of pages cannot be reclaimed.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 15.
++
++
+ compact_memory
+ ==============
+ 
+@@ -964,6 +1028,14 @@ be 133 (x + 2x = 200, 2x = 133.33).
+ At 0, the kernel will not initiate swap until the amount of free and
+ file-backed pages is less than the high watermark in a zone.
+ 
++This knob has no effect if the amount of clean file pages on the current
++node is below vm.clean_low_ratio or vm.clean_min_ratio. In this case,
++only anonymous pages can be reclaimed.
++
++If the number of anonymous pages on the current node is below
++vm.anon_min_ratio, then only file pages can be reclaimed with
++any vm.swappiness value.
++
+ 
+ unprivileged_userfaultfd
+ ========================
 diff --git a/Documentation/gpu/amdgpu/thermal.rst b/Documentation/gpu/amdgpu/thermal.rst
 index 6d942b5c58f0..1768a106aab1 100644
 --- a/Documentation/gpu/amdgpu/thermal.rst
@@ -131,7 +230,7 @@ index 6d942b5c58f0..1768a106aab1 100644
  ======
  
 diff --git a/Makefile b/Makefile
-index 5ccec99bf086..5c6151566fd3 100644
+index d078509ae8ed..6911671b03f4 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -801,11 +801,19 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
@@ -155,7 +254,7 @@ index 5ccec99bf086..5c6151566fd3 100644
  # depends on `opt-level` and `debug-assertions`, respectively.
  KBUILD_RUSTFLAGS += -Cdebug-assertions=$(if $(CONFIG_RUST_DEBUG_ASSERTIONS),y,n)
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
-index 2a7279d80460..f5849153b385 100644
+index 2a7279d80460..786fcf84d128 100644
 --- a/arch/x86/Kconfig.cpu
 +++ b/arch/x86/Kconfig.cpu
 @@ -155,9 +155,8 @@ config MPENTIUM4
@@ -313,7 +412,7 @@ index 2a7279d80460..f5849153b385 100644
  	help
  
  	  Select this for Intel Core 2 and newer Core 2 Xeons (Xeon 51xx and
-@@ -278,14 +388,191 @@ config MCORE2
+@@ -278,14 +388,199 @@ config MCORE2
  	  family in /proc/cpuinfo. Newer ones have 6 and older ones 15
  	  (not a typo)
  
@@ -421,13 +520,21 @@ index 2a7279d80460..f5849153b385 100644
 +
 +	  Enables -march=cannonlake
 +
-+config MICELAKE
-+	bool "Intel Ice Lake"
++config MICELAKE_CLIENT
++	bool "Intel Ice Lake (Client)"
 +	help
 +
 +	  Select this for 10th Gen Core processors in the Ice Lake family.
 +
 +	  Enables -march=icelake-client
++
++config MICELAKE_SERVER
++	bool "Intel Ice lake (Server)"
++	help
++
++	  Select this for the 3rd Gen Xeon processors in the Ice lake family.
++
++	  Enables -march=icelake-server
 +
 +config MCASCADELAKE
 +	bool "Intel Cascade Lake"
@@ -511,7 +618,7 @@ index 2a7279d80460..f5849153b385 100644
  
  config GENERIC_CPU
  	bool "Generic-x86-64"
-@@ -294,6 +581,26 @@ config GENERIC_CPU
+@@ -294,6 +589,26 @@ config GENERIC_CPU
  	  Generic x86-64 CPU.
  	  Run equally well on all x86-64 CPUs.
  
@@ -538,7 +645,7 @@ index 2a7279d80460..f5849153b385 100644
  endchoice
  
  config X86_GENERIC
-@@ -308,6 +615,30 @@ config X86_GENERIC
+@@ -308,6 +623,30 @@ config X86_GENERIC
  	  This is really intended for distributors who need more
  	  generic optimizations.
  
@@ -569,34 +676,34 @@ index 2a7279d80460..f5849153b385 100644
  #
  # Define implied options from the CPU selection here
  config X86_INTERNODE_CACHE_SHIFT
-@@ -318,7 +649,7 @@ config X86_INTERNODE_CACHE_SHIFT
+@@ -318,7 +657,7 @@ config X86_INTERNODE_CACHE_SHIFT
  config X86_L1_CACHE_SHIFT
  	int
  	default "7" if MPENTIUM4 || MPSC
 -	default "6" if MK7 || MK8 || MPENTIUMM || MCORE2 || MATOM || MVIAC7 || X86_GENERIC || GENERIC_CPU
-+	default "6" if MK7 || MK8 || MPENTIUMM || MCORE2 || MATOM || MVIAC7 || X86_GENERIC || GENERIC_CPU || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
++	default "6" if MK7 || MK8 || MPENTIUMM || MCORE2 || MATOM || MVIAC7 || X86_GENERIC || GENERIC_CPU || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
  	default "4" if MELAN || M486SX || M486 || MGEODEGX1
  	default "5" if MWINCHIP3D || MWINCHIPC6 || MCRUSOE || MEFFICEON || MCYRIXIII || MK6 || MPENTIUMIII || MPENTIUMII || M686 || M586MMX || M586TSC || M586 || MVIAC3_2 || MGEODE_LX
  
-@@ -336,11 +667,11 @@ config X86_ALIGNMENT_16
+@@ -336,11 +675,11 @@ config X86_ALIGNMENT_16
  
  config X86_INTEL_USERCOPY
  	def_bool y
 -	depends on MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M586MMX || X86_GENERIC || MK8 || MK7 || MEFFICEON || MCORE2
-+	depends on MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M586MMX || X86_GENERIC || MK8 || MK7 || MEFFICEON || MCORE2 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL
++	depends on MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M586MMX || X86_GENERIC || MK8 || MK7 || MEFFICEON || MCORE2 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL
  
  config X86_USE_PPRO_CHECKSUM
  	def_bool y
 -	depends on MWINCHIP3D || MWINCHIPC6 || MCYRIXIII || MK7 || MK6 || MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M686 || MK8 || MVIAC3_2 || MVIAC7 || MEFFICEON || MGEODE_LX || MCORE2 || MATOM
-+	depends on MWINCHIP3D || MWINCHIPC6 || MCYRIXIII || MK7 || MK6 || MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M686 || MK8 || MVIAC3_2 || MVIAC7 || MEFFICEON || MGEODE_LX || MCORE2 || MATOM || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
++	depends on MWINCHIP3D || MWINCHIPC6 || MCYRIXIII || MK7 || MK6 || MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M686 || MK8 || MVIAC3_2 || MVIAC7 || MEFFICEON || MGEODE_LX || MCORE2 || MATOM || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
  
  #
  # P6_NOPs are a relatively minor optimization that require a family >=
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 5b773b34768d..74e94c9ba198 100644
+index 5b773b34768d..5f57fd8750c6 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
-@@ -182,15 +182,96 @@ else
+@@ -182,15 +182,98 @@ else
          cflags-$(CONFIG_MK8)		+= -march=k8
          cflags-$(CONFIG_MPSC)		+= -march=nocona
          cflags-$(CONFIG_MCORE2)		+= -march=core2
@@ -638,7 +745,8 @@ index 5b773b34768d..74e94c9ba198 100644
 +        cflags-$(CONFIG_MSKYLAKE) 	+= -march=skylake
 +        cflags-$(CONFIG_MSKYLAKEX) 	+= -march=skylake-avx512
 +        cflags-$(CONFIG_MCANNONLAKE) 	+= -march=cannonlake
-+        cflags-$(CONFIG_MICELAKE) 	+= -march=icelake-client
++        cflags-$(CONFIG_MICELAKE_CLIENT) 	+= -march=icelake-client
++        cflags-$(CONFIG_MICELAKE_SERVER) 	+= -march=icelake-server
 +        cflags-$(CONFIG_MCASCADELAKE) 	+= -march=cascadelake
 +        cflags-$(CONFIG_MCOOPERLAKE) 	+= -march=cooperlake
 +        cflags-$(CONFIG_MTIGERLAKE) 	+= -march=tigerlake
@@ -683,7 +791,8 @@ index 5b773b34768d..74e94c9ba198 100644
 +        rustflags-$(CONFIG_MSKYLAKE) 	+= -Ctarget-cpu=skylake
 +        rustflags-$(CONFIG_MSKYLAKEX) 	+= -Ctarget-cpu=skylake-avx512
 +        rustflags-$(CONFIG_MCANNONLAKE) 	+= -Ctarget-cpu=cannonlake
-+        rustflags-$(CONFIG_MICELAKE) 	+= -Ctarget-cpu=icelake-client
++        rustflags-$(CONFIG_MICELAKE_CLIENT) 	+= -Ctarget-cpu=icelake-client
++        rustflags-$(CONFIG_MICELAKE_SERVER) 	+= -Ctarget-cpu=icelake-server
 +        rustflags-$(CONFIG_MCASCADELAKE) 	+= -Ctarget-cpu=cascadelake
 +        rustflags-$(CONFIG_MCOOPERLAKE) 	+= -Ctarget-cpu=cooperlake
 +        rustflags-$(CONFIG_MTIGERLAKE) 	+= -Ctarget-cpu=tigerlake
@@ -721,10 +830,10 @@ index b3ab80a03365..5e883b397ff3 100644
     already-configured bus numbers - to be used for buggy BIOSes
     or architectures with incomplete PCI setup by the loader */
 diff --git a/arch/x86/include/asm/vermagic.h b/arch/x86/include/asm/vermagic.h
-index 75884d2cdec3..f4e29563473d 100644
+index 75884d2cdec3..2fdae271f47f 100644
 --- a/arch/x86/include/asm/vermagic.h
 +++ b/arch/x86/include/asm/vermagic.h
-@@ -17,6 +17,54 @@
+@@ -17,6 +17,56 @@
  #define MODULE_PROC_FAMILY "586MMX "
  #elif defined CONFIG_MCORE2
  #define MODULE_PROC_FAMILY "CORE2 "
@@ -756,8 +865,10 @@ index 75884d2cdec3..f4e29563473d 100644
 +#define MODULE_PROC_FAMILY "SKYLAKEX "
 +#elif defined CONFIG_MCANNONLAKE
 +#define MODULE_PROC_FAMILY "CANNONLAKE "
-+#elif defined CONFIG_MICELAKE
-+#define MODULE_PROC_FAMILY "ICELAKE "
++#elif defined CONFIG_MICELAKE_CLIENT
++#define MODULE_PROC_FAMILY "ICELAKE_CLIENT "
++#elif defined CONFIG_MICELAKE_SERVER
++#define MODULE_PROC_FAMILY "ICELAKE_SERVER "
 +#elif defined CONFIG_MCASCADELAKE
 +#define MODULE_PROC_FAMILY "CASCADELAKE "
 +#elif defined CONFIG_MCOOPERLAKE
@@ -779,7 +890,7 @@ index 75884d2cdec3..f4e29563473d 100644
  #elif defined CONFIG_MATOM
  #define MODULE_PROC_FAMILY "ATOM "
  #elif defined CONFIG_M686
-@@ -35,6 +83,28 @@
+@@ -35,6 +85,28 @@
  #define MODULE_PROC_FAMILY "K7 "
  #elif defined CONFIG_MK8
  #define MODULE_PROC_FAMILY "K8 "
@@ -1008,10 +1119,10 @@ index df17e79c45c7..e454488c1a31 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index 8d97f17ffe66..27b3d03bfdcd 100644
+index 24fbde7dd1c4..6a50ee0ef556 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -4473,7 +4473,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
+@@ -4497,7 +4497,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
  		return r;
  	}
  
@@ -1034,7 +1145,7 @@ index ebabfe3a512f..4d3ebcaacca1 100644
   *
   * AMD driver supports pre-defined mathematical functions for transferring
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-index 288be19db7c1..9d48d01d5217 100644
+index 9be87b532517..47e8cd9a756f 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 @@ -473,7 +473,7 @@ static int amdgpu_dm_crtc_late_register(struct drm_crtc *crtc)
@@ -1288,10 +1399,10 @@ index f5bf41f21c41..363af8990aa2 100644
  struct amdgpu_pm {
  	struct mutex		mutex;
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 80e60ea2d11e..44f0b159d232 100644
+index 32bdeac2676b..eb6a3cc9ca44 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
 +++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -2775,7 +2775,10 @@ int smu_get_power_limit(void *handle,
+@@ -2779,7 +2779,10 @@ int smu_get_power_limit(void *handle,
  			*limit = smu->max_power_limit;
  			break;
  		case SMU_PPT_LIMIT_MIN:
@@ -1303,7 +1414,7 @@ index 80e60ea2d11e..44f0b159d232 100644
  			break;
  		default:
  			return -EINVAL;
-@@ -2799,7 +2802,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
+@@ -2803,7 +2806,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
  		if (smu->ppt_funcs->set_power_limit)
  			return smu->ppt_funcs->set_power_limit(smu, limit_type, limit);
  
@@ -1319,7 +1430,7 @@ index 80e60ea2d11e..44f0b159d232 100644
  		dev_err(smu->adev->dev,
  			"New power limit (%d) is out of range [%d,%d]\n",
  			limit, smu->min_power_limit, smu->max_power_limit);
-@@ -2878,6 +2888,10 @@ static enum smu_clk_type smu_convert_to_smuclk(enum pp_clock_type type)
+@@ -2882,6 +2892,10 @@ static enum smu_clk_type smu_convert_to_smuclk(enum pp_clock_type type)
  		clk_type = SMU_OD_FAN_TARGET_TEMPERATURE; break;
  	case OD_FAN_MINIMUM_PWM:
  		clk_type = SMU_OD_FAN_MINIMUM_PWM; break;
@@ -1505,7 +1616,7 @@ index d53e162dcd8d..24675a1d98db 100644
  
  	smu_v13_0_0_set_supported_od_feature_mask(smu);
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
-index b891a5e0a396..50d16301f3eb 100644
+index ceaf4572db25..60d18aca6ce5 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
 +++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
 @@ -83,6 +83,8 @@
@@ -1641,7 +1752,7 @@ index b891a5e0a396..50d16301f3eb 100644
  	case PP_OD_RESTORE_DEFAULT_TABLE:
  		if (size == 1) {
  			ret = smu_v13_0_7_od_restore_table_single(smu, input[0]);
-@@ -2106,7 +2204,11 @@ static void smu_v13_0_7_set_supported_od_feature_mask(struct smu_context *smu)
+@@ -2108,7 +2206,11 @@ static void smu_v13_0_7_set_supported_od_feature_mask(struct smu_context *smu)
  					    OD_OPS_SUPPORT_FAN_TARGET_TEMPERATURE_RETRIEVE |
  					    OD_OPS_SUPPORT_FAN_TARGET_TEMPERATURE_SET |
  					    OD_OPS_SUPPORT_FAN_MINIMUM_PWM_RETRIEVE |
@@ -1654,7 +1765,7 @@ index b891a5e0a396..50d16301f3eb 100644
  }
  
  static int smu_v13_0_7_set_default_od_settings(struct smu_context *smu)
-@@ -2172,6 +2274,10 @@ static int smu_v13_0_7_set_default_od_settings(struct smu_context *smu)
+@@ -2174,6 +2276,10 @@ static int smu_v13_0_7_set_default_od_settings(struct smu_context *smu)
  			user_od_table_bak.OverDriveTable.FanTargetTemperature;
  		user_od_table->OverDriveTable.FanMinimumPwm =
  			user_od_table_bak.OverDriveTable.FanMinimumPwm;
@@ -7304,6 +7415,25 @@ index 000000000000..7531223355e5
 +module_init(vhba_init);
 +module_exit(vhba_exit);
 +
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 61fff5d34ed5..18dc2544700b 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -205,6 +205,14 @@ static inline void __mm_zero_struct_page(struct page *page)
+ 
+ extern int sysctl_max_map_count;
+ 
++extern bool sysctl_workingset_protection;
++extern u8 sysctl_anon_min_ratio;
++extern u8 sysctl_clean_low_ratio;
++extern u8 sysctl_clean_min_ratio;
++int vm_workingset_protection_update_handler(
++	const struct ctl_table *table, int write,
++	void __user *buffer, size_t *lenp, loff_t *ppos);
++
+ extern unsigned long sysctl_user_reserve_kbytes;
+ extern unsigned long sysctl_admin_reserve_kbytes;
+ 
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
 index 68a5f1ff3301..291873a34079 100644
 --- a/include/linux/pagemap.h
@@ -7360,10 +7490,10 @@ index 8aa3372f21a0..924778a426ce 100644
  void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  long wait_woken(struct wait_queue_entry *wq_entry, unsigned mode, long timeout);
 diff --git a/init/Kconfig b/init/Kconfig
-index c521e1421ad4..38dbd16da6a9 100644
+index 7256fa127530..857869dbc22c 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
-@@ -145,6 +145,10 @@ config THREAD_INFO_IN_TASK
+@@ -154,6 +154,10 @@ config THREAD_INFO_IN_TASK
  
  menu "General setup"
  
@@ -7374,7 +7504,7 @@ index c521e1421ad4..38dbd16da6a9 100644
  config BROKEN
  	bool
  
-@@ -1300,6 +1304,22 @@ config USER_NS
+@@ -1309,6 +1313,22 @@ config USER_NS
  
  	  If unsure, say N.
  
@@ -7397,7 +7527,7 @@ index c521e1421ad4..38dbd16da6a9 100644
  config PID_NS
  	bool "PID Namespaces"
  	default y
-@@ -1442,6 +1462,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
+@@ -1451,6 +1471,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
  	  with the "-O2" compiler flag for best performance and most
  	  helpful compile-time warnings.
  
@@ -7452,21 +7582,8 @@ index 38ef6d06888e..0f78364efd4f 100644
  	default 1000 if HZ_1000
  
  config SCHED_HRTICK
-diff --git a/kernel/Kconfig.preempt b/kernel/Kconfig.preempt
-index fe782cd77388..a69475f2bca7 100644
---- a/kernel/Kconfig.preempt
-+++ b/kernel/Kconfig.preempt
-@@ -69,7 +69,7 @@ config PREEMPT
- 
- config PREEMPT_RT
- 	bool "Fully Preemptible Kernel (Real-Time)"
--	depends on EXPERT && ARCH_SUPPORTS_RT
-+	depends on ARCH_SUPPORTS_RT
- 	select PREEMPTION
- 	help
- 	  This option turns the kernel into a real-time kernel by replacing
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 22f43721d031..8287afdd01d2 100644
+index ce8be55e5e04..e97e527cec69 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -107,6 +107,10 @@
@@ -7480,7 +7597,7 @@ index 22f43721d031..8287afdd01d2 100644
  #include <asm/pgalloc.h>
  #include <linux/uaccess.h>
  #include <asm/mmu_context.h>
-@@ -2138,6 +2142,10 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2158,6 +2162,10 @@ __latent_entropy struct task_struct *copy_process(
  	if ((clone_flags & (CLONE_NEWUSER|CLONE_FS)) == (CLONE_NEWUSER|CLONE_FS))
  		return ERR_PTR(-EINVAL);
  
@@ -7491,7 +7608,7 @@ index 22f43721d031..8287afdd01d2 100644
  	/*
  	 * Thread groups must share signals as well, and detached threads
  	 * can only be started up within the thread group.
-@@ -3291,6 +3299,12 @@ int ksys_unshare(unsigned long unshare_flags)
+@@ -3311,6 +3319,12 @@ int ksys_unshare(unsigned long unshare_flags)
  	if (unshare_flags & CLONE_NEWNS)
  		unshare_flags |= CLONE_FS;
  
@@ -7619,7 +7736,7 @@ index 51e38f5f4701..c5cc616484ba 100644
  {
  	wq_entry->flags = flags;
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 79e6cb1d5c48..676e89dc38c3 100644
+index 79e6cb1d5c48..4a62ae02a2c0 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
 @@ -80,6 +80,9 @@
@@ -7648,6 +7765,47 @@ index 79e6cb1d5c48..676e89dc38c3 100644
  #ifdef CONFIG_PROC_SYSCTL
  	{
  		.procname	= "tainted",
+@@ -2198,6 +2210,40 @@ static struct ctl_table vm_table[] = {
+ 		.extra1		= SYSCTL_ZERO,
+ 	},
+ #endif
++	{
++		.procname	= "workingset_protection",
++		.data		= &sysctl_workingset_protection,
++		.maxlen		= sizeof(bool),
++		.mode		= 0644,
++		.proc_handler	= &proc_dobool,
++	},
++	{
++		.procname	= "anon_min_ratio",
++		.data		= &sysctl_anon_min_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
++	{
++		.procname	= "clean_low_ratio",
++		.data		= &sysctl_clean_low_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
++	{
++		.procname	= "clean_min_ratio",
++		.data		= &sysctl_clean_min_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
+ 	{
+ 		.procname	= "user_reserve_kbytes",
+ 		.data		= &sysctl_user_reserve_kbytes,
 diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
 index aa0b2e47f2f2..d74d857b1696 100644
 --- a/kernel/user_namespace.c
@@ -7667,10 +7825,80 @@ index aa0b2e47f2f2..d74d857b1696 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 diff --git a/mm/Kconfig b/mm/Kconfig
-index 33fa51d608dc..6bfea371341e 100644
+index 33fa51d608dc..87cb63f7ca57 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
-@@ -648,7 +648,7 @@ config COMPACTION
+@@ -499,6 +499,69 @@ config ARCH_WANT_OPTIMIZE_DAX_VMEMMAP
+ config ARCH_WANT_OPTIMIZE_HUGETLB_VMEMMAP
+ 	bool
+ 
++config ANON_MIN_RATIO
++	int "Default value for vm.anon_min_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 15
++	help
++	  This option sets the default value for vm.anon_min_ratio sysctl knob.
++
++	  The vm.anon_min_ratio sysctl knob provides *hard* protection of
++	  anonymous pages. The anonymous pages on the current node won't be
++	  reclaimed under any conditions when their amount is below
++	  vm.anon_min_ratio. This knob may be used to prevent excessive swap
++	  thrashing when anonymous memory is low (for example, when memory is
++	  going to be overfilled by compressed data of zram module).
++
++	  Setting this value too high (close to MemTotal) can result in
++	  inability to swap and can lead to early OOM under memory pressure.
++
++config CLEAN_LOW_RATIO
++	int "Default value for vm.clean_low_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 0
++	help
++	  This option sets the default value for vm.clean_low_ratio sysctl knob.
++
++	  The vm.clean_low_ratio sysctl knob provides *best-effort*
++	  protection of clean file pages. The file pages on the current node
++	  won't be reclaimed under memory pressure when the amount of clean file
++	  pages is below vm.clean_low_ratio *unless* we threaten to OOM.
++	  Protection of clean file pages using this knob may be used when
++	  swapping is still possible to
++	    - prevent disk I/O thrashing under memory pressure;
++	    - improve performance in disk cache-bound tasks under memory
++	      pressure.
++
++	  Setting it to a high value may result in a early eviction of anonymous
++	  pages into the swap space by attempting to hold the protected amount
++	  of clean file pages in memory.
++
++config CLEAN_MIN_RATIO
++	int "Default value for vm.clean_min_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 15
++	help
++	  This option sets the default value for vm.clean_min_ratio sysctl knob.
++
++	  The vm.clean_min_ratio sysctl knob provides *hard* protection of
++	  clean file pages. The file pages on the current node won't be
++	  reclaimed under memory pressure when the amount of clean file pages is
++	  below vm.clean_min_ratio. Hard protection of clean file pages using
++	  this knob may be used to
++	    - prevent disk I/O thrashing under memory pressure even with no free
++	      swap space;
++	    - improve performance in disk cache-bound tasks under memory
++	      pressure;
++	    - avoid high latency and prevent livelock in near-OOM conditions.
++
++	  Setting it to a high value may result in a early out-of-memory condition
++	  due to the inability to reclaim the protected amount of clean file pages
++	  when other types of pages cannot be reclaimed.
++
+ config HAVE_MEMBLOCK_PHYS_MAP
+ 	bool
+ 
+@@ -648,7 +711,7 @@ config COMPACTION
  config COMPACT_UNEVICTABLE_DEFAULT
  	int
  	depends on COMPACTION
@@ -7711,6 +7939,18 @@ index 5734d5d5060f..af595df5b65f 100644
  	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
  	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
  
+diff --git a/mm/mm_init.c b/mm/mm_init.c
+index 4ba5607aaf19..c081fbac7e6b 100644
+--- a/mm/mm_init.c
++++ b/mm/mm_init.c
+@@ -2628,6 +2628,7 @@ static void __init mem_init_print_info(void)
+ 		, K(totalhigh_pages())
+ #endif
+ 		);
++	printk(KERN_INFO "le9 Unofficial (le9uo) working set protection 1.8 by Masahito Suzuki (forked from hakavlad's original le9 patch)");
+ }
+ 
+ /*
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
 index fcd4c1439cb9..e2f7d709e819 100644
 --- a/mm/page-writeback.c
@@ -7793,10 +8033,38 @@ index bd5183dfd879..3a410f53a07c 100644
  
  /*
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 28ba2b06fc7d..99568ccfb0fd 100644
+index 28ba2b06fc7d..38602f8ad5aa 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -200,7 +200,11 @@ struct scan_control {
+@@ -148,6 +148,15 @@ struct scan_control {
+ 	/* The file folios on the current node are dangerously low */
+ 	unsigned int file_is_tiny:1;
+ 
++	/* The anonymous pages on the current node are below vm.anon_min_ratio */
++	unsigned int anon_below_min:1;
++
++	/* The clean file pages on the current node are below vm.clean_low_ratio */
++	unsigned int clean_below_low:1;
++
++	/* The clean file pages on the current node are below vm.clean_min_ratio */
++	unsigned int clean_below_min:1;
++
+ 	/* Always discard instead of demoting to lower tier memory */
+ 	unsigned int no_demotion:1;
+ 
+@@ -197,10 +206,23 @@ struct scan_control {
+ #define prefetchw_prev_lru_folio(_folio, _base, _field) do { } while (0)
+ #endif
+ 
++bool sysctl_workingset_protection __read_mostly = true;
++u8 sysctl_anon_min_ratio  __read_mostly = CONFIG_ANON_MIN_RATIO;
++u8 sysctl_clean_low_ratio __read_mostly = CONFIG_CLEAN_LOW_RATIO;
++u8 sysctl_clean_min_ratio __read_mostly = CONFIG_CLEAN_MIN_RATIO;
++static u64 sysctl_anon_min_ratio_kb  __read_mostly = 0;
++static u64 sysctl_clean_low_ratio_kb __read_mostly = 0;
++static u64 sysctl_clean_min_ratio_kb __read_mostly = 0;
++static u64 workingset_protection_prev_totalram __read_mostly = 0;
++
  /*
   * From 0 .. MAX_SWAPPINESS.  Higher means more swappy.
   */
@@ -7808,20 +8076,178 @@ index 28ba2b06fc7d..99568ccfb0fd 100644
  
  #ifdef CONFIG_MEMCG
  
-@@ -3992,7 +3996,11 @@ static bool lruvec_is_reclaimable(struct lruvec *lruvec, struct scan_control *sc
+@@ -1090,6 +1112,10 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
+ 		    folio_mapped(folio) && folio_test_referenced(folio))
+ 			goto keep_locked;
+ 
++		if (folio_is_file_lru(folio) ? sc->clean_below_min :
++				(sc->anon_below_min && !sc->clean_below_min))
++			goto keep_locked;
++
+ 		/*
+ 		 * The number of dirty pages determines if a node is marked
+ 		 * reclaim_congested. kswapd will stall and start writing
+@@ -2415,6 +2441,15 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 		goto out;
+ 	}
+ 
++	/*
++	 * Force-scan anon if clean file pages is under vm.clean_low_ratio
++	 * or vm.clean_min_ratio.
++	 */
++	if (sc->clean_below_low || sc->clean_below_min) {
++		scan_balance = SCAN_ANON;
++		goto out;
++	}
++
+ 	/*
+ 	 * If there is enough inactive page cache, we do not reclaim
+ 	 * anything from the anonymous working right now.
+@@ -2559,6 +2594,14 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 			BUG();
+ 		}
+ 
++		/*
++		 * Hard protection of the working set.
++		 * Don't reclaim anon/file pages when the amount is
++		 * below the watermark of the same type.
++		 */
++		if (file ? sc->clean_below_min : sc->anon_below_min)
++			scan = 0;
++
+ 		nr[lru] = scan;
+ 	}
+ }
+@@ -2578,6 +2621,96 @@ static bool can_age_anon_pages(struct pglist_data *pgdat,
+ 	return can_demote(pgdat->node_id, sc);
  }
  
- /* to protect the working set of the last N jiffies */
-+#ifdef CONFIG_CACHY
-+static unsigned long lru_gen_min_ttl __read_mostly = 1000;
-+#else
- static unsigned long lru_gen_min_ttl __read_mostly;
-+#endif
++int vm_workingset_protection_update_handler(const struct ctl_table *table, int write,
++		void __user *buffer, size_t *lenp, loff_t *ppos)
++{
++	int ret = proc_dou8vec_minmax(table, write, buffer, lenp, ppos);
++	if (ret || !write)
++		return ret;
++
++	workingset_protection_prev_totalram = 0;
++
++	return 0;
++}
++
++static void prepare_workingset_protection(pg_data_t *pgdat, struct scan_control *sc)
++{
++	unsigned long node_mem_total;
++	struct sysinfo i;
++
++	if (!(sysctl_workingset_protection)) {
++		sc->anon_below_min = 0;
++		sc->clean_below_low = 0;
++		sc->clean_below_min = 0;
++		return;
++	}
++
++	if (likely(sysctl_anon_min_ratio  ||
++	           sysctl_clean_low_ratio ||
++		       sysctl_clean_min_ratio)) {
++#ifdef CONFIG_NUMA
++		si_meminfo_node(&i, pgdat->node_id);
++#else //CONFIG_NUMA
++		si_meminfo(&i);
++#endif //CONFIG_NUMA
++		node_mem_total = i.totalram;
++
++		if (unlikely(workingset_protection_prev_totalram != node_mem_total)) {
++			sysctl_anon_min_ratio_kb  =
++				node_mem_total * sysctl_anon_min_ratio  / 100;
++			sysctl_clean_low_ratio_kb =
++				node_mem_total * sysctl_clean_low_ratio / 100;
++			sysctl_clean_min_ratio_kb =
++				node_mem_total * sysctl_clean_min_ratio / 100;
++			workingset_protection_prev_totalram = node_mem_total;
++		}
++	}
++
++	/*
++	 * Check the number of anonymous pages to protect them from
++	 * reclaiming if their amount is below the specified.
++	 */
++	if (sysctl_anon_min_ratio) {
++		unsigned long reclaimable_anon;
++
++		reclaimable_anon =
++			node_page_state(pgdat, NR_ACTIVE_ANON) +
++			node_page_state(pgdat, NR_INACTIVE_ANON) +
++			node_page_state(pgdat, NR_ISOLATED_ANON);
++
++		sc->anon_below_min = reclaimable_anon < sysctl_anon_min_ratio_kb;
++	} else
++		sc->anon_below_min = 0;
++
++	/*
++	 * Check the number of clean file pages to protect them from
++	 * reclaiming if their amount is below the specified.
++	 */
++	if (sysctl_clean_low_ratio || sysctl_clean_min_ratio) {
++		unsigned long reclaimable_file, dirty, clean;
++
++		reclaimable_file =
++			node_page_state(pgdat, NR_ACTIVE_FILE) +
++			node_page_state(pgdat, NR_INACTIVE_FILE) +
++			node_page_state(pgdat, NR_ISOLATED_FILE);
++		dirty = node_page_state(pgdat, NR_FILE_DIRTY);
++		/*
++		 * node_page_state() sum can go out of sync since
++		 * all the values are not read at once.
++		 */
++		if (likely(reclaimable_file > dirty))
++			clean = reclaimable_file - dirty;
++		else
++			clean = 0;
++
++		sc->clean_below_low = clean < sysctl_clean_low_ratio_kb;
++		sc->clean_below_min = clean < sysctl_clean_min_ratio_kb;
++	} else {
++		sc->clean_below_low = 0;
++		sc->clean_below_min = 0;
++	}
++}
++
+ #ifdef CONFIG_LRU_GEN
  
- static void lru_gen_age_node(struct pglist_data *pgdat, struct scan_control *sc)
- {
+ #ifdef CONFIG_LRU_GEN_ENABLED
+@@ -4528,6 +4661,12 @@ static int isolate_folios(struct lruvec *lruvec, struct scan_control *sc, int sw
+ 	 */
+ 	if (!swappiness)
+ 		type = LRU_GEN_FILE;
++	else if (sc->clean_below_min)
++		type = LRU_GEN_ANON;
++	else if (sc->anon_below_min)
++		type = LRU_GEN_FILE;
++	else if (sc->clean_below_low)
++		type = LRU_GEN_ANON;
+ 	else if (min_seq[LRU_GEN_ANON] < min_seq[LRU_GEN_FILE])
+ 		type = LRU_GEN_ANON;
+ 	else if (swappiness == 1)
+@@ -4807,6 +4946,8 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 
++	prepare_workingset_protection(pgdat, sc);
++
+ 	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
+ 	if (mem_cgroup_below_min(NULL, memcg))
+ 		return MEMCG_LRU_YOUNG;
+@@ -5954,6 +6095,8 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 	prepare_scan_control(pgdat, sc);
+ 
++	prepare_workingset_protection(pgdat, sc);
++
+ 	shrink_node_memcgs(pgdat, sc);
+ 
+ 	flush_reclaim_state(sc);
 diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index 2b698f8419fe..fd039c41d1c8 100644
+index fe7947f77406..99e138cfdd95 100644
 --- a/net/ipv4/inet_connection_sock.c
 +++ b/net/ipv4/inet_connection_sock.c
 @@ -634,7 +634,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
@@ -7834,5 +8260,5 @@ index 2b698f8419fe..fd039c41d1c8 100644
  		release_sock(sk);
  		if (reqsk_queue_empty(&icsk->icsk_accept_queue))
 -- 
-2.47.0
+2.47.1
 

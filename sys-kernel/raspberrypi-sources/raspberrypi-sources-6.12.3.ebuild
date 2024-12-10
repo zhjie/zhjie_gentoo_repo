@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="2"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -79,7 +79,8 @@ src_prepare() {
 
     # diretta alsa host driver
     if use diretta; then
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_09.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_22.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
     fi
 
     # cloudflare patch
