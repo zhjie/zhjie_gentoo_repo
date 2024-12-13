@@ -10,8 +10,8 @@ HOMEPAGE="https://wiki.gnome.org/Projects/Libgee"
 
 LICENSE="LGPL-2.1+"
 SLOT="0.8/2"
-KEYWORDS="~alpha amd64 arm arm64 ~ia64 ~loong ~ppc ppc64 ~riscv sparc x86 ~x86-linux"
-IUSE="+introspection clang vala"
+KEYWORDS="~alpha amd64 arm arm64 ~loong ppc ppc64 ~riscv sparc x86 ~x86-linux"
+IUSE="introspection vala"
 
 # FIXME: add doc support, requires valadoc
 RDEPEND="
@@ -27,20 +27,17 @@ BDEPEND="virtual/pkgconfig"
 PATCHES=(
 	"${FILESDIR}"/libgee-0.20.6-c99.patch
 	"${FILESDIR}"/libgee-0.20.6-c99-2.patch
+	"${FILESDIR}"/hashmap.patch
 )
 
 src_prepare() {
-	if use vala; then
-		vala_setup
-	fi
+        if use vala; then
+                vala_setup
+        fi
 	gnome2_src_prepare
 }
 
 src_configure() {
-        if use clang; then
-                CFLAGS="${CFLAGS} -Wno-incompatible-function-pointer-types"
-        fi
-
 	# Commented out VALAC="$(type -P false)" for c99 patches
 	# We can drop all the Vala wiring and use the shipped files once
 	# a new release is made.
