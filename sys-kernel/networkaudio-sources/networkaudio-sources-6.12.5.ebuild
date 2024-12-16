@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="7"
+K_GENPATCHES_VER="8"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -45,7 +45,6 @@ src_prepare() {
     eapply "${FILESDIR}/cachy/0006-crypto.patch"
     eapply "${FILESDIR}/cachy/0007-fixes.patch"
     eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
-    eapply "${FILESDIR}/cachy/0011-t2.patch"
     eapply "${FILESDIR}/cachy/0012-zstd.patch"
 
     # highhz patch
