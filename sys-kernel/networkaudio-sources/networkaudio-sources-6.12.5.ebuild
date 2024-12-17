@@ -14,7 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa bmq bore diretta"
+IUSE="naa bmq bore diretta amd_pstate"
 REQUIRED_USE="
     bmq? ( !bore )
     bore? ( !bmq )
@@ -38,7 +38,9 @@ src_prepare() {
 
     # cachy patch
     eapply "${FILESDIR}/cachy/0001-amd-cache-optimizer.patch"
-    eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
+    if use amd_pstate; then
+        eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
+    fi
     eapply "${FILESDIR}/cachy/0003-autofdo.patch"
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
     eapply "${FILESDIR}/cachy/0005-cachy.patch"
