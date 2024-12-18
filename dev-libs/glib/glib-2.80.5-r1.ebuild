@@ -5,7 +5,7 @@ EAPI=8
 PYTHON_REQ_USE="xml(+)"
 PYTHON_COMPAT=( python3_{10..13} )
 
-inherit gnome.org gnome2-utils linux-info meson-multilib multilib python-any-r1 toolchain-funcs
+inherit gnome.org gnome2-utils linux-info meson-multilib multilib python-any-r1 toolchain-funcs xdg
 
 DESCRIPTION="The GLib library of C routines"
 HOMEPAGE="https://www.gtk.org/"
@@ -22,8 +22,8 @@ INTROSPECTION_BUILD_DIR="${WORKDIR}/${INTROSPECTION_P}-build"
 
 LICENSE="LGPL-2.1+"
 SLOT="2"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
-IUSE="dbus debug +elf doc +introspection +mime selinux static-libs sysprof systemtap test utils xattr"
+KEYWORDS="amd64 arm64"
+IUSE="dbus debug +elf doc introspection mime selinux static-libs sysprof systemtap test utils xattr"
 RESTRICT="!test? ( test )"
 
 # * elfutils (via libelf) does not build on Windows. gresources are not embedded
@@ -190,6 +190,11 @@ src_prepare() {
 	# Link the glib source to the introspection subproject directory so it can be built there first
 	if use introspection ; then
 		ln -s "${S}" "${INTROSPECTION_SOURCE_DIR}/subprojects/glib"
+
+		# bug #946578
+		cd "${INTROSPECTION_SOURCE_DIR}" || die
+		eapply "${FILESDIR}"/glib-2.80.5-gobject-introspection-1.80.patch
+		cd "${S}" || die
 	fi
 
 	default
@@ -213,8 +218,8 @@ multilib_src_configure() {
 	# Build internal copy of gobject-introspection to avoid circular dependency (Built for native abi only)
 	if multilib_native_use introspection && ! has_version ">=dev-libs/${INTROSPECTION_P}" ; then
 		einfo "Bootstrapping gobject-introspection..."
-		INTROSPECTION_BIN_DIR="${T}/usr/bin"
-		INTROSPECTION_LIB_DIR="${T}/usr/$(get_libdir)"
+		INTROSPECTION_BIN_DIR="${T}/${EPREFIX}/usr/bin"
+		INTROSPECTION_LIB_DIR="${T}/${EPREFIX}/usr/$(get_libdir)"
 
 		local emesonargs=(
 			-Dpython="${EPYTHON}"
@@ -245,6 +250,11 @@ multilib_src_configure() {
 		ORIG_SOURCE_DIR=${EMESON_SOURCE}
 		EMESON_SOURCE=${INTROSPECTION_SOURCE_DIR}
 
+		# g-ir-scanner has some relocatable logic but it searches
+		# for 'lib', not 'lib64', so it can't find itself and eventually
+		# falls back to the system installation. See bug #946221.
+		sed -i -e "/^pylibdir =/s:'lib:'$(get_libdir):" "${EMESON_SOURCE}"/tools/g-ir-tool-template.in || die
+
 		ORIG_BUILD_DIR=${BUILD_DIR}
 		BUILD_DIR=${INTROSPECTION_BUILD_DIR}
 
@@ -267,7 +277,10 @@ multilib_src_configure() {
 		export PKG_CONFIG_LIBDIR="${INTROSPECTION_LIB_DIR}/pkgconfig:${INTROSPECTION_BUILD_DIR}/meson-private"
 
 		# Set the normal primary pkgconfig search paths as secondary
-		export PKG_CONFIG_PATH="$(pkg-config --variable pc_path pkg-config)"
+		# (We also need to prepend our just-built one for later use of
+		# g-ir-scanner to use the new one and to help workaround bugs like
+		# bug #946221.)
+		export PKG_CONFIG_PATH="${PKG_CONFIG_LIBDIR}:$(pkg-config --variable pc_path pkg-config)"
 
 		# Add the paths to the built glib libraries to the library path so that gobject-introspection can load them
 		for gliblib in glib gobject gthread gmodule gio girepository; do
@@ -278,11 +291,13 @@ multilib_src_configure() {
 		export PYTHONPATH="${INTROSPECTION_LIB_DIR}/gobject-introspection:${PYTHONPATH}"
 	fi
 
+	# TODO: Can this be cleaned up now we have -Dglib_debug? (bug #946485)
 	use debug && EMESON_BUILD_TYPE=debug
 
 	local emesonargs=(
 		-Ddefault_library=$(usex static-libs both shared)
 		-Druntime_dir="${EPREFIX}"/run
+		$(meson_feature debug glib_debug)
 		$(meson_feature selinux)
 		$(meson_use xattr)
 		-Dlibmount=enabled # only used if host_system == 'linux'
@@ -293,7 +308,7 @@ multilib_src_configure() {
 		$(meson_use doc documentation)
 		$(meson_use test tests)
 		-Dinstalled_tests=false
-		-Dnls=disabled
+		-Dnls=enabled
 		-Doss_fuzz=disabled
 		$(meson_native_use_feature elf libelf)
 		-Dmultiarch=false
@@ -345,8 +360,13 @@ multilib_src_install_all() {
 	# and removals, and test depend on glib-utils instead; revisit now with
 	# meson
 	rm "${ED}/usr/bin/glib-genmarshal" || die
+	# rm "${ED}/usr/share/man/man1/glib-genmarshal.1" || die
 	rm "${ED}/usr/bin/glib-mkenums" || die
+	# rm "${ED}/usr/share/man/man1/glib-mkenums.1" || die
 	rm "${ED}/usr/bin/gtester-report" || die
+	# rm "${ED}/usr/share/man/man1/gtester-report.1" || die
+	# gdbus-codegen manpage installed by dev-util/gdbus-codegen
+	# rm "${ED}/usr/share/man/man1/gdbus-codegen.1" || die
 }
 
 pkg_preinst() {

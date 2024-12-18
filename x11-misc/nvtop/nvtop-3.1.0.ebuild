@@ -8,13 +8,8 @@ inherit cmake
 DESCRIPTION="AMD and NVIDIA GPUs htop like monitoring tool"
 HOMEPAGE="https://github.com/Syllo/nvtop"
 
-if [[ "${PV}" == "9999" ]]; then
-	inherit git-r3
-	EGIT_REPO_URI="https://github.com/Syllo/nvtop"
-else
-	SRC_URI="https://github.com/Syllo/nvtop/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="~amd64"
-fi
+SRC_URI="https://github.com/Syllo/nvtop/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz"
+KEYWORDS="amd64"
 
 LICENSE="GPL-3"
 SLOT="0"

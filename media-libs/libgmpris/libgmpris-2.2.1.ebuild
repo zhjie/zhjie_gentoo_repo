@@ -33,11 +33,8 @@ src_prepare() {
 	eautoconf
 }
 
-#src_configure() {
-#	econf
-#}
-
 src_install() {
 	dolib.so "${S}"/src/.libs/libgmpris.so.0.0.0
-	dosym /usr/lib64/libgmpris.so.0.0.0 /usr/lib64/libgmpris.so.0
+	cd "${ED%/}"/usr/$(get_libdir)/
+        ln -s libgmpris.so.0.0.0 libgmpris.so.0
 }
