@@ -1,6 +1,6 @@
-From 24f92bfcd2f013233f8e8934da9d7cfe12119d8d Mon Sep 17 00:00:00 2001
+From c335f50994128543c8e019b8cc913d7fb0e98f2b Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Mon, 9 Dec 2024 15:04:43 +0100
+Date: Thu, 19 Dec 2024 18:50:18 +0100
 Subject: [PATCH 03/12] autofdo
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -414,10 +414,10 @@ index a578178468f1..a2d251917629 100644
  M:	Petr Mladek <pmladek@suse.com>
  R:	Steven Rostedt <rostedt@goodmis.org>
 diff --git a/Makefile b/Makefile
-index 87dc2f810860..d078509ae8ed 100644
+index c10952585c14..a0229efbf8e3 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1018,6 +1018,8 @@ include-$(CONFIG_KMSAN)		+= scripts/Makefile.kmsan
+@@ -1019,6 +1019,8 @@ include-$(CONFIG_KMSAN)		+= scripts/Makefile.kmsan
  include-$(CONFIG_UBSAN)		+= scripts/Makefile.ubsan
  include-$(CONFIG_KCOV)		+= scripts/Makefile.kcov
  include-$(CONFIG_RANDSTRUCT)	+= scripts/Makefile.randstruct
@@ -493,7 +493,7 @@ index d317a843f7ea..f1b86eb30340 100644
  		SCHED_TEXT
  		LOCK_TEXT
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 7b9a7e8f39ac..f127d0f1024e 100644
+index 171be04eca1f..f691eafefc42 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -126,6 +126,8 @@ config X86
@@ -702,10 +702,10 @@ index 000000000000..344190717e47
 +
 +export CFLAGS_PROPELLER_CLANG
 diff --git a/tools/objtool/check.c b/tools/objtool/check.c
-index 6604f5d038aa..05a0fb4a3d1a 100644
+index f0d8796b984a..634a67dba86c 100644
 --- a/tools/objtool/check.c
 +++ b/tools/objtool/check.c
-@@ -4557,6 +4557,8 @@ static int validate_ibt(struct objtool_file *file)
+@@ -4560,6 +4560,8 @@ static int validate_ibt(struct objtool_file *file)
  		    !strcmp(sec->name, "__jump_table")			||
  		    !strcmp(sec->name, "__mcount_loc")			||
  		    !strcmp(sec->name, ".kcfi_traps")			||

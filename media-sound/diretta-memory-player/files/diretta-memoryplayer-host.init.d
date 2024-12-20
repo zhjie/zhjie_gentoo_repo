@@ -3,16 +3,15 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-description="Diretta MemoryPlay Host"
+description="Diretta MemoryPlayer Host"
 
-# ./diretta-memoryplay-host/MemoryPlayHost
 export SSD_NICELEVEL="-10"
 user="root:root"
-error_log="/tmp/diretta-memoryplay-host.err"
-output_log="/tmp/diretta-memoryplay-host.log"
-command="/opt/diretta-memoryplay-host/MemoryPlayHost"
+error_log="/tmp/diretta-memory-player.err"
+output_log="/tmp/diretta-memory-player.log"
+command="/opt/diretta-memory-player/SMemoryPlayHost"
 command_args=""
-pidfile="/run/diretta-memoryplay-host.pid"
+pidfile="/run/diretta-memory-player.pid"
 command_background="yes"
 # start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user}"
 
