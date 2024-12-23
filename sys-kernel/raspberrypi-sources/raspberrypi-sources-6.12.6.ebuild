@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="8"
@@ -7,28 +7,46 @@ K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="9"
 K_EXP_GENPATCHES_NOUSE="1"
 
-inherit kernel-2
+inherit kernel-2 git-r3
 detect_version
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64"
-IUSE="naa bmq bore diretta amd_pstate highhz autofdo"
+KEYWORDS="amd64 arm64"
+IUSE="naa bmq bore diretta highhz autofdo"
 REQUIRED_USE="
     bmq? ( !bore )
     bore? ( !bmq )
 "
 
-SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
+EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
+EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
+
+SRC_URI="${GENPATCHES_URI}"
+
+S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi"
+EXTRAVERSION="-networkaudio"
 
 src_unpack() {
-    UNIPATCH_LIST_DEFAULT=""
-    UNIPATCH_EXCLUDE=""
-    kernel-2_src_unpack
+    git-r3_src_unpack
+    mv "${WORKDIR}/${PF}" "${S}"
+
+    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.base.tar.xz
+    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.extras.tar.xz
+
+    rm -rfv "${WORKDIR}"/10*.patch
+    rm -rfv "${S}/.git"
+
+    mkdir "${WORKDIR}"/genpatch
+    mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
+    unpack_set_extraversion
 }
 
 src_prepare() {
+    # genpatch
+    eapply "${WORKDIR}"/genpatch/*.patch
+
     # naa patch
     if use naa; then
         eapply "${FILESDIR}/naa/0005-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
@@ -37,11 +55,6 @@ src_prepare() {
     fi
 
     # cachy patch
-    eapply "${FILESDIR}/cachy/0001-amd-cache-optimizer.patch"
-
-    if use amd_pstate; then
-        eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
-    fi
 
     if use autofdo; then
         eapply "${FILESDIR}/cachy/0003-autofdo.patch"
@@ -49,9 +62,7 @@ src_prepare() {
 
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
     eapply "${FILESDIR}/cachy/0005-cachy.patch"
-    eapply "${FILESDIR}/cachy/0006-crypto.patch"
     eapply "${FILESDIR}/cachy/0007-fixes.patch"
-    eapply "${FILESDIR}/cachy/0009-perf-per-core.patch"
     eapply "${FILESDIR}/cachy/0012-zstd.patch"
 
     # highhz patch
@@ -71,10 +82,10 @@ src_prepare() {
         eapply "${FILESDIR}/bore/0001-bore-cachy.patch"
     fi
 
-    # diretta alsa host drive
+    # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_11_26.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_12_22.patch"
     fi
 
     # cloudflare patch

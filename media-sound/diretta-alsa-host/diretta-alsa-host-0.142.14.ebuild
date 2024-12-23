@@ -8,8 +8,8 @@ inherit unpacker
 DESCRIPTION="Linux Diretta Alsa Host"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-X86_HOST="diretta-alsa-daemon-2024.11.26-1-x86_64.pkg.tar.zst"
-ARM_HOST="diretta-alsa-daemon-2024.11.26-1-aarch64.pkg.tar.xz"
+X86_HOST="diretta-alsa-daemon-2024.12.22-1-x86_64.pkg.tar.zst"
+ARM_HOST="diretta-alsa-daemon-2024.12.22-1-aarch64.pkg.tar.xz"
 SRC_URI="amd64? ( https://www.audio-linux.com/repo/${X86_HOST} )
          arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_HOST} )
 "
