@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="9"
+K_GENPATCHES_VER="10"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -49,13 +49,15 @@ src_prepare() {
 
     # naa patch
     if use naa; then
-        eapply "${FILESDIR}/naa/0005-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
-        eapply "${FILESDIR}/naa/0006-Adjust-USB-isochronous-packet-size.patch"
-        eapply "${FILESDIR}/naa/0007-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
+        eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
+        eapply "${FILESDIR}/naa/0002-Lynx-Hilo-quirk.patch"
+        eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
+        eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
+        eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
+        eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
     # cachy patch
-
     if use autofdo; then
         eapply "${FILESDIR}/cachy/0003-autofdo.patch"
     fi
