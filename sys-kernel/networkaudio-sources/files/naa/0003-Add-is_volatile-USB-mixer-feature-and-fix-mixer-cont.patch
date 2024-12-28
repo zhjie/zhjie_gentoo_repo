@@ -1,7 +1,7 @@
-From cfdbc941eccde98baf7ca461b69395e06f98b5a2 Mon Sep 17 00:00:00 2001
+From 49292d8f5f9b49927fddc81e148390db969fe1e3 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Fri, 21 Sep 2018 10:37:01 +0300
-Subject: [PATCH 5/7] Add is_volatile USB mixer feature and fix mixer control
+Subject: [PATCH 3/9] Add is_volatile USB mixer feature and fix mixer control
  creation
 
 ---
@@ -11,19 +11,19 @@ Subject: [PATCH 5/7] Add is_volatile USB mixer feature and fix mixer control
  3 files changed, 18 insertions(+), 9 deletions(-)
 
 diff --git a/sound/usb/mixer.c b/sound/usb/mixer.c
-index 567514832b0d..4740f1347375 100644
+index 409fc1164694..f95ba5aa28c2 100644
 --- a/sound/usb/mixer.c
 +++ b/sound/usb/mixer.c
-@@ -434,7 +434,7 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
+@@ -433,7 +433,7 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
  {
  	int err;
  
 -	if (cval->cached & BIT(channel)) {
-+	if (cval->cached & BIT(channel) && !cval->is_volatile) {
++	if ((cval->cached & BIT(channel)) && !cval->is_volatile) {
  		*value = cval->cache_val[index];
  		return 0;
  	}
-@@ -446,8 +446,10 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
+@@ -445,8 +445,10 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
  				      cval->control, channel, err);
  		return err;
  	}
@@ -36,7 +36,7 @@ index 567514832b0d..4740f1347375 100644
  	return 0;
  }
  
-@@ -537,8 +539,10 @@ int snd_usb_set_cur_mix_value(struct usb_mixer_elem_info *cval, int channel,
+@@ -536,8 +538,10 @@ int snd_usb_set_cur_mix_value(struct usb_mixer_elem_info *cval, int channel,
  					  value);
  	if (err < 0)
  		return err;
@@ -50,7 +50,7 @@ index 567514832b0d..4740f1347375 100644
  }
  
 diff --git a/sound/usb/mixer.h b/sound/usb/mixer.h
-index 98ea24d91d80..6c6c29e8b0c6 100644
+index d43895c1ae5c..f07758dad01e 100644
 --- a/sound/usb/mixer.h
 +++ b/sound/usb/mixer.h
 @@ -89,6 +89,7 @@ struct usb_mixer_elem_info {
@@ -62,10 +62,10 @@ index 98ea24d91d80..6c6c29e8b0c6 100644
  	int cache_val[MAX_CHANNELS];
  	u8 initialized;
 diff --git a/sound/usb/mixer_quirks.c b/sound/usb/mixer_quirks.c
-index d12b87e52d22..4300a275e60e 100644
+index c8d48566e175..97a400c1a041 100644
 --- a/sound/usb/mixer_quirks.c
 +++ b/sound/usb/mixer_quirks.c
-@@ -141,20 +141,24 @@ static int add_single_ctl_with_resume(struct usb_mixer_interface *mixer,
+@@ -142,20 +142,24 @@ static int add_single_ctl_with_resume(struct usb_mixer_interface *mixer,
  				      const struct snd_kcontrol_new *knew,
  				      struct usb_mixer_elem_list **listp)
  {
