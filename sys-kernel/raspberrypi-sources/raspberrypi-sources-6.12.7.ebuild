@@ -49,7 +49,6 @@ src_prepare() {
 
     # naa patch
     if use naa; then
-        eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
         eapply "${FILESDIR}/naa/0002-Lynx-Hilo-quirk.patch"
         eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
         eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
