@@ -8,8 +8,9 @@ inherit unpacker
 DESCRIPTION="Linux Diretta Alsa Host"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-X86_HOST="diretta-alsa-daemon-2024.12.22-1-x86_64.pkg.tar.zst"
-ARM_HOST="diretta-alsa-daemon-2024.12.22-1-aarch64.pkg.tar.xz"
+VER="2024.12.27"
+X86_HOST="diretta-memory-player-${VER}-1-x86_64.pkg.tar.zst"
+ARM_HOST="diretta-memory-player-${VER}-1-aarch64.pkg.tar.xz"
 SRC_URI="amd64? ( https://www.audio-linux.com/repo/${X86_HOST} )
          arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_HOST} )
 "
@@ -19,8 +20,6 @@ SLOT="0"
 LICENSE="CDDL"
 IUSE=""
 
-# BDEPEND="|| ( sys-kernel/networkaudio-sources[diretta] sys-kernel/raspberrypi-sources[diretta] )"
-
 src_unpack() {
     if use amd64; then
         _unpacker "${X86_HOST}"
@@ -29,13 +28,12 @@ src_unpack() {
         _unpacker "${ARM_HOST}"
     fi
 
-    mv ./opt/diretta-alsa/ "${WORKDIR}/${P}"
+    mv ./opt/diretta-memory-player/ "${WORKDIR}/${P}"
 }
 
 src_install() {
     insinto "/opt/${PN}/"
     insopts -m755
     doins -r *
-    doins "${FILESDIR}/alsa_host.sh"
-    newinitd "${FILESDIR}/diretta-alsa-host.init.d" "diretta-alsa-host"
+    newinitd "${FILESDIR}/diretta-memoryplayer-host.init.d" "diretta-memoryplayer-host"
 }

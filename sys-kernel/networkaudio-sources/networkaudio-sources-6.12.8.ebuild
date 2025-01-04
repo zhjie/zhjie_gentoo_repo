@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="10"
+K_GENPATCHES_VER="11"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -43,17 +43,18 @@ src_prepare() {
     if use amd; then
         eapply "${FILESDIR}/cachy/0001-amd-cache-optimizer.patch"
         eapply "${FILESDIR}/cachy/0002-amd-pstate.patch"
+        eapply "${FILESDIR}/cachy/0003-amd-tlb-broadcast.patch"
     fi
 
     if use autofdo; then
-        eapply "${FILESDIR}/cachy/0003-autofdo.patch"
+        eapply "${FILESDIR}/cachy/0004-autofdo.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0005-cachy.patch"
-    eapply "${FILESDIR}/cachy/0006-crypto.patch"
-    eapply "${FILESDIR}/cachy/0007-fixes.patch"
-    eapply "${FILESDIR}/cachy/0012-zstd.patch"
+    eapply "${FILESDIR}/cachy/0005-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-crypto.patch"
+    eapply "${FILESDIR}/cachy/0008-fixes.patch"
+    eapply "${FILESDIR}/cachy/0013-zstd.patch"
 
     # highhz patch
     if use highhz; then
@@ -75,7 +76,7 @@ src_prepare() {
     # diretta alsa host drive
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_12_22.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_2024.12.27.patch"
     fi
 
     # cloudflare patch
