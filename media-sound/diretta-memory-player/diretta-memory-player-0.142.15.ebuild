@@ -8,7 +8,7 @@ inherit unpacker
 DESCRIPTION="Linux Diretta Alsa Host"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-VER="2024.12.27"
+VER="2025.01.07"
 X86_HOST="diretta-memory-player-${VER}-1-x86_64.pkg.tar.zst"
 ARM_HOST="diretta-memory-player-${VER}-1-aarch64.pkg.tar.xz"
 SRC_URI="amd64? ( https://www.audio-linux.com/repo/${X86_HOST} )
