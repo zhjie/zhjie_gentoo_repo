@@ -6,13 +6,13 @@ EAPI=8
 inherit systemd unpacker
 
 MY_PN=${PN/-bin/}
-HQV=31
+MY_PV=$(ver_cut 1-3)-$(ver_cut 4)
 
-DESCRIPTION="HQPlayer Embedded - upsampling multichannel audio player"
-HOMEPAGE="http://www.signalyst.com/consumer.html"
+DESCRIPTION="HQPlayer Embedded - Embedded version of HQPlayer is designed for building Linux-based music playback devices and digital audio processors"
+HOMEPAGE="https://signalyst.com/hqplayer-embedded"
 SRC_URI="
-amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${PV}-${HQV}intel_amd64.deb ) )
-amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${PV}-${HQV}_amd64.deb ) )
+	amd64? ( !cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${MY_PV}intel_amd64.deb ) )
+	amd64? ( cpu_flags_x86_avx2? ( https://www.signalyst.eu/bins/hqplayerd/noble/${MY_PN}_${MY_PV}_amd64.deb ) )
 "
 
 LICENSE="Signalyst"
