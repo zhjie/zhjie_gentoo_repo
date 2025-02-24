@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="19"
+K_GENPATCHES_VER="20"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -60,7 +60,7 @@ src_prepare() {
     # diretta alsa host drive
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.01.07.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.02.16.patch"
     fi
 
     # cloudflare patch

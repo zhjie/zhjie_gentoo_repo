@@ -5,10 +5,9 @@
 EAPI=8
 inherit systemd
 
-VN="$(ver_cut 4)"
 DESCRIPTION="THE ULTIMATE MUSIC PLAYER FOR MUSIC FANATICS"
 HOMEPAGE="https://roonlabs.com"
-SRC_URI="http://download.roonlabs.net/updates/production/RoonServer_linuxx64_20000${VN}.tar.bz2 -> ${PF}.tar.bz2"
+SRC_URI="https://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2 -> ${PF}.tar.bz2"
 
 LICENSE="roonlabs"
 

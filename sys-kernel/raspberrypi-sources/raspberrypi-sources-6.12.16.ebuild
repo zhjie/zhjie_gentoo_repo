@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="12"
+K_GENPATCHES_VER="20"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -14,11 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
-IUSE="naa bmq bore diretta highhz autofdo"
-REQUIRED_USE="
-    bmq? ( !bore )
-    bore? ( !bmq )
-"
+IUSE="naa bmq diretta highhz"
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
@@ -56,15 +52,10 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
-    # cachy patch
-    if use autofdo; then
-        eapply "${FILESDIR}/cachy/0004-autofdo.patch"
-    fi
-
-    eapply "${FILESDIR}/cachy/0005-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0008-fixes.patch"
-    eapply "${FILESDIR}/cachy/0013-zstd.patch"
+    eapply "${FILESDIR}/cachy/0002-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0003-cachy.patch"
+    eapply "${FILESDIR}/cachy/0004-fixes.patch"
+    eapply "${FILESDIR}/cachy/0008-zstd.patch"
 
     # highhz patch
     if use highhz; then
@@ -78,15 +69,10 @@ src_prepare() {
         eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r0.patch"
     fi
 
-    # bore scheduler
-    if use bore; then
-        eapply "${FILESDIR}/bore/0001-bore-cachy.patch"
-    fi
-
     # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.01.07.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.02.16.patch"
     fi
 
     # cloudflare patch

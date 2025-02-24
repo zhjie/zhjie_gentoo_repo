@@ -1,22 +1,22 @@
-From c50e67956d592d75217878c821e0d82cc2d34aef Mon Sep 17 00:00:00 2001
-From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 2 Jan 2025 12:36:13 +0100
-Subject: [PATCH 09/13] ntsync
+From 0c0623b2147eff5cc84dc9e20079d9e902bdc9c3 Mon Sep 17 00:00:00 2001
+From: Eric Naim <dnaim@cachyos.org>
+Date: Tue, 18 Feb 2025 16:01:37 +0800
+Subject: [PATCH 5/8] ntsync
 
-Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Eric Naim <dnaim@cachyos.org>
 ---
  Documentation/userspace-api/index.rst         |    1 +
  Documentation/userspace-api/ntsync.rst        |  385 +++++
  MAINTAINERS                                   |    9 +
  drivers/misc/Kconfig                          |    1 -
- drivers/misc/ntsync.c                         |  992 +++++++++++-
+ drivers/misc/ntsync.c                         |  993 +++++++++++-
  include/uapi/linux/ntsync.h                   |   42 +-
  tools/testing/selftests/Makefile              |    1 +
  .../selftests/drivers/ntsync/.gitignore       |    1 +
  .../testing/selftests/drivers/ntsync/Makefile |    7 +
  tools/testing/selftests/drivers/ntsync/config |    1 +
  .../testing/selftests/drivers/ntsync/ntsync.c | 1343 +++++++++++++++++
- 11 files changed, 2767 insertions(+), 16 deletions(-)
+ 11 files changed, 2768 insertions(+), 16 deletions(-)
  create mode 100644 Documentation/userspace-api/ntsync.rst
  create mode 100644 tools/testing/selftests/drivers/ntsync/.gitignore
  create mode 100644 tools/testing/selftests/drivers/ntsync/Makefile
@@ -427,10 +427,10 @@ index 000000000000..25e7c4aef968
 +  ``objs`` and in ``alert``. If this is attempted, the function fails
 +  with ``EINVAL``.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index a2d251917629..a30770b6f75a 100644
+index a578178468f1..12d0694339ce 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -16501,6 +16501,15 @@ T:	git https://github.com/Paragon-Software-Group/linux-ntfs3.git
+@@ -16494,6 +16494,15 @@ T:	git https://github.com/Paragon-Software-Group/linux-ntfs3.git
  F:	Documentation/filesystems/ntfs3.rst
  F:	fs/ntfs3/
  
@@ -459,7 +459,7 @@ index 3fe7e2a9bd29..6c8b999a5e08 100644
  	  This module provides kernel support for emulation of Windows NT
  	  synchronization primitives. It is not a hardware driver.
 diff --git a/drivers/misc/ntsync.c b/drivers/misc/ntsync.c
-index 4954553b7baa..457ff28b789f 100644
+index 4954553b7baa..94b94c4cc579 100644
 --- a/drivers/misc/ntsync.c
 +++ b/drivers/misc/ntsync.c
 @@ -6,11 +6,17 @@
@@ -1580,6 +1580,14 @@ index 4954553b7baa..457ff28b789f 100644
  	default:
  		return -ENOIOCTLCMD;
  	}
+@@ -238,6 +1206,7 @@ static struct miscdevice ntsync_misc = {
+ 	.minor		= MISC_DYNAMIC_MINOR,
+ 	.name		= NTSYNC_NAME,
+ 	.fops		= &ntsync_fops,
++	.mode		= 0666, // Setting file permissions to 0666
+ };
+ 
+ module_misc_device(ntsync_misc);
 diff --git a/include/uapi/linux/ntsync.h b/include/uapi/linux/ntsync.h
 index dcfa38fdc93c..6d06793512b1 100644
 --- a/include/uapi/linux/ntsync.h
@@ -3026,5 +3034,5 @@ index 000000000000..3aad311574c4
 +
 +TEST_HARNESS_MAIN
 -- 
-2.48.0.rc1
+2.48.1
 
