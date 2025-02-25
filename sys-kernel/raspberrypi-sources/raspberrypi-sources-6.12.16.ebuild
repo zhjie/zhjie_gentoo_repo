@@ -66,7 +66,7 @@ src_prepare() {
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r0.patch"
+        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r1.patch"
     fi
 
     # diretta alsa host driver
