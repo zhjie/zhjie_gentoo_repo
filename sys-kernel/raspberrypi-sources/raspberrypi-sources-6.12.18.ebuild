@@ -1,43 +1,55 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="20"
+K_GENPATCHES_VER="22"
 K_EXP_GENPATCHES_NOUSE="1"
 
-inherit kernel-2
+inherit kernel-2 git-r3
 detect_version
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64"
-IUSE="naa bmq diretta amd highhz"
+KEYWORDS="amd64 arm64"
+IUSE="naa bmq diretta highhz"
 
-SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
+EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
+EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
+
+SRC_URI="${GENPATCHES_URI}"
+
+S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi"
+EXTRAVERSION="-networkaudio"
 
 src_unpack() {
-    UNIPATCH_LIST_DEFAULT=""
-    UNIPATCH_EXCLUDE=""
-    kernel-2_src_unpack
+    git-r3_src_unpack
+    mv "${WORKDIR}/${PF}" "${S}"
+
+    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.base.tar.xz
+    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.extras.tar.xz
+
+    rm -rfv "${WORKDIR}"/10*.patch
+    rm -rfv "${S}/.git"
+
+    mkdir "${WORKDIR}"/genpatch
+    mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
+    unpack_set_extraversion
 }
 
 src_prepare() {
+    # genpatch
+    eapply "${WORKDIR}"/genpatch/*.patch
+
     # naa patch
     if use naa; then
-        eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
         eapply "${FILESDIR}/naa/0002-Lynx-Hilo-quirk.patch"
         eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
         eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
-    fi
-
-    # cachy patch
-    if use amd; then
-        eapply "${FILESDIR}/cachy/0001-amd-cache-optimizer.patch"
     fi
 
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
@@ -57,7 +69,7 @@ src_prepare() {
         eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r1.patch"
     fi
 
-    # diretta alsa host drive
+    # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
         eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.02.16.patch"

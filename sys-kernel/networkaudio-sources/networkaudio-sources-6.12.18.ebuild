@@ -4,52 +4,40 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="20"
+K_GENPATCHES_VER="22"
 K_EXP_GENPATCHES_NOUSE="1"
 
-inherit kernel-2 git-r3
+inherit kernel-2
 detect_version
 
-DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta host."
+DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64 arm64"
-IUSE="naa bmq diretta highhz"
+KEYWORDS="amd64"
+IUSE="naa bmq diretta amd highhz"
 
-EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
-EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
-
-SRC_URI="${GENPATCHES_URI}"
-
-S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi"
-EXTRAVERSION="-networkaudio"
+SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
 
 src_unpack() {
-    git-r3_src_unpack
-    mv "${WORKDIR}/${PF}" "${S}"
-
-    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.base.tar.xz
-    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.extras.tar.xz
-
-    rm -rfv "${WORKDIR}"/10*.patch
-    rm -rfv "${S}/.git"
-
-    mkdir "${WORKDIR}"/genpatch
-    mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
-    unpack_set_extraversion
+    UNIPATCH_LIST_DEFAULT=""
+    UNIPATCH_EXCLUDE=""
+    kernel-2_src_unpack
 }
 
 src_prepare() {
-    # genpatch
-    eapply "${WORKDIR}"/genpatch/*.patch
-
     # naa patch
     if use naa; then
+        eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
         eapply "${FILESDIR}/naa/0002-Lynx-Hilo-quirk.patch"
         eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
         eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
+    fi
+
+    # cachy patch
+    if use amd; then
+        eapply "${FILESDIR}/cachy/0001-amd-cache-optimizer.patch"
     fi
 
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
