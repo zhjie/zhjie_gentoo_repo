@@ -17,20 +17,20 @@ IUSE=""
 RDEPEND="
 	dev-libs/openssl
 	media-libs/alsa-lib
-	dev-qt/qtcore
-	dev-qt/qtgui
-	dev-qt/qtmultimedia
-	dev-qt/qtscript
-	dev-qt/linguist-tools"
+	dev-qt/qtcore:5
+	dev-qt/qtgui:5
+	dev-qt/qtmultimedia:5
+	dev-qt/qtscript:5
+	dev-qt/linguist-tools:5"
 
 DEPEND="
-		dev-util/cmake
-		${RDEPEND}
+	dev-build/cmake
+	${RDEPEND}
 "
 
 src_configure() {
-		local mycmakeargs=(
+	local mycmakeargs=(
 		-DUSE_QT5=1
-		)
+	)
 	cmake-utils_src_configure
 }
