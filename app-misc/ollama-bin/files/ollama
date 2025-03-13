@@ -1,0 +1,21 @@
+#!/sbin/openrc-run
+# Copyright 1999-2025 Gentoo Authors
+# Distributed under the terms of the GNU General Public License, v2
+# $Header: $
+
+description="Ollama Service"
+
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_MODELS=/var/lib/ollma/models
+
+user="root:root"
+logfile="/var/log/ollama.log"
+command="/usr/bin/ollama"
+command_args="serve"
+command_background="yes"
+pidfile="/run/ollama.pid"
+start_stop_daemon_args="--nicelevel -10 --background --make-pidfile --stderr ${logfile} --user ${user}"
+
+start_pre() {
+    checkpath --file --owner $user --mode 0644 $logfile
+}
