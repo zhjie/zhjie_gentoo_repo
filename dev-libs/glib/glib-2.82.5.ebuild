@@ -59,6 +59,7 @@ BDEPEND="
 	dev-libs/libxslt
 	>=sys-devel/gettext-0.19.8
 	doc? ( >=dev-util/gi-docgen-2023.1 )
+	doc? ( dev-python/docutils )
 	systemtap? ( >=dev-debug/systemtap-1.3 )
 	${PYTHON_DEPS}
 	test? ( >=sys-apps/dbus-1.2.14 )
@@ -304,7 +305,7 @@ multilib_src_configure() {
 		$(meson_feature selinux)
 		$(meson_use xattr)
 		-Dlibmount=enabled # only used if host_system == 'linux'
-		-Dman-pages=disabled
+		$(meson_use doc man-pages)
 		$(meson_use systemtap dtrace)
 		$(meson_use systemtap)
 		$(meson_feature sysprof)
@@ -363,13 +364,19 @@ multilib_src_install_all() {
 	# and removals, and test depend on glib-utils instead; revisit now with
 	# meson
 	rm "${ED}/usr/bin/glib-genmarshal" || die
-	# rm "${ED}/usr/share/man/man1/glib-genmarshal.1" || die
+	if use doc; then
+	rm "${ED}/usr/share/man/man1/glib-genmarshal.1" || die
+	fi
 	rm "${ED}/usr/bin/glib-mkenums" || die
-	# rm "${ED}/usr/share/man/man1/glib-mkenums.1" || die
+	if use doc; then
+	rm "${ED}/usr/share/man/man1/glib-mkenums.1" || die
+	fi
 	rm "${ED}/usr/bin/gtester-report" || die
-	# rm "${ED}/usr/share/man/man1/gtester-report.1" || die
+	if use doc; then
+	rm "${ED}/usr/share/man/man1/gtester-report.1" || die
 	# gdbus-codegen manpage installed by dev-util/gdbus-codegen
-	# rm "${ED}/usr/share/man/man1/gdbus-codegen.1" || die
+	rm "${ED}/usr/share/man/man1/gdbus-codegen.1" || die
+	fi
 }
 
 pkg_preinst() {
