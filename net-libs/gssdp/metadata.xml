@@ -5,7 +5,10 @@
     <email>gnome@gentoo.org</email>
     <name>Gentoo GNOME Desktop</name>
   </maintainer>
+  <use>
+    <flag name="man">Generate man page for tools</flag>
+  </use>
   <upstream>
-    <remote-id type="gnome-gitlab">GNOME/gupnp</remote-id>
+    <remote-id type="gnome-gitlab">GNOME/gssdp</remote-id>
   </upstream>
 </pkgmetadata>
