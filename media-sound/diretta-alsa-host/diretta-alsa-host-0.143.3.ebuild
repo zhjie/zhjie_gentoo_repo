@@ -8,7 +8,7 @@ inherit unpacker
 DESCRIPTION="Linux Diretta ALSA Host"
 HOMEPAGE="https://www.diretta.link/preview/"
 X86_VER="2025.02.16"
-ARM_VER="2025.01.17"
+ARM_VER="2025.02.16"
 X86_HOST="diretta-alsa-daemon-${X86_VER}-1-x86_64.pkg.tar.zst"
 ARM_HOST="diretta-alsa-daemon-${ARM_VER}-1-aarch64.pkg.tar.xz"
 SRC_URI="amd64? ( https://www.audio-linux.com/repo/${X86_HOST} )
