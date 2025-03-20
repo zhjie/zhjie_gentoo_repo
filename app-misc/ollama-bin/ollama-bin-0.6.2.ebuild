@@ -14,12 +14,11 @@ SRC_URI="
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="systemd cuda"
+IUSE="systemd"
 S="${WORKDIR}"
 RESTRICT="strip"
 
 RDEPEND="
-	cuda? ( dev-util/nvidia-cuda-toolkit )
 "
 
 #src_unpack() {
@@ -30,7 +29,7 @@ src_install() {
 	exeinto /opt/ollama/bin
 	doexe "${WORKDIR}/bin/ollama" || die "Failed to install binary"
 
-	rm -rfv "${WORKDIR}"/lib/ollama/cuda_v*/libcu*
+	rm -rfv "${WORKDIR}"/lib/ollama/cuda_v11
 	insinto /opt/ollama/lib/
 	doins -r "${WORKDIR}/lib/ollama/" || die "Failed to install libraries"
 	dosym /opt/ollama/bin/ollama /usr/bin/ollama

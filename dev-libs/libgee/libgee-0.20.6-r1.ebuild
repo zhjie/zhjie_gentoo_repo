@@ -42,5 +42,6 @@ src_configure() {
 	# We can drop all the Vala wiring and use the shipped files once
 	# a new release is made.
 	gnome2_src_configure \
-		$(use_enable introspection)
+		$(use_enable introspection) \
+		$(use_enable vala)
 }

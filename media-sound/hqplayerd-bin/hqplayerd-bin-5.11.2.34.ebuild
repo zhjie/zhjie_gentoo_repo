@@ -20,7 +20,7 @@ SLOT="0"
 KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd +upnp +rygen-bin cuda cpu_flags_x86_avx2"
+IUSE="systemd +upnp +rygen-bin cpu_flags_x86_avx2"
 
 RDEPEND=">=dev-libs/glib-2.78.0
 	>=media-libs/libgmpris-2.2.1
@@ -41,7 +41,6 @@ RDEPEND=">=dev-libs/glib-2.78.0
 	upnp? ( !rygen-bin? ( !net-misc/rygel-bin net-misc/rygel ) )
 	upnp? ( !net-misc/rygel )
 	upnp? ( >=dev-libs/glib-2.80.0 )
-	cuda? ( dev-util/nvidia-cuda-toolkit )
 "
 
 DEPEND="${RDEPEND}
