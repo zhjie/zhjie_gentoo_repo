@@ -15,16 +15,19 @@ SRC_URI="https://launchpad.net/ubuntu/+archive/primary/+files/${PN}_${PV}${UVER}
 LICENSE="CC-BY-SA-4.0 GPL-3 LGPL-2.1 LGPL-3"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="cinnamon gnome-shell gtk mate unity xfwm metacity"
+IUSE="cinnamon gnome-shell gtk mate unity xfwm metacity gtk2"
 RESTRICT="binchecks strip test"
 
 RDEPEND="
 	dev-libs/glib:2
-	x11-libs/gtk+:2
-	x11-themes/gtk-engines-adwaita
-	x11-themes/gtk-engines-murrine
 
-	gtk? ( sys-apps/xdg-desktop-portal-gtk )
+	gtk2? ( x11-libs/gtk+:2 
+		x11-themes/gtk-engines-adwaita
+		x11-themes/gtk-engines-murrine
+		sys-apps/xdg-desktop-portal-gtk
+	)
+
+	gtk? ( sys-apps/xdg-desktop-portal-gtk x11-libs/gtk+ )
 "
 BDEPEND="
 	dev-libs/glib:2
