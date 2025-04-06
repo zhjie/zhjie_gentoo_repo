@@ -15,7 +15,7 @@ SRC_URI="https://launchpad.net/ubuntu/+archive/primary/+files/${PN}_${PV}${UVER}
 LICENSE="CC-BY-SA-4.0 GPL-3 LGPL-2.1 LGPL-3"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="cinnamon gnome-shell gtk mate unity xfwm"
+IUSE="cinnamon gnome-shell gtk mate unity xfwm metacity"
 RESTRICT="binchecks strip test"
 
 RDEPEND="
@@ -107,9 +107,9 @@ src_configure() {
 		-Dgtk=true
 		-Dgtksourceview=true
 		-Dicons=true
-		-Dmetacity=true
-		-Dsessions=false
+		-Dsessions=true
 		-Dsounds=true
+		$(meson_use metacity )
 		$(meson_use cinnamon )
 		$(meson_use cinnamon cinnamon-dark )
 		$(meson_use cinnamon cinnamon-shell )
