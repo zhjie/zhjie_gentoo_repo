@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="25"
+K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -13,8 +13,8 @@ detect_version
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64"
-IUSE="naa bmq diretta amd highhz"
+KEYWORDS="~amd64"
+IUSE="naa t2 diretta amd highhz"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
 
@@ -37,24 +37,26 @@ src_prepare() {
 
     # cachy patch
     if use amd; then
-        eapply "${FILESDIR}/cachy/6.12/0001-amd-cache-optimizer.patch"
+        eapply "${FILESDIR}/cachy/6.14/0001-amd-pstate.patch"
+        eapply "${FILESDIR}/cachy/6.14/0002-amd-tlb-broadcast.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/6.12/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/6.12/0003-cachy.patch"
-    eapply "${FILESDIR}/cachy/6.12/0004-fixes.patch"
-    eapply "${FILESDIR}/cachy/6.12/0008-zstd.patch"
+    eapply "${FILESDIR}/cachy/6.14/0004-bbr3.patch"
+    eapply "${FILESDIR}/cachy/6.14/0005-cachy.patch"
+    eapply "${FILESDIR}/cachy/6.14/0006-crypto.patch"
+    eapply "${FILESDIR}/cachy/6.14/0007-fixes.patch"
+    eapply "${FILESDIR}/cachy/6.14/0010-zstd.patch"
+
+    # apple t2 patch
+    if use t2; then
+        eapply "${FILESDIR}/cachy/6.14/0009-t2.patch"
+    fi
 
     # highhz patch
     if use highhz; then
         eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
         eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
         eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
-    fi
-
-    # bmq scheduler
-    if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r1.patch"
     fi
 
     # diretta alsa host driver

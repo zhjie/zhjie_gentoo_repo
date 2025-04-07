@@ -1,4 +1,4 @@
-From 4c6e980fc8a354ed8f7d211e8300697989070165 Mon Sep 17 00:00:00 2001
+From 57239aaed4d3a2729de4d1647f2b9f47cbb24c38 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
 Date: Thu, 3 Apr 2025 19:33:32 +0200
 Subject: [PATCH 07/10] fixes
@@ -50,6 +50,15 @@ index 472540aeabc2..6c2986d2ad11 100644
  
  #define unlikely(cond) (cond)
  
+@@ -106,7 +107,7 @@ static void parse_args(int argc, char **argv)
+ 	}
+ }
+ 
+-#define BUFSIZE 256
++#define BUFSIZE (256 + KSYM_NAME_LEN)
+ 
+ int main(int argc, char **argv)
+ {
 diff --git a/crypto/crc32c_generic.c b/crypto/crc32c_generic.c
 index 985da981d6e2..99713d0c77c0 100644
 --- a/crypto/crc32c_generic.c
