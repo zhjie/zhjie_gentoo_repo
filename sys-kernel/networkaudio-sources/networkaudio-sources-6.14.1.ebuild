@@ -14,7 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="~amd64"
-IUSE="naa t2 diretta amd highhz"
+IUSE="naa t2 bore diretta amd highhz"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
 
@@ -50,6 +50,11 @@ src_prepare() {
     # apple t2 patch
     if use t2; then
         eapply "${FILESDIR}/cachy/6.14/0009-t2.patch"
+    fi
+
+    # bore scheduler
+    if use bore; then
+        eapply "${FILESDIR}/cachy/6.14/sched/0001-bore-cachy.patch"
     fi
 
     # highhz patch
