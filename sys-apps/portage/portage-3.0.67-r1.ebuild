@@ -1,9 +1,9 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-PYTHON_COMPAT=( pypy3 python3_{10..13} )
+PYTHON_COMPAT=( pypy3 pypy3_11 python3_{10..13} )
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 TMPFILES_OPTIONAL=1
 
@@ -20,7 +20,7 @@ if [[ ${PV} == 9999 ]] ; then
 	inherit git-r3
 else
 	SRC_URI="https://gitweb.gentoo.org/proj/portage.git/snapshot/${P}.tar.bz2"
-	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
+	KEYWORDS="~alpha amd64 arm arm64 hppa ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
 fi
 
 LICENSE="GPL-2"
@@ -89,7 +89,7 @@ PDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${P}-webrsync.patch
+	"${FILESDIR}"/${PN}-3.0.67-nicer-depend-phase-output.patch
 )
 
 pkg_pretend() {
@@ -127,7 +127,7 @@ my_src_configure() {
 		$(meson_use xattr)
 	)
 
-	if use native-extensions && [[ "${EPYTHON}" != "pypy3" ]] ; then
+	if use native-extensions && [[ "${EPYTHON}" != pypy3* ]] ; then
 		emesonargs+=( -Dnative-extensions=true )
 	else
 		emesonargs+=( -Dnative-extensions=false )
@@ -184,18 +184,22 @@ pkg_preinst() {
 			-u PORTDIR \
 			-u PORTDIR_OVERLAY \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.default_locations || die
 
 		env -u BINPKG_COMPRESS -u PORTAGE_REPOSITORIES \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_compression || die
 
 		env -u FEATURES -u PORTAGE_REPOSITORIES \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_multi_instance || die
 
 		env -u BINPKG_FORMAT \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_format || die
 	fi
 
