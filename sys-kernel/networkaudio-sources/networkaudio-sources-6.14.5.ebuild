@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="6"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -13,7 +13,7 @@ detect_version
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE="naa bmq diretta amd highhz"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
@@ -49,7 +49,7 @@ src_prepare() {
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/cachy/6.14/sched/0001-prjc-cachy.patch"
+        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.14-r0.patch"
     fi
 
     # highhz patch
