@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="amd64"
 RESTRICT="mirror bindist"
 
-IUSE="systemd samba ffmpeg web alsa server-gc trace mp3"
+IUSE="systemd samba ffmpeg web alsa server-gc taskset4 trace mp3"
 
 RDEPEND="dev-libs/icu
     alsa? ( media-libs/alsa-lib )
@@ -45,6 +45,18 @@ src_prepare() {
         sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Appliance/RoonAppliance.runtimeconfig.json
         sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Appliance/remoting_codegen.runtimeconfig.json
         sed 's|"System.GC.Server": false,|"System.GC.Server": true,|g' -i "${S}"/RoonServer/Server/RoonServer.runtimeconfig.json
+    fi
+
+    if use taskset4; then
+        cp "${S}"/RoonServer/Appliance/RoonAppliance "${S}"/RoonServer/Appliance/RoonAppliance.orig
+        sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 1,2,3 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+            "${S}"/RoonServer/Appliance/RoonAppliance
+        cp "${S}"/RoonServer/Appliance/RAATServer "${S}"/RoonServer/Appliance/RAATServer.orig
+        sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+            "${S}"/RoonServer/Appliance/RAATServer
+        cp "${S}"/RoonServer/Server/RoonServer "${S}"/RoonServer/Server/RoonServer.orig
+        sed -i 's/exec "$HARDLINK" "$SCRIPT.dll" "$@"/exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"/g' \
+            "${S}"/RoonServer/Server/RoonServer
     fi
 
     if ! use trace; then

@@ -8,7 +8,7 @@ Type=simple
 User=root
 Environment=ROON_DATAROOT=/var/roon
 Environment=ROON_ID_DIR=/var/roon
-ExecStart=/opt/RoonServer/Server/RoonServer
+ExecStart=/opt/roonserver/Server/RoonServer
 Restart=on-abort
 
 [Install]

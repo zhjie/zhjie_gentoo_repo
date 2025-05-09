@@ -6,7 +6,7 @@ export ROON_DATAROOT=/var/roon
 export ROON_ID_DIR=/var/roon
 
 user="root:root"
-command="/opt/RoonServer/Server/RoonServer"
+command="/opt/roonserver/Server/RoonServer"
 pidfile="/run/roonserver.pid"
 command_background="yes"
 output_log="/tmp/roonserver.log"
