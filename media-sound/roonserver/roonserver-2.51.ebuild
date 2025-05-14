@@ -20,6 +20,7 @@ IUSE="systemd samba ffmpeg web alsa server-gc taskset4 trace mp3"
 RDEPEND="dev-libs/icu
     alsa? ( media-libs/alsa-lib )
     samba? ( net-fs/cifs-utils )
+    samba? ( dev-libs/libtasn1 )
     ffmpeg? ( media-video/ffmpeg )
     trace? ( dev-util/lttng-ust )
     mp3? ( media-video/ffmpeg[mp3] )
