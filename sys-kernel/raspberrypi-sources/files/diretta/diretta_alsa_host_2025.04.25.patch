@@ -1,7 +1,7 @@
-diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bridge.c
+diff -urpN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bridge.c
 --- a/sound/drivers/alsa_bridge.c	1970-01-01 08:00:00.000000000 +0800
-+++ b/sound/drivers/alsa_bridge.c	2024-12-23 16:13:30.648938397 +0800
-@@ -0,0 +1,971 @@
++++ b/sound/drivers/alsa_bridge.c	2025-04-20 16:13:57.000000000 +0800
+@@ -0,0 +1,980 @@
 +#include  <linux/version.h>
 +#include <linux/init.h>
 +#include <linux/module.h>
@@ -57,8 +57,10 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	struct page* pageinfo;
 +	int order;
 +	bool doStart;
++	bool doPrStart;
 +	
 +	snd_pcm_uframes_t back_buffer_size;
++	unsigned int back_periods;
 +	snd_pcm_format_t back_format;
 +	unsigned int back_rate;
 +	unsigned int back_channels;
@@ -310,8 +312,8 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	substream->runtime->hw.periods_max =		node->info->periodMax;
 +	substream->runtime->hw.fifo_size =		0;
 +	
-+	printk("snd_card_diretta_playback_open period_bytes_min=%ld\n",substream->runtime->hw.period_bytes_min);
-+	printk("snd_card_diretta_playback_open period_bytes_max=%ld\n",substream->runtime->hw.period_bytes_max);
++	printk("snd_card_diretta_playback_open period_bytes_min=%d\n",(int)substream->runtime->hw.period_bytes_min);
++	printk("snd_card_diretta_playback_open period_bytes_max=%d\n",(int)substream->runtime->hw.period_bytes_max);
 +	printk("snd_card_diretta_playback_open periods_min=%d\n",substream->runtime->hw.periods_min);
 +	printk("snd_card_diretta_playback_open periods_max=%d\n",substream->runtime->hw.periods_max);
 +	
@@ -321,6 +323,7 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	 
 +	node->playbackOpen = true;
 +	node->doStart = false;
++	node->doPrStart = false;
 +//	printk("snd_card_diretta_playback_open done\n");
 +	
 +	return 0;
@@ -337,6 +340,7 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	
 +	node->info->statusPlayer = 0;
 +	node->doStart = false;
++	node->doPrStart = false;
 +	return 0;
 +
 +}
@@ -353,8 +357,9 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	unsigned long rate = runtime->rate;
 +	if(node->close)
 +		return -EFAULT;
-+	if(node->doStart){
++	if(node->doPrStart || node->doStart){
 +		if(	node->back_buffer_size == runtime->buffer_size &&
++			node->back_periods == runtime->periods  &&
 +			node->back_format == runtime->format &&
 +			node->back_rate == runtime->rate &&
 +			node->back_channels == runtime->channels ){
@@ -364,10 +369,11 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	}
 +	
 +	node->back_buffer_size = runtime->buffer_size;
++	node->back_periods = runtime->periods;
 +	node->back_format = runtime->format;
 +	node->back_rate = runtime->rate;
 +	node->back_channels = runtime->channels;
-+	printk("snd_card_diretta_pcm_prepare buffer_size=%ld / periods=%d  format=%d  rate=%d  ch=%d \n",runtime->buffer_size,runtime->periods,runtime->format,runtime->rate,runtime->channels);
++	printk("snd_card_diretta_pcm_prepare buffer_size=%d / periods=%d  format=%d  rate=%d  ch=%d \n",(int)runtime->buffer_size,runtime->periods,runtime->format,runtime->rate,runtime->channels);
 +	
 +	node->info->statusPlayer &=  ~DA_STATUS_CONNECT;
 +	diretta_alsa_waite_clear(node,2000,DA_STATUS_CONNECT);
@@ -426,6 +432,7 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	if(diretta_alsa_waite(node,10000,DA_STATUS_CONNECT)!=1)
 +		return -1;
 +
++	node->doPrStart = true;
 +	return 0;
 +
 +}
@@ -437,8 +444,10 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	if(cmd){
 +		node->info->statusPlayer |=  DA_STATUS_PLAY;
 +		node->doStart = true;
++		node->doPrStart = false;
 +	}else{
 +		node->info->statusPlayer &= ~DA_STATUS_PLAY;
++		node->doPrStart = false;
 +	}
 +	return 0;
 +
@@ -781,7 +790,7 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +static long diretta_alsa_ioctl(struct file *file, unsigned int cmd, unsigned long arg){
 +	
 +	int ret,a;
-+//	printk("diretta_alsa_ioctl %d %ld\n",cmd,arg);
++//	printk("diretta_alsa_ioctl %d %d\n",cmd,(int)arg);
 +	if(diretta_alsa.exit){
 +		return -ENOSYS;
 +	}
@@ -881,11 +890,11 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	
 +	size_t size = vma->vm_end - vma->vm_start;
 +    vma->vm_ops = &diretta_alsa_vm_ops;
-+//#if LINUX_VERSION_CODE < KERNEL_VERSION(6,3,0)
-+//    vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
-+//#else
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6,3,0)
++    vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
++#else
 +	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
-+//#endif
++#endif
 +	remap_pfn_range(vma, vma->vm_start,
 +				    virt_to_phys(((diretta_alsa_node_st*  ) file->private_data)->buffer) >> PAGE_SHIFT,
 +				    size, vma->vm_page_prot) ;
@@ -938,11 +947,11 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +	diretta_alsa.major=ret;
 +	
 +	
-+	//#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
-+	//  diretta_alsa.class = class_create(THIS_MODULE, "diretta-alsa");
-+	//#else
++	#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
++	  diretta_alsa.class = class_create(THIS_MODULE, "diretta-alsa");
++	#else
 +	  diretta_alsa.class = class_create("diretta-alsa");
-+	//#endif	
++	#endif	
 +	
 +	if (IS_ERR(diretta_alsa.class)) {
 +		ret = PTR_ERR(diretta_alsa.class);
@@ -973,9 +982,9 @@ diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.c b/sound/drivers/alsa_bri
 +MODULE_AUTHOR("nobody@localhost");
 +MODULE_DESCRIPTION("Diretta ALSA driver");
 +MODULE_LICENSE("Dual BSD/GPL");
-diff '--color=auto' -rupN a/sound/drivers/alsa_bridge.h b/sound/drivers/alsa_bridge.h
+diff -urpN a/sound/drivers/alsa_bridge.h b/sound/drivers/alsa_bridge.h
 --- a/sound/drivers/alsa_bridge.h	1970-01-01 08:00:00.000000000 +0800
-+++ b/sound/drivers/alsa_bridge.h	2024-12-23 16:13:30.648938397 +0800
++++ b/sound/drivers/alsa_bridge.h	2025-04-20 16:13:57.000000000 +0800
 @@ -0,0 +1,117 @@
 +
 +#define DIRETTA_BR_DELETE 0

@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="22"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -52,10 +52,9 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0003-cachy.patch"
-    eapply "${FILESDIR}/cachy/0004-fixes.patch"
-    eapply "${FILESDIR}/cachy/0008-zstd.patch"
+    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-fixes.patch"
 
     # highhz patch
     if use highhz; then
@@ -66,13 +65,13 @@ src_prepare() {
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.12-r1.patch"
+        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.15-r0.patch"
     fi
 
     # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.02.16.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.04.25.patch"
     fi
 
     # cloudflare patch
