@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="7"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2
@@ -35,21 +35,20 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
+    eapply "${FILESDIR}/gcc/more-ISA-levels-and-uarches-for-kernel-6.15-rc1+.patch"
+
     # cachy patch
     if use amd; then
         eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
-        eapply "${FILESDIR}/cachy/0002-amd-tlb-broadcast.patch"
     fi
 
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0005-cachy.patch"
-    eapply "${FILESDIR}/cachy/0006-crypto.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
     eapply "${FILESDIR}/cachy/0007-fixes.patch"
-    eapply "${FILESDIR}/cachy/0009-zstd.patch"
 
     # bmq scheduler
     if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.14-r0.patch"
+        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.15-r0.patch"
     fi
 
     # highhz patch

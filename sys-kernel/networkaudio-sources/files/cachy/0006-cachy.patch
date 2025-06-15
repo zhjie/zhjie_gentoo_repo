@@ -1,51 +1,55 @@
-From 00498cff4e82f7a363b6c967102587694f9067ca Mon Sep 17 00:00:00 2001
+From dd6470b2c144014a34e9ae41a4acfa26c1549371 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 2 May 2025 18:59:47 +0200
-Subject: [PATCH 5/9] cachy
+Date: Tue, 10 Jun 2025 13:56:00 +0200
+Subject: [PATCH 6/8] cachy
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
+ .gitignore                                    |    3 +
+ .../ABI/testing/sysfs-driver-intel-xe-hwmon   |   24 +
  .../admin-guide/kernel-parameters.txt         |   12 +
- Makefile                                      |    8 +
- arch/x86/Kconfig.cpu                          |  367 +-
- arch/x86/Makefile                             |   89 +-
+ Documentation/admin-guide/sysctl/vm.rst       |   72 +
+ MAINTAINERS                                   |    5 +
+ Makefile                                      |   48 +-
+ arch/Kconfig                                  |   19 +
+ arch/x86/Kconfig.cpu                          |   70 +
+ arch/x86/Makefile                             |   17 +
  arch/x86/include/asm/pci.h                    |    6 +
- arch/x86/include/asm/vermagic.h               |   72 +
  arch/x86/pci/common.c                         |    7 +-
- block/Kconfig.iosched                         |    9 +
+ block/Kconfig.iosched                         |   14 +
  block/Makefile                                |    8 +
- block/adios.c                                 | 1342 +++++++
- block/elevator.c                              |    8 +
+ block/adios.c                                 | 1344 +++++++
+ block/elevator.c                              |   12 +
  drivers/Makefile                              |   13 +-
  drivers/ata/ahci.c                            |   23 +-
  drivers/cpufreq/Kconfig.x86                   |    2 -
  drivers/cpufreq/intel_pstate.c                |    2 +
  drivers/gpu/drm/amd/amdgpu/amdgpu.h           |    1 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c  |   44 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.h  |    1 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c    |    6 +-
  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |   10 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c       |   19 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.h       |    1 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h      |    1 +
  drivers/gpu/drm/amd/display/Kconfig           |    6 +
- .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |   69 +-
- .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h |    7 +
+ .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |    2 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_color.c   |    2 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_crtc.c    |    6 +-
  .../amd/display/amdgpu_dm/amdgpu_dm_plane.c   |    6 +-
- .../drm/amd/display/dc/bios/bios_parser2.c    |   13 +-
- .../drm/amd/display/dc/core/dc_link_exports.c |    6 +
- drivers/gpu/drm/amd/display/dc/dc.h           |    3 +
- .../dc/resource/dce120/dce120_resource.c      |   17 +
  drivers/gpu/drm/amd/pm/amdgpu_pm.c            |    3 +
  drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     |   14 +-
+ drivers/gpu/drm/xe/regs/xe_pcode_regs.h       |    3 +
+ drivers/gpu/drm/xe/xe_device_types.h          |    2 +
+ drivers/gpu/drm/xe/xe_hwmon.c                 |  125 +-
+ drivers/gpu/drm/xe/xe_pci.c                   |    4 +
+ drivers/gpu/drm/xe/xe_pcode_api.h             |    3 +
+ drivers/hid/amd-sfh-hid/amd_sfh_client.c      |    2 +
+ drivers/hid/amd-sfh-hid/amd_sfh_pcie.c        |    4 +
+ drivers/hid/amd-sfh-hid/amd_sfh_pcie.h        |    1 +
+ .../hid_descriptor/amd_sfh_hid_desc.c         |   27 +
+ .../hid_descriptor/amd_sfh_hid_desc.h         |    8 +
+ .../hid_descriptor/amd_sfh_hid_report_desc.h  |   20 +
  drivers/input/evdev.c                         |   19 +-
  drivers/md/dm-crypt.c                         |    5 +
  drivers/media/v4l2-core/Kconfig               |    5 +
  drivers/media/v4l2-core/Makefile              |    2 +
- drivers/media/v4l2-core/v4l2loopback.c        | 3292 +++++++++++++++++
- drivers/media/v4l2-core/v4l2loopback.h        |   98 +
+ drivers/media/v4l2-core/v4l2loopback.c        | 3313 +++++++++++++++++
+ drivers/media/v4l2-core/v4l2loopback.h        |  108 +
  .../media/v4l2-core/v4l2loopback_formats.h    |  445 +++
  drivers/pci/controller/Makefile               |    6 +
  drivers/pci/controller/intel-nvme-remap.c     |  462 +++
@@ -55,6 +59,8 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/scsi/vhba/Kconfig                     |    9 +
  drivers/scsi/vhba/Makefile                    |    4 +
  drivers/scsi/vhba/vhba.c                      | 1132 ++++++
+ fs/select.c                                   |    2 +-
+ include/linux/mm.h                            |    8 +
  include/linux/pagemap.h                       |    2 +-
  include/linux/user_namespace.h                |    4 +
  include/linux/wait.h                          |    2 +
@@ -63,21 +69,28 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  kernel/Kconfig.preempt                        |    2 +-
  kernel/fork.c                                 |   14 +
  kernel/locking/rwsem.c                        |    4 +-
- kernel/sched/fair.c                           |   24 +-
+ kernel/sched/fair.c                           |   13 +
  kernel/sched/sched.h                          |    2 +-
  kernel/sched/wait.c                           |   24 +
  kernel/sysctl.c                               |   12 +
  kernel/user_namespace.c                       |    7 +
- mm/Kconfig                                    |    2 +-
+ mm/Kconfig                                    |   65 +-
  mm/compaction.c                               |    4 +
  mm/huge_memory.c                              |    4 +
+ mm/mm_init.c                                  |    1 +
  mm/page-writeback.c                           |    8 +
  mm/page_alloc.c                               |    4 +
  mm/swap.c                                     |    5 +
+ mm/util.c                                     |   34 +
  mm/vmpressure.c                               |    4 +
- mm/vmscan.c                                   |    4 +
+ mm/vmscan.c                                   |  157 +-
  net/ipv4/inet_connection_sock.c               |    2 +-
- 72 files changed, 7871 insertions(+), 99 deletions(-)
+ scripts/Makefile.build                        |   52 +-
+ scripts/Makefile.lib                          |    7 +-
+ scripts/Makefile.vmlinux_o                    |   16 +-
+ scripts/Makefile.vmlinux_thinlink             |   53 +
+ scripts/head-object-list.txt                  |    1 +
+ 85 files changed, 8059 insertions(+), 68 deletions(-)
  create mode 100644 block/adios.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.h
@@ -86,12 +99,73 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  create mode 100644 drivers/scsi/vhba/Kconfig
  create mode 100644 drivers/scsi/vhba/Makefile
  create mode 100644 drivers/scsi/vhba/vhba.c
+ create mode 100644 scripts/Makefile.vmlinux_thinlink
 
+diff --git a/.gitignore b/.gitignore
+index f2f63e47fb88..b83a68185ef4 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -12,6 +12,7 @@
+ #
+ .*
+ *.a
++*.a_thinlto_native
+ *.asn1.[ch]
+ *.bin
+ *.bz2
+@@ -39,6 +40,7 @@
+ *.mod.c
+ *.o
+ *.o.*
++*.o_thinlto_native
+ *.patch
+ *.rmeta
+ *.rpm
+@@ -64,6 +66,7 @@ modules.order
+ /vmlinux
+ /vmlinux.32
+ /vmlinux.map
++/vmlinux.thinlink
+ /vmlinux.symvers
+ /vmlinux.unstripped
+ /vmlinux-gdb.py
+diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+index cb207c79680d..6fbab98fb639 100644
+--- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
++++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+@@ -124,3 +124,27 @@ Contact:	intel-xe@lists.freedesktop.org
+ Description:	RO. VRAM temperature in millidegree Celsius.
+ 
+ 		Only supported for particular Intel Xe graphics platforms.
++
++What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan1_input
++Date:		March 2025
++KernelVersion:	6.14
++Contact:	intel-xe@lists.freedesktop.org
++Description:	RO. Fan 1 speed in RPM.
++
++		Only supported for particular Intel Xe graphics platforms.
++
++What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan2_input
++Date:		March 2025
++KernelVersion:	6.14
++Contact:	intel-xe@lists.freedesktop.org
++Description:	RO. Fan 2 speed in RPM.
++
++		Only supported for particular Intel Xe graphics platforms.
++
++What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan3_input
++Date:		March 2025
++KernelVersion:	6.14
++Contact:	intel-xe@lists.freedesktop.org
++Description:	RO. Fan 3 speed in RPM.
++
++		Only supported for particular Intel Xe graphics platforms.
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 56be1fc99bdd..08063b29b18f 100644
+index 8f75ec177399..c865280efa8e 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2277,6 +2277,9 @@
+@@ -2318,6 +2318,9 @@
  			disable
  			  Do not enable intel_pstate as the default
  			  scaling driver for the supported processors
@@ -101,7 +175,7 @@ index 56be1fc99bdd..08063b29b18f 100644
                          active
                            Use intel_pstate driver to bypass the scaling
                            governors layer of cpufreq and provides it own
-@@ -4644,6 +4647,15 @@
+@@ -4689,6 +4692,15 @@
  		nomsi		[MSI] If the PCI_MSI kernel config parameter is
  				enabled, this kernel boot option can be used to
  				disable the use of MSI interrupts system-wide.
@@ -117,11 +191,134 @@ index 56be1fc99bdd..08063b29b18f 100644
  		noioapicquirk	[APIC] Disable all boot interrupt quirks.
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
+diff --git a/Documentation/admin-guide/sysctl/vm.rst b/Documentation/admin-guide/sysctl/vm.rst
+index 8290177b4f75..2a94faa5a4ca 100644
+--- a/Documentation/admin-guide/sysctl/vm.rst
++++ b/Documentation/admin-guide/sysctl/vm.rst
+@@ -25,6 +25,9 @@ files can be found in mm/swap.c.
+ Currently, these files are in /proc/sys/vm:
+ 
+ - admin_reserve_kbytes
++- anon_min_ratio
++- clean_low_ratio
++- clean_min_ratio
+ - compact_memory
+ - compaction_proactiveness
+ - compact_unevictable_allowed
+@@ -109,6 +112,67 @@ On x86_64 this is about 128MB.
+ Changing this takes effect whenever an application requests memory.
+ 
+ 
++anon_min_ratio
++==============
++
++This knob provides *hard* protection of anonymous pages. The anonymous pages
++on the current node won't be reclaimed under any conditions when their amount
++is below vm.anon_min_ratio.
++
++This knob may be used to prevent excessive swap thrashing when anonymous
++memory is low (for example, when memory is going to be overfilled by
++compressed data of zram module).
++
++Setting this value too high (close to 100) can result in inability to
++swap and can lead to early OOM under memory pressure.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 1.
++
++
++clean_low_ratio
++================
++
++This knob provides *best-effort* protection of clean file pages. The file pages
++on the current node won't be reclaimed under memory pressure when the amount of
++clean file pages is below vm.clean_low_ratio *unless* we threaten to OOM.
++
++Protection of clean file pages using this knob may be used when swapping is
++still possible to
++  - prevent disk I/O thrashing under memory pressure;
++  - improve performance in disk cache-bound tasks under memory pressure.
++
++Setting it to a high value may result in a early eviction of anonymous pages
++into the swap space by attempting to hold the protected amount of clean file
++pages in memory.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 15.
++
++
++clean_min_ratio
++================
++
++This knob provides *hard* protection of clean file pages. The file pages on the
++current node won't be reclaimed under memory pressure when the amount of clean
++file pages is below vm.clean_min_ratio.
++
++Hard protection of clean file pages using this knob may be used to
++  - prevent disk I/O thrashing under memory pressure even with no free swap space;
++  - improve performance in disk cache-bound tasks under memory pressure;
++  - avoid high latency and prevent livelock in near-OOM conditions.
++
++Setting it to a high value may result in a early out-of-memory condition due to
++the inability to reclaim the protected amount of clean file pages when other
++types of pages cannot be reclaimed.
++
++The unit of measurement is the percentage of the total memory of the node.
++
++The default value is 4.
++
++
+ compact_memory
+ ==============
+ 
+@@ -973,6 +1037,14 @@ be 133 (x + 2x = 200, 2x = 133.33).
+ At 0, the kernel will not initiate swap until the amount of free and
+ file-backed pages is less than the high watermark in a zone.
+ 
++This knob has no effect if the amount of clean file pages on the current
++node is below vm.clean_low_ratio or vm.clean_min_ratio. In this case,
++only anonymous pages can be reclaimed.
++
++If the number of anonymous pages on the current node is below
++vm.anon_min_ratio, then only file pages can be reclaimed with
++any vm.swappiness value.
++
+ 
+ unprivileged_userfaultfd
+ ========================
+diff --git a/MAINTAINERS b/MAINTAINERS
+index dd844ac8d910..4feb3b9f8f73 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5790,6 +5790,11 @@ F:	scripts/Makefile.clang
+ F:	scripts/clang-tools/
+ K:	\b(?i:clang|llvm)\b
+ 
++CLANG/LLVM THINLTO DISTRIBUTED BUILD
++M:	Rong Xu <xur@google.com>
++S:	Supported
++F:	scripts/Makefile.vmlinux_thinlink
++
+ CLK API
+ M:	Russell King <linux@armlinux.org.uk>
+ L:	linux-clk@vger.kernel.org
 diff --git a/Makefile b/Makefile
-index 87835d7abbce..a53f423d634d 100644
+index 7138d1fabfa4..52f348c59ad6 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -860,11 +860,19 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
+@@ -298,7 +298,8 @@ no-dot-config-targets := $(clean-targets) \
+ 			 outputmakefile rustavailable rustfmt rustfmtcheck
+ no-sync-config-targets := $(no-dot-config-targets) %install modules_sign kernelrelease \
+ 			  image_name
+-single-targets := %.a %.i %.ko %.lds %.ll %.lst %.mod %.o %.rsi %.s %/
++single-targets := %.a %.i %.ko %.lds %.ll %.lst %.mod %.o %.rsi %.s %.o_thinlto_native \
++	          %.a_thinlto_native %.o.thinlto.bc %/
+ 
+ config-build	:=
+ mixed-build	:=
+@@ -857,11 +858,19 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
  ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
  KBUILD_CFLAGS += -O2
  KBUILD_RUSTFLAGS += -Copt-level=2
@@ -141,402 +338,158 @@ index 87835d7abbce..a53f423d634d 100644
  # Always set `debug-assertions` and `overflow-checks` because their default
  # depends on `opt-level` and `debug-assertions`, respectively.
  KBUILD_RUSTFLAGS += -Cdebug-assertions=$(if $(CONFIG_RUST_DEBUG_ASSERTIONS),y,n)
+@@ -991,10 +1000,10 @@ export CC_FLAGS_SCS
+ endif
+ 
+ ifdef CONFIG_LTO_CLANG
+-ifdef CONFIG_LTO_CLANG_THIN
+-CC_FLAGS_LTO	:= -flto=thin -fsplit-lto-unit
+-else
++ifdef CONFIG_LTO_CLANG_FULL
+ CC_FLAGS_LTO	:= -flto
++else # for CONFIG_LTO_CLANG_THIN or CONFIG_LTO_CLANG_THIN_DIST
++CC_FLAGS_LTO	:= -flto=thin -fsplit-lto-unit
+ endif
+ CC_FLAGS_LTO	+= -fvisibility=hidden
+ 
+@@ -1213,8 +1222,34 @@ vmlinux.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
+ 	$(call if_changed,ar_vmlinux.a)
+ 
+ PHONY += vmlinux_o
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++vmlinux.thinlink: vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
++	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_thinlink
++targets += vmlinux.thinlink
++
++vmlinux.a_thinlto_native := $(patsubst %.a,%.a_thinlto_native,$(KBUILD_VMLINUX_OBJS))
++quiet_cmd_ar_vmlinux.a_thinlto_native = AR      $@
++      cmd_ar_vmlinux.a_thinlto_native = \
++	rm -f $@; \
++	$(AR) cDPrST $@ $(vmlinux.a_thinlto_native); \
++	$(AR) mPiT $$($(AR) t $@ | sed -n 1p) $@ $$($(AR) t $@ | grep -F -f $(srctree)/scripts/head-object-list.txt)
++
++define rule_gen_vmlinux.a_thinlto_native
++	+$(Q)$(MAKE) $(build)=. need-builtin=1 thinlto_final_pass=1 need-modorder=1 built-in.a_thinlto_native
++	$(call cmd_and_savecmd,ar_vmlinux.a_thinlto_native)
++endef
++
++vmlinux.a_thinlto_native: vmlinux.thinlink scripts/head-object-list.txt FORCE
++	$(call if_changed_rule,gen_vmlinux.a_thinlto_native)
++
++targets += vmlinux.a_thinlto_native
++
++vmlinux_o: vmlinux.a_thinlto_native
++	$(Q)$(MAKE) thinlto_final_pass=1 -f $(srctree)/scripts/Makefile.vmlinux_o
++else
+ vmlinux_o: vmlinux.a $(KBUILD_VMLINUX_LIBS)
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_o
++endif
+ 
+ vmlinux.o modules.builtin.modinfo modules.builtin: vmlinux_o
+ 	@:
+@@ -1572,7 +1607,8 @@ CLEAN_FILES += vmlinux.symvers modules-only.symvers \
+ 	       modules.builtin.ranges vmlinux.o.map vmlinux.unstripped \
+ 	       compile_commands.json rust/test \
+ 	       rust-project.json .vmlinux.objs .vmlinux.export.c \
+-               .builtin-dtbs-list .builtin-dtb.S
++	       .builtin-dtbs-list .builtin-dtb.S \
++	       .vmlinux_thinlto_bc_files vmlinux.thinlink
+ 
+ # Directories & files removed with 'make mrproper'
+ MRPROPER_FILES += include/config include/generated          \
+@@ -2023,6 +2059,8 @@ clean: $(clean-dirs)
+ 		-o -name '*.symtypes' -o -name 'modules.order' \
+ 		-o -name '*.c.[012]*.*' \
+ 		-o -name '*.ll' \
++		-o -name '*.a_thinlto_native' -o -name '*.o_thinlto_native' \
++		-o -name '*.o.thinlto.bc' \
+ 		-o -name '*.gcno' \
+ 		\) -type f -print \
+ 		-o -name '.tmp_*' -print \
+diff --git a/arch/Kconfig b/arch/Kconfig
+index b0adb665041f..30dccda07c67 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -810,6 +810,25 @@ config LTO_CLANG_THIN
+ 	    https://clang.llvm.org/docs/ThinLTO.html
+ 
+ 	  If unsure, say Y.
++
++config LTO_CLANG_THIN_DIST
++	bool "Clang ThinLTO in distributed mode (EXPERIMENTAL)"
++	depends on HAS_LTO_CLANG && ARCH_SUPPORTS_LTO_CLANG_THIN
++	select LTO_CLANG
++	help
++	  This option enables Clang's ThinLTO in distributed build mode.
++	  In this mode, the linker performs the thin-link, generating
++	  ThinLTO index files. Subsequently, the build system explicitly
++	  invokes ThinLTO backend compilation using these index files
++	  and pre-linked IR objects. The resulting native object files
++	  are with the .o_thinlto_native suffix.
++
++	  This build mode offers improved visibility into the ThinLTO
++	  process through explicit subcommand exposure. It also makes
++	  final native object files directly available, benefiting
++	  tools like objtool and kpatch. Additionally, it provides
++	  crucial granular control over back-end options, enabling
++	  module-specific compiler options, and simplifies debugging.
+ endchoice
+ 
+ config ARCH_SUPPORTS_AUTOFDO_CLANG
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
-index 9bade26f6c67..00ae7c345e5c 100644
+index 753b8763abae..d4ce964d9713 100644
 --- a/arch/x86/Kconfig.cpu
 +++ b/arch/x86/Kconfig.cpu
-@@ -155,9 +155,8 @@ config MPENTIUM4
- 		-Paxville
- 		-Dempsey
+@@ -245,6 +245,76 @@ config MATOM
  
--
- config MK6
--	bool "K6/K6-II/K6-III"
-+	bool "AMD K6/K6-II/K6-III"
- 	depends on X86_32
- 	help
- 	  Select this for an AMD K6-family processor.  Enables use of
-@@ -165,7 +164,7 @@ config MK6
- 	  flags to GCC.
+ endchoice
  
- config MK7
--	bool "Athlon/Duron/K7"
-+	bool "AMD Athlon/Duron/K7"
- 	depends on X86_32
- 	help
- 	  Select this for an AMD Athlon K7-family processor.  Enables use of
-@@ -173,12 +172,114 @@ config MK7
- 	  flags to GCC.
- 
- config MK8
--	bool "Opteron/Athlon64/Hammer/K8"
-+	bool "AMD Opteron/Athlon64/Hammer/K8"
- 	help
- 	  Select this for an AMD Opteron or Athlon64 Hammer-family processor.
- 	  Enables use of some extended instructions, and passes appropriate
- 	  optimization flags to GCC.
- 
-+config MK8SSE3
-+	bool "AMD Opteron/Athlon64/Hammer/K8 with SSE3"
++config CC_HAS_MARCH_NATIVE
++	# This flag might not be available in cross-compilers:
++	def_bool $(cc-option, -march=native)
++	# LLVM 18 has an easily triggered internal compiler error in core
++	# networking code with '-march=native' on certain systems:
++	# https://github.com/llvm/llvm-project/issues/72026
++	# LLVM 19 introduces an optimization that resolves some high stack
++	# usage warnings that only appear wth '-march=native'.
++	depends on CC_IS_GCC || CLANG_VERSION >= 190100
++
++
++choice
++	prompt "x86_64 Compiler Build Optimization"
++	default GENERIC_CPU
++
++config X86_NATIVE_CPU
++	bool "Build and optimize for local/native CPU"
++	depends on X86_64
++	depends on CC_HAS_MARCH_NATIVE
 +	help
-+	  Select this for improved AMD Opteron or Athlon64 Hammer-family processors.
-+	  Enables use of some extended instructions, and passes appropriate
-+	  optimization flags to GCC.
++	  Optimize for the current CPU used to compile the kernel.
++	  Use this option if you intend to build the kernel for your
++	  local machine.
 +
-+config MK10
-+	bool "AMD 61xx/7x50/PhenomX3/X4/II/K10"
++	  Note that such a kernel might not work optimally on a
++	  different x86 machine.
++
++	  If unsure, say N.
++
++config GENERIC_CPU
++	bool "Generic-x86-64"
++	depends on X86_64
 +	help
-+	  Select this for an AMD 61xx Eight-Core Magny-Cours, Athlon X2 7x50,
-+	  Phenom X3/X4/II, Athlon II X2/X3/X4, or Turion II-family processor.
-+	  Enables use of some extended instructions, and passes appropriate
-+	  optimization flags to GCC.
-+
-+config MBARCELONA
-+	bool "AMD Barcelona"
-+	help
-+	  Select this for AMD Family 10h Barcelona processors.
-+
-+	  Enables -march=barcelona
-+
-+config MBOBCAT
-+	bool "AMD Bobcat"
-+	help
-+	  Select this for AMD Family 14h Bobcat processors.
-+
-+	  Enables -march=btver1
-+
-+config MJAGUAR
-+	bool "AMD Jaguar"
-+	help
-+	  Select this for AMD Family 16h Jaguar processors.
-+
-+	  Enables -march=btver2
-+
-+config MBULLDOZER
-+	bool "AMD Bulldozer"
-+	help
-+	  Select this for AMD Family 15h Bulldozer processors.
-+
-+	  Enables -march=bdver1
-+
-+config MPILEDRIVER
-+	bool "AMD Piledriver"
-+	help
-+	  Select this for AMD Family 15h Piledriver processors.
-+
-+	  Enables -march=bdver2
-+
-+config MSTEAMROLLER
-+	bool "AMD Steamroller"
-+	help
-+	  Select this for AMD Family 15h Steamroller processors.
-+
-+	  Enables -march=bdver3
-+
-+config MEXCAVATOR
-+	bool "AMD Excavator"
-+	help
-+	  Select this for AMD Family 15h Excavator processors.
-+
-+	  Enables -march=bdver4
-+
-+config MZEN
-+	bool "AMD Zen"
-+	help
-+	  Select this for AMD Family 17h Zen processors.
-+
-+	  Enables -march=znver1
-+
-+config MZEN2
-+	bool "AMD Zen 2"
-+	help
-+	  Select this for AMD Family 17h Zen 2 processors.
-+
-+	  Enables -march=znver2
-+
-+config MZEN3
-+	bool "AMD Zen 3"
-+	depends on (CC_IS_GCC && GCC_VERSION >= 100300) || (CC_IS_CLANG && CLANG_VERSION >= 120000)
-+	help
-+	  Select this for AMD Family 19h Zen 3 processors.
-+
-+	  Enables -march=znver3
++	  Generic x86-64 CPU.
++          Runs equally well on all x86-64 CPUs.
 +
 +config MZEN4
-+	bool "AMD Zen 4"
++	bool "AMD Ryzen 4"
 +	depends on (CC_IS_GCC && GCC_VERSION >= 130000) || (CC_IS_CLANG && CLANG_VERSION >= 160000)
 +	help
 +	  Select this for AMD Family 19h Zen 4 processors.
 +
-+	  Enables -march=znver4
++          Enables -march=znver4
 +
-+config MZEN5
-+	bool "AMD Zen 5"
-+	depends on (CC_IS_GCC && GCC_VERSION > 140000) || (CC_IS_CLANG && CLANG_VERSION >= 190100)
-+	help
-+	  Select this for AMD Family 19h Zen 5 processors.
++endchoice
 +
-+	  Enables -march=znver5
-+
- config MCRUSOE
- 	bool "Crusoe"
- 	depends on X86_32
-@@ -269,8 +370,17 @@ config MPSC
- 	  using the cpu family field
- 	  in /proc/cpuinfo. Family 15 is an older Xeon, Family 6 a newer one.
- 
-+config MATOM
-+	bool "Intel Atom"
-+	help
-+
-+	  Select this for the Intel Atom platform. Intel Atom CPUs have an
-+	  in-order pipelining architecture and thus can benefit from
-+	  accordingly optimized code. Use a recent GCC with specific Atom
-+	  support in order to fully benefit from selecting this option.
-+
- config MCORE2
--	bool "Core 2/newer Xeon"
-+	bool "Intel Core 2"
- 	help
- 
- 	  Select this for Intel Core 2 and newer Core 2 Xeons (Xeon 51xx and
-@@ -278,14 +388,199 @@ config MCORE2
- 	  family in /proc/cpuinfo. Newer ones have 6 and older ones 15
- 	  (not a typo)
- 
--config MATOM
--	bool "Intel Atom"
-+	  Enables -march=core2
-+
-+config MNEHALEM
-+	bool "Intel Nehalem"
- 	help
- 
--	  Select this for the Intel Atom platform. Intel Atom CPUs have an
--	  in-order pipelining architecture and thus can benefit from
--	  accordingly optimized code. Use a recent GCC with specific Atom
--	  support in order to fully benefit from selecting this option.
-+	  Select this for 1st Gen Core processors in the Nehalem family.
-+
-+	  Enables -march=nehalem
-+
-+config MWESTMERE
-+	bool "Intel Westmere"
-+	help
-+
-+	  Select this for the Intel Westmere formerly Nehalem-C family.
-+
-+	  Enables -march=westmere
-+
-+config MSILVERMONT
-+	bool "Intel Silvermont"
-+	help
-+
-+	  Select this for the Intel Silvermont platform.
-+
-+	  Enables -march=silvermont
-+
-+config MGOLDMONT
-+	bool "Intel Goldmont"
-+	help
-+
-+	  Select this for the Intel Goldmont platform including Apollo Lake and Denverton.
-+
-+	  Enables -march=goldmont
-+
-+config MGOLDMONTPLUS
-+	bool "Intel Goldmont Plus"
-+	help
-+
-+	  Select this for the Intel Goldmont Plus platform including Gemini Lake.
-+
-+	  Enables -march=goldmont-plus
-+
-+config MSANDYBRIDGE
-+	bool "Intel Sandy Bridge"
-+	help
-+
-+	  Select this for 2nd Gen Core processors in the Sandy Bridge family.
-+
-+	  Enables -march=sandybridge
-+
-+config MIVYBRIDGE
-+	bool "Intel Ivy Bridge"
-+	help
-+
-+	  Select this for 3rd Gen Core processors in the Ivy Bridge family.
-+
-+	  Enables -march=ivybridge
-+
-+config MHASWELL
-+	bool "Intel Haswell"
-+	help
-+
-+	  Select this for 4th Gen Core processors in the Haswell family.
-+
-+	  Enables -march=haswell
-+
-+config MBROADWELL
-+	bool "Intel Broadwell"
-+	help
-+
-+	  Select this for 5th Gen Core processors in the Broadwell family.
-+
-+	  Enables -march=broadwell
-+
-+config MSKYLAKE
-+	bool "Intel Skylake"
-+	help
-+
-+	  Select this for 6th Gen Core processors in the Skylake family.
-+
-+	  Enables -march=skylake
-+
-+config MSKYLAKEX
-+	bool "Intel Skylake X"
-+	help
-+
-+	  Select this for 6th Gen Core processors in the Skylake X family.
-+
-+	  Enables -march=skylake-avx512
-+
-+config MCANNONLAKE
-+	bool "Intel Cannon Lake"
-+	help
-+
-+	  Select this for 8th Gen Core processors
-+
-+	  Enables -march=cannonlake
-+
-+config MICELAKE_CLIENT
-+	bool "Intel Ice Lake (Client)"
-+	help
-+
-+	  Select this for 10th Gen Core processors in the Ice Lake family.
-+
-+	  Enables -march=icelake-client
-+
-+config MICELAKE_SERVER
-+	bool "Intel Ice lake (Server)"
-+	help
-+
-+	  Select this for the 3rd Gen Xeon processors in the Ice lake family.
-+
-+	  Enables -march=icelake-server
-+
-+config MCASCADELAKE
-+	bool "Intel Cascade Lake"
-+	help
-+
-+	  Select this for Xeon processors in the Cascade Lake family.
-+
-+	  Enables -march=cascadelake
-+
-+config MCOOPERLAKE
-+	bool "Intel Cooper Lake"
-+	depends on (CC_IS_GCC && GCC_VERSION > 100100) || (CC_IS_CLANG && CLANG_VERSION >= 100000)
-+	help
-+
-+	  Select this for Xeon processors in the Cooper Lake family.
-+
-+	  Enables -march=cooperlake
-+
-+config MTIGERLAKE
-+	bool "Intel Tiger Lake"
-+	depends on  (CC_IS_GCC && GCC_VERSION > 100100) || (CC_IS_CLANG && CLANG_VERSION >= 100000)
-+	help
-+
-+	  Select this for third-generation 10 nm process processors in the Tiger Lake family.
-+
-+	  Enables -march=tigerlake
-+
-+config MSAPPHIRERAPIDS
-+	bool "Intel Sapphire Rapids"
-+	depends on (CC_IS_GCC && GCC_VERSION > 110000) || (CC_IS_CLANG && CLANG_VERSION >= 120000)
-+	help
-+
-+	  Select this for fourth-generation 10 nm process processors in the Sapphire Rapids family.
-+
-+	  Enables -march=sapphirerapids
-+
-+config MROCKETLAKE
-+	bool "Intel Rocket Lake"
-+	depends on (CC_IS_GCC && GCC_VERSION > 110000) || (CC_IS_CLANG && CLANG_VERSION >= 120000)
-+	help
-+
-+	  Select this for eleventh-generation processors in the Rocket Lake family.
-+
-+	  Enables -march=rocketlake
-+
-+config MALDERLAKE
-+	bool "Intel Alder Lake"
-+	depends on (CC_IS_GCC && GCC_VERSION > 110000) || (CC_IS_CLANG && CLANG_VERSION >= 120000)
-+	help
-+
-+	  Select this for twelfth-generation processors in the Alder Lake family.
-+
-+	  Enables -march=alderlake
-+
-+config MRAPTORLAKE
-+	bool "Intel Raptor Lake"
-+	depends on (CC_IS_GCC && GCC_VERSION >= 130000) || (CC_IS_CLANG && CLANG_VERSION >= 150500)
-+	help
-+
-+	  Select this for thirteenth-generation processors in the Raptor Lake family.
-+
-+	  Enables -march=raptorlake
-+
-+config MMETEORLAKE
-+	bool "Intel Meteor Lake"
-+	depends on (CC_IS_GCC && GCC_VERSION >= 130000) || (CC_IS_CLANG && CLANG_VERSION >= 150500)
-+	help
-+
-+	  Select this for fourteenth-generation processors in the Meteor Lake family.
-+
-+	  Enables -march=meteorlake
-+
-+config MEMERALDRAPIDS
-+	bool "Intel Emerald Rapids"
-+	depends on (CC_IS_GCC && GCC_VERSION > 130000) || (CC_IS_CLANG && CLANG_VERSION >= 150500)
-+	help
-+
-+	  Select this for fifth-generation 10 nm process processors in the Emerald Rapids family.
-+
-+	  Enables -march=emeraldrapids
- 
- config GENERIC_CPU
- 	bool "Generic-x86-64"
-@@ -294,6 +589,26 @@ config GENERIC_CPU
- 	  Generic x86-64 CPU.
- 	  Run equally well on all x86-64 CPUs.
- 
-+config MNATIVE_INTEL
-+	bool "Intel-Native optimizations autodetected by the compiler"
-+	help
-+
-+	  Clang 3.8, GCC 4.2 and above support -march=native, which automatically detects
-+	  the optimum settings to use based on your processor. Do NOT use this
-+	  for AMD CPUs.  Intel Only!
-+
-+	  Enables -march=native
-+
-+config MNATIVE_AMD
-+	bool "AMD-Native optimizations autodetected by the compiler"
-+	help
-+
-+	  Clang 3.8, GCC 4.2 and above support -march=native, which automatically detects
-+	  the optimum settings to use based on your processor. Do NOT use this
-+	  for Intel CPUs.  AMD Only!
-+
-+	  Enables -march=native
-+
- endchoice
- 
- config X86_GENERIC
-@@ -308,6 +623,30 @@ config X86_GENERIC
- 	  This is really intended for distributors who need more
- 	  generic optimizations.
- 
 +config X86_64_VERSION
 +	int "x86-64 compiler ISA level"
 +	range 1 4
@@ -546,7 +499,7 @@ index 9bade26f6c67..00ae7c345e5c 100644
 +	  Specify a specific x86-64 compiler ISA level.
 +
 +	  There are three x86-64 ISA levels that work on top of
-+	  the x86-64 baseline, namely: x86-64-v2, x86-64-v3, and x86-64-v4.
++	  the x86-64 baseline, namely: x86-64-v2 and x86-64-v3.
 +
 +	  x86-64-v2 brings support for vector instructions up to Streaming SIMD
 +	  Extensions 4.2 (SSE4.2) and Supplemental Streaming SIMD Extensions 3
@@ -561,138 +514,9 @@ index 9bade26f6c67..00ae7c345e5c 100644
 +	  /lib/ld-linux-x86-64.so.2 --help | grep supported
 +	  /lib64/ld-linux-x86-64.so.2 --help | grep supported
 +
- #
- # Define implied options from the CPU selection here
- config X86_INTERNODE_CACHE_SHIFT
-@@ -318,7 +657,7 @@ config X86_INTERNODE_CACHE_SHIFT
- config X86_L1_CACHE_SHIFT
- 	int
- 	default "7" if MPENTIUM4 || MPSC
--	default "6" if MK7 || MK8 || MPENTIUMM || MCORE2 || MATOM || MVIAC7 || X86_GENERIC || GENERIC_CPU
-+	default "6" if MK7 || MK8 || MPENTIUMM || MCORE2 || MATOM || MVIAC7 || X86_GENERIC || GENERIC_CPU || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
- 	default "4" if MELAN || M486SX || M486 || MGEODEGX1
- 	default "5" if MWINCHIP3D || MWINCHIPC6 || MCRUSOE || MEFFICEON || MCYRIXIII || MK6 || MPENTIUMIII || MPENTIUMII || M686 || M586MMX || M586TSC || M586 || MVIAC3_2 || MGEODE_LX
- 
-@@ -336,11 +675,11 @@ config X86_ALIGNMENT_16
- 
- config X86_INTEL_USERCOPY
- 	def_bool y
--	depends on MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M586MMX || X86_GENERIC || MK8 || MK7 || MEFFICEON || MCORE2
-+	depends on MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M586MMX || X86_GENERIC || MK8 || MK7 || MEFFICEON || MCORE2 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL
- 
- config X86_USE_PPRO_CHECKSUM
- 	def_bool y
--	depends on MWINCHIP3D || MWINCHIPC6 || MCYRIXIII || MK7 || MK6 || MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M686 || MK8 || MVIAC3_2 || MVIAC7 || MEFFICEON || MGEODE_LX || MCORE2 || MATOM
-+	depends on MWINCHIP3D || MWINCHIPC6 || MCYRIXIII || MK7 || MK6 || MPENTIUM4 || MPENTIUMM || MPENTIUMIII || MPENTIUMII || M686 || MK8 || MVIAC3_2 || MVIAC7 || MEFFICEON || MGEODE_LX || MCORE2 || MATOM || MK8SSE3 || MK10 || MBARCELONA || MBOBCAT || MJAGUAR || MBULLDOZER || MPILEDRIVER || MSTEAMROLLER || MEXCAVATOR || MZEN || MZEN2 || MZEN3 || MZEN4 || MZEN5 || MNEHALEM || MWESTMERE || MSILVERMONT || MGOLDMONT || MGOLDMONTPLUS || MSANDYBRIDGE || MIVYBRIDGE || MHASWELL || MBROADWELL || MSKYLAKE || MSKYLAKEX || MCANNONLAKE || MICELAKE_CLIENT || MICELAKE_SERVER || MCASCADELAKE || MCOOPERLAKE || MTIGERLAKE || MSAPPHIRERAPIDS || MROCKETLAKE || MALDERLAKE || MRAPTORLAKE || MMETEORLAKE || MEMERALDRAPIDS || MNATIVE_INTEL || MNATIVE_AMD
- 
- #
- # P6_NOPs are a relatively minor optimization that require a family >=
-diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 5b773b34768d..5f57fd8750c6 100644
---- a/arch/x86/Makefile
-+++ b/arch/x86/Makefile
-@@ -182,15 +182,98 @@ else
-         cflags-$(CONFIG_MK8)		+= -march=k8
-         cflags-$(CONFIG_MPSC)		+= -march=nocona
-         cflags-$(CONFIG_MCORE2)		+= -march=core2
--        cflags-$(CONFIG_MATOM)		+= -march=atom
--        cflags-$(CONFIG_GENERIC_CPU)	+= -mtune=generic
-+        cflags-$(CONFIG_MATOM)		+= -march=bonnell
-+        ifeq ($(CONFIG_X86_64_VERSION),1)
-+          cflags-$(CONFIG_GENERIC_CPU)		+= -mtune=generic
-+          rustflags-$(CONFIG_GENERIC_CPU)	+= -Ztune-cpu=generic
-+        else
-+          cflags-$(CONFIG_GENERIC_CPU)		+= -march=x86-64-v$(CONFIG_X86_64_VERSION)
-+          rustflags-$(CONFIG_GENERIC_CPU)	+= -Ctarget-cpu=x86-64-v$(CONFIG_X86_64_VERSION)
-+        endif
-+        cflags-$(CONFIG_MK8SSE3)	+= -march=k8-sse3
-+        cflags-$(CONFIG_MK10) 		+= -march=amdfam10
-+        cflags-$(CONFIG_MBARCELONA) 	+= -march=barcelona
-+        cflags-$(CONFIG_MBOBCAT) 	+= -march=btver1
-+        cflags-$(CONFIG_MJAGUAR) 	+= -march=btver2
-+        cflags-$(CONFIG_MBULLDOZER) 	+= -march=bdver1
-+        cflags-$(CONFIG_MPILEDRIVER)	+= -march=bdver2 -mno-tbm
-+        cflags-$(CONFIG_MSTEAMROLLER) 	+= -march=bdver3 -mno-tbm
-+        cflags-$(CONFIG_MEXCAVATOR) 	+= -march=bdver4 -mno-tbm
-+        cflags-$(CONFIG_MZEN) 		+= -march=znver1
-+        cflags-$(CONFIG_MZEN2) 	+= -march=znver2
-+        cflags-$(CONFIG_MZEN3) 	+= -march=znver3
-+        cflags-$(CONFIG_MZEN4) 	+= -march=znver4
-+        cflags-$(CONFIG_MZEN5) 	+= -march=znver5
-+        cflags-$(CONFIG_MNATIVE_INTEL) += -march=native
-+        cflags-$(CONFIG_MNATIVE_AMD) 	+= -march=native -mno-tbm
-+        cflags-$(CONFIG_MNEHALEM) 	+= -march=nehalem
-+        cflags-$(CONFIG_MWESTMERE) 	+= -march=westmere
-+        cflags-$(CONFIG_MSILVERMONT) 	+= -march=silvermont
-+        cflags-$(CONFIG_MGOLDMONT) 	+= -march=goldmont
-+        cflags-$(CONFIG_MGOLDMONTPLUS) += -march=goldmont-plus
-+        cflags-$(CONFIG_MSANDYBRIDGE) 	+= -march=sandybridge
-+        cflags-$(CONFIG_MIVYBRIDGE) 	+= -march=ivybridge
-+        cflags-$(CONFIG_MHASWELL) 	+= -march=haswell
-+        cflags-$(CONFIG_MBROADWELL) 	+= -march=broadwell
-+        cflags-$(CONFIG_MSKYLAKE) 	+= -march=skylake
-+        cflags-$(CONFIG_MSKYLAKEX) 	+= -march=skylake-avx512
-+        cflags-$(CONFIG_MCANNONLAKE) 	+= -march=cannonlake
-+        cflags-$(CONFIG_MICELAKE_CLIENT) 	+= -march=icelake-client
-+        cflags-$(CONFIG_MICELAKE_SERVER) 	+= -march=icelake-server
-+        cflags-$(CONFIG_MCASCADELAKE) 	+= -march=cascadelake
-+        cflags-$(CONFIG_MCOOPERLAKE) 	+= -march=cooperlake
-+        cflags-$(CONFIG_MTIGERLAKE) 	+= -march=tigerlake
-+        cflags-$(CONFIG_MSAPPHIRERAPIDS) += -march=sapphirerapids
-+        cflags-$(CONFIG_MROCKETLAKE) 	+= -march=rocketlake
-+        cflags-$(CONFIG_MALDERLAKE) 	+= -march=alderlake
-+        cflags-$(CONFIG_MRAPTORLAKE) 	+= -march=raptorlake
-+        cflags-$(CONFIG_MMETEORLAKE) 	+= -march=meteorlake
-+        cflags-$(CONFIG_MEMERALDRAPIDS)	+= -march=emeraldrapids
-         KBUILD_CFLAGS += $(cflags-y)
- 
-         rustflags-$(CONFIG_MK8)		+= -Ctarget-cpu=k8
-         rustflags-$(CONFIG_MPSC)	+= -Ctarget-cpu=nocona
-         rustflags-$(CONFIG_MCORE2)	+= -Ctarget-cpu=core2
-         rustflags-$(CONFIG_MATOM)	+= -Ctarget-cpu=atom
--        rustflags-$(CONFIG_GENERIC_CPU)	+= -Ztune-cpu=generic
-+        rustflags-$(CONFIG_MK8SSE3)	+= -Ctarget-cpu=k8-sse3
-+        rustflags-$(CONFIG_MK10) 		+= -Ctarget-cpu=amdfam10
-+        rustflags-$(CONFIG_MBARCELONA) 	+= -Ctarget-cpu=barcelona
-+        rustflags-$(CONFIG_MBOBCAT) 	+= -Ctarget-cpu=btver1
-+        rustflags-$(CONFIG_MJAGUAR) 	+= -Ctarget-cpu=btver2
-+        rustflags-$(CONFIG_MBULLDOZER) 	+= -Ctarget-cpu=bdver1
-+        rustflags-$(CONFIG_MPILEDRIVER)	+= -Ctarget-cpu=bdver2
-+        rustflags-$(CONFIG_MSTEAMROLLER) 	+= -Ctarget-cpu=bdver3
-+        rustflags-$(CONFIG_MEXCAVATOR) 	+= -Ctarget-cpu=bdver4
-+        rustflags-$(CONFIG_MZEN) 		+= -Ctarget-cpu=znver1
-+        rustflags-$(CONFIG_MZEN2) 	+= -Ctarget-cpu=znver2
-+        rustflags-$(CONFIG_MZEN3) 	+= -Ctarget-cpu=znver3
-+        rustflags-$(CONFIG_MZEN4) 	+= -Ctarget-cpu=znver4
-+        rustflags-$(CONFIG_MZEN5) 	+= -Ctarget-cpu=znver5
-+        rustflags-$(CONFIG_MNATIVE_INTEL) += -Ctarget-cpu=native
-+        rustflags-$(CONFIG_MNATIVE_AMD) 	+= -Ctarget-cpu=native
-+        rustflags-$(CONFIG_MNEHALEM) 	+= -Ctarget-cpu=nehalem
-+        rustflags-$(CONFIG_MWESTMERE) 	+= -Ctarget-cpu=westmere
-+        rustflags-$(CONFIG_MSILVERMONT) 	+= -Ctarget-cpu=silvermont
-+        rustflags-$(CONFIG_MGOLDMONT) 	+= -Ctarget-cpu=goldmont
-+        rustflags-$(CONFIG_MGOLDMONTPLUS) += -Ctarget-cpu=goldmont-plus
-+        rustflags-$(CONFIG_MSANDYBRIDGE) 	+= -Ctarget-cpu=sandybridge
-+        rustflags-$(CONFIG_MIVYBRIDGE) 	+= -Ctarget-cpu=ivybridge
-+        rustflags-$(CONFIG_MHASWELL) 	+= -Ctarget-cpu=haswell
-+        rustflags-$(CONFIG_MBROADWELL) 	+= -Ctarget-cpu=broadwell
-+        rustflags-$(CONFIG_MSKYLAKE) 	+= -Ctarget-cpu=skylake
-+        rustflags-$(CONFIG_MSKYLAKEX) 	+= -Ctarget-cpu=skylake-avx512
-+        rustflags-$(CONFIG_MCANNONLAKE) 	+= -Ctarget-cpu=cannonlake
-+        rustflags-$(CONFIG_MICELAKE_CLIENT) 	+= -Ctarget-cpu=icelake-client
-+        rustflags-$(CONFIG_MICELAKE_SERVER) 	+= -Ctarget-cpu=icelake-server
-+        rustflags-$(CONFIG_MCASCADELAKE) 	+= -Ctarget-cpu=cascadelake
-+        rustflags-$(CONFIG_MCOOPERLAKE) 	+= -Ctarget-cpu=cooperlake
-+        rustflags-$(CONFIG_MTIGERLAKE) 	+= -Ctarget-cpu=tigerlake
-+        rustflags-$(CONFIG_MSAPPHIRERAPIDS) += -Ctarget-cpu=sapphirerapids
-+        rustflags-$(CONFIG_MROCKETLAKE) 	+= -Ctarget-cpu=rocketlake
-+        rustflags-$(CONFIG_MALDERLAKE) 	+= -Ctarget-cpu=alderlake
-+        rustflags-$(CONFIG_MRAPTORLAKE) 	+= -Ctarget-cpu=raptorlake
-+        rustflags-$(CONFIG_MMETEORLAKE) 	+= -Ctarget-cpu=meteorlake
-+        rustflags-$(CONFIG_MEMERALDRAPIDS)	+= -Ctarget-cpu=emeraldrapids
-         KBUILD_RUSTFLAGS += $(rustflags-y)
- 
-         KBUILD_CFLAGS += -mno-red-zone
+ config X86_GENERIC
+ 	bool "Generic x86 support"
+ 	depends on X86_32
 diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
 index b3ab80a03365..5e883b397ff3 100644
 --- a/arch/x86/include/asm/pci.h
@@ -717,96 +541,6 @@ index b3ab80a03365..5e883b397ff3 100644
  /* Can be used to override the logic in pci_scan_bus for skipping
     already-configured bus numbers - to be used for buggy BIOSes
     or architectures with incomplete PCI setup by the loader */
-diff --git a/arch/x86/include/asm/vermagic.h b/arch/x86/include/asm/vermagic.h
-index 75884d2cdec3..2fdae271f47f 100644
---- a/arch/x86/include/asm/vermagic.h
-+++ b/arch/x86/include/asm/vermagic.h
-@@ -17,6 +17,56 @@
- #define MODULE_PROC_FAMILY "586MMX "
- #elif defined CONFIG_MCORE2
- #define MODULE_PROC_FAMILY "CORE2 "
-+#elif defined CONFIG_MNATIVE_INTEL
-+#define MODULE_PROC_FAMILY "NATIVE_INTEL "
-+#elif defined CONFIG_MNATIVE_AMD
-+#define MODULE_PROC_FAMILY "NATIVE_AMD "
-+#elif defined CONFIG_MNEHALEM
-+#define MODULE_PROC_FAMILY "NEHALEM "
-+#elif defined CONFIG_MWESTMERE
-+#define MODULE_PROC_FAMILY "WESTMERE "
-+#elif defined CONFIG_MSILVERMONT
-+#define MODULE_PROC_FAMILY "SILVERMONT "
-+#elif defined CONFIG_MGOLDMONT
-+#define MODULE_PROC_FAMILY "GOLDMONT "
-+#elif defined CONFIG_MGOLDMONTPLUS
-+#define MODULE_PROC_FAMILY "GOLDMONTPLUS "
-+#elif defined CONFIG_MSANDYBRIDGE
-+#define MODULE_PROC_FAMILY "SANDYBRIDGE "
-+#elif defined CONFIG_MIVYBRIDGE
-+#define MODULE_PROC_FAMILY "IVYBRIDGE "
-+#elif defined CONFIG_MHASWELL
-+#define MODULE_PROC_FAMILY "HASWELL "
-+#elif defined CONFIG_MBROADWELL
-+#define MODULE_PROC_FAMILY "BROADWELL "
-+#elif defined CONFIG_MSKYLAKE
-+#define MODULE_PROC_FAMILY "SKYLAKE "
-+#elif defined CONFIG_MSKYLAKEX
-+#define MODULE_PROC_FAMILY "SKYLAKEX "
-+#elif defined CONFIG_MCANNONLAKE
-+#define MODULE_PROC_FAMILY "CANNONLAKE "
-+#elif defined CONFIG_MICELAKE_CLIENT
-+#define MODULE_PROC_FAMILY "ICELAKE_CLIENT "
-+#elif defined CONFIG_MICELAKE_SERVER
-+#define MODULE_PROC_FAMILY "ICELAKE_SERVER "
-+#elif defined CONFIG_MCASCADELAKE
-+#define MODULE_PROC_FAMILY "CASCADELAKE "
-+#elif defined CONFIG_MCOOPERLAKE
-+#define MODULE_PROC_FAMILY "COOPERLAKE "
-+#elif defined CONFIG_MTIGERLAKE
-+#define MODULE_PROC_FAMILY "TIGERLAKE "
-+#elif defined CONFIG_MSAPPHIRERAPIDS
-+#define MODULE_PROC_FAMILY "SAPPHIRERAPIDS "
-+#elif defined CONFIG_ROCKETLAKE
-+#define MODULE_PROC_FAMILY "ROCKETLAKE "
-+#elif defined CONFIG_MALDERLAKE
-+#define MODULE_PROC_FAMILY "ALDERLAKE "
-+#elif defined CONFIG_MRAPTORLAKE
-+#define MODULE_PROC_FAMILY "RAPTORLAKE "
-+#elif defined CONFIG_MMETEORLAKE
-+#define MODULE_PROC_FAMILY "METEORLAKE "
-+#elif defined CONFIG_MEMERALDRAPIDS
-+#define MODULE_PROC_FAMILY "EMERALDRAPIDS "
- #elif defined CONFIG_MATOM
- #define MODULE_PROC_FAMILY "ATOM "
- #elif defined CONFIG_M686
-@@ -35,6 +85,28 @@
- #define MODULE_PROC_FAMILY "K7 "
- #elif defined CONFIG_MK8
- #define MODULE_PROC_FAMILY "K8 "
-+#elif defined CONFIG_MK8SSE3
-+#define MODULE_PROC_FAMILY "K8SSE3 "
-+#elif defined CONFIG_MK10
-+#define MODULE_PROC_FAMILY "K10 "
-+#elif defined CONFIG_MBARCELONA
-+#define MODULE_PROC_FAMILY "BARCELONA "
-+#elif defined CONFIG_MBOBCAT
-+#define MODULE_PROC_FAMILY "BOBCAT "
-+#elif defined CONFIG_MBULLDOZER
-+#define MODULE_PROC_FAMILY "BULLDOZER "
-+#elif defined CONFIG_MPILEDRIVER
-+#define MODULE_PROC_FAMILY "PILEDRIVER "
-+#elif defined CONFIG_MSTEAMROLLER
-+#define MODULE_PROC_FAMILY "STEAMROLLER "
-+#elif defined CONFIG_MJAGUAR
-+#define MODULE_PROC_FAMILY "JAGUAR "
-+#elif defined CONFIG_MEXCAVATOR
-+#define MODULE_PROC_FAMILY "EXCAVATOR "
-+#elif defined CONFIG_MZEN
-+#define MODULE_PROC_FAMILY "ZEN "
-+#elif defined CONFIG_MZEN2
-+#define MODULE_PROC_FAMILY "ZEN2 "
- #elif defined CONFIG_MELAN
- #define MODULE_PROC_FAMILY "ELAN "
- #elif defined CONFIG_MCRUSOE
 diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
 index ddb798603201..7c20387d8202 100644
 --- a/arch/x86/pci/common.c
@@ -830,10 +564,10 @@ index ddb798603201..7c20387d8202 100644
  }
 -#endif
 diff --git a/block/Kconfig.iosched b/block/Kconfig.iosched
-index 27f11320b8d1..79fd5da5dd16 100644
+index 27f11320b8d1..e98585dd83e0 100644
 --- a/block/Kconfig.iosched
 +++ b/block/Kconfig.iosched
-@@ -16,6 +16,15 @@ config MQ_IOSCHED_KYBER
+@@ -16,6 +16,20 @@ config MQ_IOSCHED_KYBER
  	  synchronous writes, it will self-tune queue depths to achieve that
  	  goal.
  
@@ -841,16 +575,21 @@ index 27f11320b8d1..79fd5da5dd16 100644
 +	tristate "Adaptive Deadline I/O scheduler"
 +	default m
 +	help
-+	  ADIOS is a multi-queue I/O scheduler for the Linux kernel, based on
-+	  mq-deadline and Kyber, with learning-based adaptive latency control.
-+	  It aims to provide low latency for synchronous requests while
-+	  maintaining high throughput for asynchronous requests and bulk I/O.
++	  The Adaptive Deadline I/O Scheduler (ADIOS) is a multi-queue I/O
++	  scheduler with learning-based adaptive latency control.
++
++config MQ_IOSCHED_DEFAULT_ADIOS
++	bool "Enable ADIOS I/O scheduler as default MQ I/O scheduler"
++	depends on MQ_IOSCHED_ADIOS=y
++	default n
++	help
++	  Enable the ADIOS I/O scheduler as the default scheduler for MQ I/O.
 +
  config IOSCHED_BFQ
  	tristate "BFQ I/O scheduler"
  	select BLK_ICQ
 diff --git a/block/Makefile b/block/Makefile
-index 33748123710b..a67f651a7846 100644
+index 3a941dc0d27f..94e3bf608bd2 100644
 --- a/block/Makefile
 +++ b/block/Makefile
 @@ -23,6 +23,7 @@ obj-$(CONFIG_BLK_CGROUP_IOLATENCY)	+= blk-iolatency.o
@@ -861,7 +600,7 @@ index 33748123710b..a67f651a7846 100644
  bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
  obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
  
-@@ -36,3 +37,10 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+@@ -37,3 +38,10 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
  					   blk-crypto-sysfs.o
  obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
  obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
@@ -874,16 +613,13 @@ index 33748123710b..a67f651a7846 100644
 +
 diff --git a/block/adios.c b/block/adios.c
 new file mode 100644
-index 000000000000..3e66b26b51ac
+index 000000000000..f008d28cd059
 --- /dev/null
 +++ b/block/adios.c
-@@ -0,0 +1,1342 @@
+@@ -0,0 +1,1344 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * The Adaptive Deadline I/O Scheduler (ADIOS)
-+ * Based on mq-deadline and Kyber,
-+ * with learning-based adaptive latency control
-+ *
++ * Adaptive Deadline I/O Scheduler (ADIOS)
 + * Copyright (C) 2025 Masahito Suzuki
 + */
 +#include <linux/bio.h>
@@ -904,7 +640,7 @@ index 000000000000..3e66b26b51ac
 +#include "blk-mq.h"
 +#include "blk-mq-sched.h"
 +
-+#define ADIOS_VERSION "1.5.5"
++#define ADIOS_VERSION "1.5.8"
 +
 +// Define operation types supported by ADIOS
 +enum adios_op_type {
@@ -1017,6 +753,8 @@ index 000000000000..3e66b26b51ac
 +
 +	struct kmem_cache *rq_data_pool;
 +	struct kmem_cache *dl_group_pool;
++
++	struct request_queue *queue;
 +};
 +
 +// List of requests with the same deadline in the deadline-sorted tree
@@ -1876,6 +1614,9 @@ index 000000000000..3e66b26b51ac
 +	/* We dispatch from request queue wide instead of hw queue */
 +	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
 +
++	ad->queue = q;
++	blk_stat_enable_accounting(q);
++
 +	q->elevator = eq;
 +	return 0;
 +
@@ -1901,6 +1642,8 @@ index 000000000000..3e66b26b51ac
 +
 +	if (ad->dl_group_pool)
 +		kmem_cache_destroy(ad->dl_group_pool);
++
++	blk_stat_disable_accounting(ad->queue);
 +
 +	kfree(ad);
 +}
@@ -2191,8 +1934,6 @@ index 000000000000..3e66b26b51ac
 +		.init_sched			= adios_init_sched,
 +		.exit_sched			= adios_exit_sched,
 +	},
-+#ifdef CONFIG_BLK_DEBUG_FS
-+#endif
 +	.elevator_attrs = adios_sched_attrs,
 +	.elevator_name = "adios",
 +	.elevator_owner = THIS_MODULE,
@@ -2222,11 +1963,17 @@ index 000000000000..3e66b26b51ac
 +MODULE_DESCRIPTION(ADIOS_PROGNAME);
 \ No newline at end of file
 diff --git a/block/elevator.c b/block/elevator.c
-index cd2ce4921601..bcd6d2482a8a 100644
+index b4d08026b02c..d0ab14375925 100644
 --- a/block/elevator.c
 +++ b/block/elevator.c
-@@ -558,9 +558,17 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
+@@ -556,11 +556,23 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
+ 	if (q->tag_set->flags & BLK_MQ_F_NO_SCHED_BY_DEFAULT)
+ 		return NULL;
  
++#ifdef CONFIG_MQ_IOSCHED_DEFAULT_ADIOS
++	return elevator_find_get("adios");
++#endif // CONFIG_MQ_IOSCHED_DEFAULT_ADIOS
++
  	if (q->nr_hw_queues != 1 &&
  	    !blk_mq_is_shared_tags(q->tag_set->flags))
 +#if defined(CONFIG_CACHY)
@@ -2244,7 +1991,7 @@ index cd2ce4921601..bcd6d2482a8a 100644
  
  /*
 diff --git a/drivers/Makefile b/drivers/Makefile
-index 45d1c3e630f7..4f5ab2429a7f 100644
+index b5749cf67044..5beba9f57254 100644
 --- a/drivers/Makefile
 +++ b/drivers/Makefile
 @@ -64,14 +64,8 @@ obj-y				+= char/
@@ -2277,7 +2024,7 @@ index 45d1c3e630f7..4f5ab2429a7f 100644
  obj-$(CONFIG_MTD)		+= mtd/
  obj-$(CONFIG_SPI)		+= spi/
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index f3a6bfe098cd..e926c78380a2 100644
+index 163ac909bd06..83a1e8b5443c 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
 @@ -1629,7 +1629,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
@@ -2321,7 +2068,7 @@ index f3a6bfe098cd..e926c78380a2 100644
  }
  
  static int ahci_get_irq_vector(struct ata_host *host, int port)
-@@ -1909,7 +1902,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1912,7 +1905,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  		return -ENOMEM;
  
  	/* detect remapped nvme devices */
@@ -2333,7 +2080,7 @@ index f3a6bfe098cd..e926c78380a2 100644
  	sysfs_add_file_to_group(&pdev->dev.kobj,
  				&dev_attr_remapped_nvme.attr,
 diff --git a/drivers/cpufreq/Kconfig.x86 b/drivers/cpufreq/Kconfig.x86
-index 97c2d4f15d76..5a3af44d785a 100644
+index 2c5c228408bf..918e2bebfe78 100644
 --- a/drivers/cpufreq/Kconfig.x86
 +++ b/drivers/cpufreq/Kconfig.x86
 @@ -9,7 +9,6 @@ config X86_INTEL_PSTATE
@@ -2353,10 +2100,10 @@ index 97c2d4f15d76..5a3af44d785a 100644
  	  This driver adds a CPUFreq driver which utilizes a fine grain
  	  processor performance frequency control range instead of legacy
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 9c4cc01fd51a..06a3c53e116e 100644
+index ba9bf06f1c77..b8ceac594acd 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -3827,6 +3827,8 @@ static int __init intel_pstate_setup(char *str)
+@@ -3828,6 +3828,8 @@ static int __init intel_pstate_setup(char *str)
  
  	if (!strcmp(str, "disable"))
  		no_load = 1;
@@ -2366,10 +2113,10 @@ index 9c4cc01fd51a..06a3c53e116e 100644
  		default_driver = &intel_pstate;
  	else if (!strcmp(str, "passive"))
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index 98f0c12df12b..33a9e7c0ced2 100644
+index c3641331d4de..ce1072fe4921 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -160,6 +160,7 @@ struct amdgpu_watchdog_timer {
+@@ -161,6 +161,7 @@ struct amdgpu_watchdog_timer {
   */
  extern int amdgpu_modeset;
  extern unsigned int amdgpu_vram_limit;
@@ -2377,123 +2124,11 @@ index 98f0c12df12b..33a9e7c0ced2 100644
  extern int amdgpu_vis_vram_limit;
  extern int amdgpu_gart_size;
  extern int amdgpu_gtt_size;
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-index 093141ad6ed0..e476e45b996a 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-@@ -36,13 +36,6 @@
- #include "atombios_encoders.h"
- #include "bif/bif_4_1_d.h"
- 
--static void amdgpu_atombios_lookup_i2c_gpio_quirks(struct amdgpu_device *adev,
--					  ATOM_GPIO_I2C_ASSIGMENT *gpio,
--					  u8 index)
--{
--
--}
--
- static struct amdgpu_i2c_bus_rec amdgpu_atombios_get_bus_rec_for_i2c_gpio(ATOM_GPIO_I2C_ASSIGMENT *gpio)
- {
- 	struct amdgpu_i2c_bus_rec i2c;
-@@ -108,9 +101,6 @@ struct amdgpu_i2c_bus_rec amdgpu_atombios_lookup_i2c_gpio(struct amdgpu_device *
- 
- 		gpio = &i2c_info->asGPIO_Info[0];
- 		for (i = 0; i < num_indices; i++) {
--
--			amdgpu_atombios_lookup_i2c_gpio_quirks(adev, gpio, i);
--
- 			if (gpio->sucI2cId.ucAccess == id) {
- 				i2c = amdgpu_atombios_get_bus_rec_for_i2c_gpio(gpio);
- 				break;
-@@ -142,8 +132,6 @@ void amdgpu_atombios_i2c_init(struct amdgpu_device *adev)
- 
- 		gpio = &i2c_info->asGPIO_Info[0];
- 		for (i = 0; i < num_indices; i++) {
--			amdgpu_atombios_lookup_i2c_gpio_quirks(adev, gpio, i);
--
- 			i2c = amdgpu_atombios_get_bus_rec_for_i2c_gpio(gpio);
- 
- 			if (i2c.valid) {
-@@ -156,6 +144,38 @@ void amdgpu_atombios_i2c_init(struct amdgpu_device *adev)
- 	}
- }
- 
-+void amdgpu_atombios_oem_i2c_init(struct amdgpu_device *adev, u8 i2c_id)
-+{
-+	struct atom_context *ctx = adev->mode_info.atom_context;
-+	ATOM_GPIO_I2C_ASSIGMENT *gpio;
-+	struct amdgpu_i2c_bus_rec i2c;
-+	int index = GetIndexIntoMasterTable(DATA, GPIO_I2C_Info);
-+	struct _ATOM_GPIO_I2C_INFO *i2c_info;
-+	uint16_t data_offset, size;
-+	int i, num_indices;
-+	char stmp[32];
-+
-+	if (amdgpu_atom_parse_data_header(ctx, index, &size, NULL, NULL, &data_offset)) {
-+		i2c_info = (struct _ATOM_GPIO_I2C_INFO *)(ctx->bios + data_offset);
-+
-+		num_indices = (size - sizeof(ATOM_COMMON_TABLE_HEADER)) /
-+			sizeof(ATOM_GPIO_I2C_ASSIGMENT);
-+
-+		gpio = &i2c_info->asGPIO_Info[0];
-+		for (i = 0; i < num_indices; i++) {
-+			i2c = amdgpu_atombios_get_bus_rec_for_i2c_gpio(gpio);
-+
-+			if (i2c.valid && i2c.i2c_id == i2c_id) {
-+				sprintf(stmp, "OEM 0x%x", i2c.i2c_id);
-+				adev->i2c_bus[i] = amdgpu_i2c_create(adev_to_drm(adev), &i2c, stmp);
-+				break;
-+			}
-+			gpio = (ATOM_GPIO_I2C_ASSIGMENT *)
-+				((u8 *)gpio + sizeof(ATOM_GPIO_I2C_ASSIGMENT));
-+		}
-+	}
-+}
-+
- struct amdgpu_gpio_rec
- amdgpu_atombios_lookup_gpio(struct amdgpu_device *adev,
- 			    u8 id)
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.h
-index 0e16432d9a72..867bc5c5ce67 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.h
-@@ -136,6 +136,7 @@ amdgpu_atombios_lookup_gpio(struct amdgpu_device *adev,
- struct amdgpu_i2c_bus_rec amdgpu_atombios_lookup_i2c_gpio(struct amdgpu_device *adev,
- 							  uint8_t id);
- void amdgpu_atombios_i2c_init(struct amdgpu_device *adev);
-+void amdgpu_atombios_oem_i2c_init(struct amdgpu_device *adev, u8 i2c_id);
- 
- bool amdgpu_atombios_has_dce_engine_info(struct amdgpu_device *adev);
- 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index 71e8a76180ad..de6c961b45b0 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -4473,8 +4473,7 @@ int amdgpu_device_init(struct amdgpu_device *adev,
- 				goto failed;
- 			}
- 			/* init i2c buses */
--			if (!amdgpu_device_has_dc_support(adev))
--				amdgpu_atombios_i2c_init(adev);
-+			amdgpu_i2c_init(adev);
- 		}
- 	}
- 
-@@ -4743,8 +4742,7 @@ void amdgpu_device_fini_sw(struct amdgpu_device *adev)
- 	amdgpu_reset_fini(adev);
- 
- 	/* free i2c buses */
--	if (!amdgpu_device_has_dc_support(adev))
--		amdgpu_i2c_fini(adev);
-+	amdgpu_i2c_fini(adev);
- 
- 	if (amdgpu_emu_mode != 1)
- 		amdgpu_atombios_fini(adev);
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index f2d77bc04e4a..a3e33d97f89d 100644
+index 72c807f5822e..6ef3fedc1233 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -139,6 +139,7 @@ enum AMDGPU_DEBUG_MASK {
+@@ -143,6 +143,7 @@ enum AMDGPU_DEBUG_MASK {
  };
  
  unsigned int amdgpu_vram_limit = UINT_MAX;
@@ -2501,7 +2136,7 @@ index f2d77bc04e4a..a3e33d97f89d 100644
  int amdgpu_vis_vram_limit;
  int amdgpu_gart_size = -1; /* auto */
  int amdgpu_gtt_size = -1; /* auto */
-@@ -257,6 +258,15 @@ struct amdgpu_watchdog_timer amdgpu_watchdog_timer = {
+@@ -262,6 +263,15 @@ struct amdgpu_watchdog_timer amdgpu_watchdog_timer = {
  	.period = 0x0, /* default to 0x0 (timeout disable) */
  };
  
@@ -2517,60 +2152,6 @@ index f2d77bc04e4a..a3e33d97f89d 100644
  /**
   * DOC: vramlimit (int)
   * Restrict the total amount of VRAM in MiB for testing.  The default is 0 (Use full VRAM).
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c
-index f0765ccde668..8179d0814db9 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c
-@@ -225,6 +225,25 @@ void amdgpu_i2c_destroy(struct amdgpu_i2c_chan *i2c)
- 	kfree(i2c);
- }
- 
-+void amdgpu_i2c_init(struct amdgpu_device *adev)
-+{
-+	if (!adev->is_atom_fw) {
-+		if (!amdgpu_device_has_dc_support(adev)) {
-+			amdgpu_atombios_i2c_init(adev);
-+		} else {
-+			switch (adev->asic_type) {
-+			case CHIP_POLARIS10:
-+			case CHIP_POLARIS11:
-+			case CHIP_POLARIS12:
-+				amdgpu_atombios_oem_i2c_init(adev, 0x97);
-+				break;
-+			default:
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /* remove all the buses */
- void amdgpu_i2c_fini(struct amdgpu_device *adev)
- {
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.h
-index 21e3d1dad0a1..1d3d3806e0dd 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.h
-@@ -28,6 +28,7 @@ struct amdgpu_i2c_chan *amdgpu_i2c_create(struct drm_device *dev,
- 					  const struct amdgpu_i2c_bus_rec *rec,
- 					  const char *name);
- void amdgpu_i2c_destroy(struct amdgpu_i2c_chan *i2c);
-+void amdgpu_i2c_init(struct amdgpu_device *adev);
- void amdgpu_i2c_fini(struct amdgpu_device *adev);
- struct amdgpu_i2c_chan *
- amdgpu_i2c_lookup(struct amdgpu_device *adev,
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
-index 5e3faefc5510..6da4f946cac0 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_mode.h
-@@ -609,6 +609,7 @@ struct amdgpu_i2c_adapter {
- 	struct i2c_adapter base;
- 
- 	struct ddc_service *ddc_service;
-+	bool oem;
- };
- 
- #define TO_DM_AUX(x) container_of((x), struct amdgpu_dm_dp_aux, aux)
 diff --git a/drivers/gpu/drm/amd/display/Kconfig b/drivers/gpu/drm/amd/display/Kconfig
 index abd3b6564373..46937e6fa78d 100644
 --- a/drivers/gpu/drm/amd/display/Kconfig
@@ -2587,73 +2168,10 @@ index abd3b6564373..46937e6fa78d 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index 76c8e6457175..ee177942738f 100644
+index 0fe8bd19ecd1..37b14f31cc46 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -179,6 +179,8 @@ static int amdgpu_dm_init(struct amdgpu_device *adev);
- static void amdgpu_dm_fini(struct amdgpu_device *adev);
- static bool is_freesync_video_mode(const struct drm_display_mode *mode, struct amdgpu_dm_connector *aconnector);
- static void reset_freesync_config_for_crtc(struct dm_crtc_state *new_crtc_state);
-+static struct amdgpu_i2c_adapter *
-+create_i2c(struct ddc_service *ddc_service, bool oem);
- 
- static enum drm_mode_subconnector get_subconnector_type(struct dc_link *link)
- {
-@@ -2973,6 +2975,33 @@ static int amdgpu_dm_smu_write_watermarks_table(struct amdgpu_device *adev)
- 	return 0;
- }
- 
-+static int dm_oem_i2c_hw_init(struct amdgpu_device *adev)
-+{
-+	struct amdgpu_display_manager *dm = &adev->dm;
-+	struct amdgpu_i2c_adapter *oem_i2c;
-+	struct ddc_service *oem_ddc_service;
-+	int r;
-+
-+	oem_ddc_service = dc_get_oem_i2c_device(adev->dm.dc);
-+	if (oem_ddc_service) {
-+		oem_i2c = create_i2c(oem_ddc_service, true);
-+		if (!oem_i2c) {
-+			dev_info(adev->dev, "Failed to create oem i2c adapter data\n");
-+			return -ENOMEM;
-+		}
-+
-+		r = i2c_add_adapter(&oem_i2c->base);
-+		if (r) {
-+			dev_info(adev->dev, "Failed to register oem i2c\n");
-+			kfree(oem_i2c);
-+			return r;
-+		}
-+		dm->oem_i2c = oem_i2c;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * dm_hw_init() - Initialize DC device
-  * @ip_block: Pointer to the amdgpu_ip_block for this hw instance.
-@@ -3004,6 +3033,10 @@ static int dm_hw_init(struct amdgpu_ip_block *ip_block)
- 		return r;
- 	amdgpu_dm_hpd_init(adev);
- 
-+	r = dm_oem_i2c_hw_init(adev);
-+	if (r)
-+		dev_info(adev->dev, "Failed to add OEM i2c bus\n");
-+
- 	return 0;
- }
- 
-@@ -3019,6 +3052,8 @@ static int dm_hw_fini(struct amdgpu_ip_block *ip_block)
- {
- 	struct amdgpu_device *adev = ip_block->adev;
- 
-+	kfree(adev->dm.oem_i2c);
-+
- 	amdgpu_dm_hpd_fini(adev);
- 
- 	amdgpu_dm_irq_fini(adev);
-@@ -4673,7 +4708,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
+@@ -4720,7 +4720,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
  		return r;
  	}
  
@@ -2662,93 +2180,6 @@ index 76c8e6457175..ee177942738f 100644
  	if (amdgpu_dm_create_color_properties(adev)) {
  		dc_state_release(state->context);
  		kfree(state);
-@@ -8386,7 +8421,7 @@ static int amdgpu_dm_i2c_xfer(struct i2c_adapter *i2c_adap,
- 	int i;
- 	int result = -EIO;
- 
--	if (!ddc_service->ddc_pin || !ddc_service->ddc_pin->hw_info.hw_supported)
-+	if (!ddc_service->ddc_pin)
- 		return result;
- 
- 	cmd.payloads = kcalloc(num, sizeof(struct i2c_payload), GFP_KERNEL);
-@@ -8405,11 +8440,18 @@ static int amdgpu_dm_i2c_xfer(struct i2c_adapter *i2c_adap,
- 		cmd.payloads[i].data = msgs[i].buf;
- 	}
- 
--	if (dc_submit_i2c(
--			ddc_service->ctx->dc,
--			ddc_service->link->link_index,
--			&cmd))
--		result = num;
-+	if (i2c->oem) {
-+		if (dc_submit_i2c_oem(
-+			    ddc_service->ctx->dc,
-+			    &cmd))
-+			result = num;
-+	} else {
-+		if (dc_submit_i2c(
-+			    ddc_service->ctx->dc,
-+			    ddc_service->link->link_index,
-+			    &cmd))
-+			result = num;
-+	}
- 
- 	kfree(cmd.payloads);
- 	return result;
-@@ -8426,9 +8468,7 @@ static const struct i2c_algorithm amdgpu_dm_i2c_algo = {
- };
- 
- static struct amdgpu_i2c_adapter *
--create_i2c(struct ddc_service *ddc_service,
--	   int link_index,
--	   int *res)
-+create_i2c(struct ddc_service *ddc_service, bool oem)
- {
- 	struct amdgpu_device *adev = ddc_service->ctx->driver_context;
- 	struct amdgpu_i2c_adapter *i2c;
-@@ -8439,9 +8479,14 @@ create_i2c(struct ddc_service *ddc_service,
- 	i2c->base.owner = THIS_MODULE;
- 	i2c->base.dev.parent = &adev->pdev->dev;
- 	i2c->base.algo = &amdgpu_dm_i2c_algo;
--	snprintf(i2c->base.name, sizeof(i2c->base.name), "AMDGPU DM i2c hw bus %d", link_index);
-+	if (oem)
-+		snprintf(i2c->base.name, sizeof(i2c->base.name), "AMDGPU DM i2c OEM bus");
-+	else
-+		snprintf(i2c->base.name, sizeof(i2c->base.name), "AMDGPU DM i2c hw bus %d",
-+			 ddc_service->link->link_index);
- 	i2c_set_adapdata(&i2c->base, i2c);
- 	i2c->ddc_service = ddc_service;
-+	i2c->oem = oem;
- 
- 	return i2c;
- }
-@@ -8487,7 +8532,7 @@ static int amdgpu_dm_connector_init(struct amdgpu_display_manager *dm,
- 	link->priv = aconnector;
- 
- 
--	i2c = create_i2c(link->ddc, link->link_index, &res);
-+	i2c = create_i2c(link->ddc, false);
- 	if (!i2c) {
- 		DRM_ERROR("Failed to create i2c adapter data\n");
- 		return -ENOMEM;
-diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
-index d2703ca7dff3..ef60e80de19c 100644
---- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
-+++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.h
-@@ -606,6 +606,13 @@ struct amdgpu_display_manager {
- 	 * Bounding box data read from dmub during early initialization for DCN4+
- 	 */
- 	struct dml2_soc_bb *bb_from_dmub;
-+
-+	/**
-+	 * @oem_i2c:
-+	 *
-+	 * OEM i2c bus
-+	 */
-+	struct amdgpu_i2c_adapter *oem_i2c;
- };
- 
- enum dsc_clock_force_state {
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 index ebabfe3a512f..4d3ebcaacca1 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
@@ -2763,10 +2194,10 @@ index ebabfe3a512f..4d3ebcaacca1 100644
   *
   * AMD driver supports pre-defined mathematical functions for transferring
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-index 87058271b00c..454545775eae 100644
+index e8bdd7f0c460..b4aafe6103bc 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-@@ -472,7 +472,7 @@ static int amdgpu_dm_crtc_late_register(struct drm_crtc *crtc)
+@@ -481,7 +481,7 @@ static int amdgpu_dm_crtc_late_register(struct drm_crtc *crtc)
  }
  #endif
  
@@ -2775,7 +2206,7 @@ index 87058271b00c..454545775eae 100644
  /**
   * dm_crtc_additional_color_mgmt - enable additional color properties
   * @crtc: DRM CRTC
-@@ -554,7 +554,7 @@ static const struct drm_crtc_funcs amdgpu_dm_crtc_funcs = {
+@@ -563,7 +563,7 @@ static const struct drm_crtc_funcs amdgpu_dm_crtc_funcs = {
  #if defined(CONFIG_DEBUG_FS)
  	.late_register = amdgpu_dm_crtc_late_register,
  #endif
@@ -2784,7 +2215,7 @@ index 87058271b00c..454545775eae 100644
  	.atomic_set_property = amdgpu_dm_atomic_crtc_set_property,
  	.atomic_get_property = amdgpu_dm_atomic_crtc_get_property,
  #endif
-@@ -733,7 +733,7 @@ int amdgpu_dm_crtc_init(struct amdgpu_display_manager *dm,
+@@ -742,7 +742,7 @@ int amdgpu_dm_crtc_init(struct amdgpu_display_manager *dm,
  
  	drm_mode_crtc_set_gamma_size(&acrtc->base, MAX_COLOR_LEGACY_LUT_ENTRIES);
  
@@ -2794,10 +2225,10 @@ index 87058271b00c..454545775eae 100644
  #endif
  	return 0;
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
-index 92472109f84a..d5f3e6d5aa7f 100644
+index 3e0f45f1711c..f645cb7831a0 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
-@@ -1598,7 +1598,7 @@ static void amdgpu_dm_plane_drm_plane_destroy_state(struct drm_plane *plane,
+@@ -1601,7 +1601,7 @@ static void amdgpu_dm_plane_drm_plane_destroy_state(struct drm_plane *plane,
  	drm_atomic_helper_plane_destroy_state(plane, state);
  }
  
@@ -2806,7 +2237,7 @@ index 92472109f84a..d5f3e6d5aa7f 100644
  static void
  dm_atomic_plane_attach_color_mgmt_properties(struct amdgpu_display_manager *dm,
  					     struct drm_plane *plane)
-@@ -1789,7 +1789,7 @@ static const struct drm_plane_funcs dm_plane_funcs = {
+@@ -1792,7 +1792,7 @@ static const struct drm_plane_funcs dm_plane_funcs = {
  	.atomic_duplicate_state = amdgpu_dm_plane_drm_plane_duplicate_state,
  	.atomic_destroy_state = amdgpu_dm_plane_drm_plane_destroy_state,
  	.format_mod_supported = amdgpu_dm_plane_format_mod_supported,
@@ -2815,7 +2246,7 @@ index 92472109f84a..d5f3e6d5aa7f 100644
  	.atomic_set_property = dm_atomic_plane_set_property,
  	.atomic_get_property = dm_atomic_plane_get_property,
  #endif
-@@ -1885,7 +1885,7 @@ int amdgpu_dm_plane_init(struct amdgpu_display_manager *dm,
+@@ -1888,7 +1888,7 @@ int amdgpu_dm_plane_init(struct amdgpu_display_manager *dm,
  	else
  		drm_plane_helper_add(plane, &dm_plane_helper_funcs);
  
@@ -2824,129 +2255,11 @@ index 92472109f84a..d5f3e6d5aa7f 100644
  	dm_atomic_plane_attach_color_mgmt_properties(dm, plane);
  #endif
  	/* Create (reset) the plane state */
-diff --git a/drivers/gpu/drm/amd/display/dc/bios/bios_parser2.c b/drivers/gpu/drm/amd/display/dc/bios/bios_parser2.c
-index a62f6c51301c..1d2c6019efac 100644
---- a/drivers/gpu/drm/amd/display/dc/bios/bios_parser2.c
-+++ b/drivers/gpu/drm/amd/display/dc/bios/bios_parser2.c
-@@ -1778,6 +1778,7 @@ static enum bp_result get_firmware_info_v3_1(
- 	struct dc_firmware_info *info)
- {
- 	struct atom_firmware_info_v3_1 *firmware_info;
-+	struct atom_firmware_info_v3_2 *firmware_info32;
- 	struct atom_display_controller_info_v4_1 *dce_info = NULL;
- 
- 	if (!info)
-@@ -1785,6 +1786,8 @@ static enum bp_result get_firmware_info_v3_1(
- 
- 	firmware_info = GET_IMAGE(struct atom_firmware_info_v3_1,
- 			DATA_TABLES(firmwareinfo));
-+	firmware_info32 = GET_IMAGE(struct atom_firmware_info_v3_2,
-+			DATA_TABLES(firmwareinfo));
- 
- 	dce_info = GET_IMAGE(struct atom_display_controller_info_v4_1,
- 			DATA_TABLES(dce_info));
-@@ -1817,7 +1820,15 @@ static enum bp_result get_firmware_info_v3_1(
- 				bp->cmd_tbl.get_smu_clock_info(bp, SMU9_SYSPLL0_ID) * 10;
- 	}
- 
--	info->oem_i2c_present = false;
-+	/* These fields are marked as reserved in v3_1, but they appear to be populated
-+	 * properly.
-+	 */
-+	if (firmware_info32->board_i2c_feature_id == 0x2) {
-+		info->oem_i2c_present = true;
-+		info->oem_i2c_obj_id = firmware_info32->board_i2c_feature_gpio_id;
-+	} else {
-+		info->oem_i2c_present = false;
-+	}
- 
- 	return BP_RESULT_OK;
- }
-diff --git a/drivers/gpu/drm/amd/display/dc/core/dc_link_exports.c b/drivers/gpu/drm/amd/display/dc/core/dc_link_exports.c
-index c1b79b379447..261c3bc4d46e 100644
---- a/drivers/gpu/drm/amd/display/dc/core/dc_link_exports.c
-+++ b/drivers/gpu/drm/amd/display/dc/core/dc_link_exports.c
-@@ -150,6 +150,12 @@ bool dc_link_update_dsc_config(struct pipe_ctx *pipe_ctx)
- 	return link->dc->link_srv->update_dsc_config(pipe_ctx);
- }
- 
-+struct ddc_service *
-+dc_get_oem_i2c_device(struct dc *dc)
-+{
-+	return dc->res_pool->oem_device;
-+}
-+
- bool dc_is_oem_i2c_device_present(
- 	struct dc *dc,
- 	size_t slave_address)
-diff --git a/drivers/gpu/drm/amd/display/dc/dc.h b/drivers/gpu/drm/amd/display/dc/dc.h
-index ab77dcbc1058..1f9c8bb6c79d 100644
---- a/drivers/gpu/drm/amd/display/dc/dc.h
-+++ b/drivers/gpu/drm/amd/display/dc/dc.h
-@@ -1949,6 +1949,9 @@ int dc_link_aux_transfer_raw(struct ddc_service *ddc,
- 		struct aux_payload *payload,
- 		enum aux_return_code_type *operation_result);
- 
-+struct ddc_service *
-+dc_get_oem_i2c_device(struct dc *dc);
-+
- bool dc_is_oem_i2c_device_present(
- 	struct dc *dc,
- 	size_t slave_address
-diff --git a/drivers/gpu/drm/amd/display/dc/resource/dce120/dce120_resource.c b/drivers/gpu/drm/amd/display/dc/resource/dce120/dce120_resource.c
-index c63c59623433..eb1e158d3436 100644
---- a/drivers/gpu/drm/amd/display/dc/resource/dce120/dce120_resource.c
-+++ b/drivers/gpu/drm/amd/display/dc/resource/dce120/dce120_resource.c
-@@ -67,6 +67,7 @@
- #include "reg_helper.h"
- 
- #include "dce100/dce100_resource.h"
-+#include "link.h"
- 
- #ifndef mmDP0_DP_DPHY_INTERNAL_CTRL
- 	#define mmDP0_DP_DPHY_INTERNAL_CTRL		0x210f
-@@ -659,6 +660,12 @@ static void dce120_resource_destruct(struct dce110_resource_pool *pool)
- 
- 	if (pool->base.dmcu != NULL)
- 		dce_dmcu_destroy(&pool->base.dmcu);
-+
-+	if (pool->base.oem_device != NULL) {
-+		struct dc *dc = pool->base.oem_device->ctx->dc;
-+
-+		dc->link_srv->destroy_ddc_service(&pool->base.oem_device);
-+	}
- }
- 
- static void read_dce_straps(
-@@ -1054,6 +1061,7 @@ static bool dce120_resource_construct(
- 	struct dc *dc,
- 	struct dce110_resource_pool *pool)
- {
-+	struct ddc_service_init_data ddc_init_data = {0};
- 	unsigned int i;
- 	int j;
- 	struct dc_context *ctx = dc->ctx;
-@@ -1257,6 +1265,15 @@ static bool dce120_resource_construct(
- 
- 	bw_calcs_data_update_from_pplib(dc);
- 
-+	if (dc->ctx->dc_bios->fw_info.oem_i2c_present) {
-+		ddc_init_data.ctx = dc->ctx;
-+		ddc_init_data.link = NULL;
-+		ddc_init_data.id.id = dc->ctx->dc_bios->fw_info.oem_i2c_obj_id;
-+		ddc_init_data.id.enum_id = 0;
-+		ddc_init_data.id.type = OBJECT_TYPE_GENERIC;
-+		pool->base.oem_device = dc->link_srv->create_ddc_service(&ddc_init_data);
-+	}
-+
- 	return true;
- 
- irqs_create_fail:
 diff --git a/drivers/gpu/drm/amd/pm/amdgpu_pm.c b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-index 77b1f061bbf0..89ffc9fd9463 100644
+index 922def51685b..da76611edb10 100644
 --- a/drivers/gpu/drm/amd/pm/amdgpu_pm.c
 +++ b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-@@ -3180,6 +3180,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
+@@ -3055,6 +3055,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
  					 struct device_attribute *attr,
  					 char *buf)
  {
@@ -2957,10 +2270,10 @@ index 77b1f061bbf0..89ffc9fd9463 100644
  }
  
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index ed9dac00ebfb..b3fd5e9df44c 100644
+index 46cce1d2aaf3..e3adb7aea969 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
 +++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -2823,7 +2823,10 @@ int smu_get_power_limit(void *handle,
+@@ -2854,7 +2854,10 @@ int smu_get_power_limit(void *handle,
  			*limit = smu->max_power_limit;
  			break;
  		case SMU_PPT_LIMIT_MIN:
@@ -2972,7 +2285,7 @@ index ed9dac00ebfb..b3fd5e9df44c 100644
  			break;
  		default:
  			return -EINVAL;
-@@ -2847,7 +2850,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
+@@ -2878,7 +2881,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
  		if (smu->ppt_funcs->set_power_limit)
  			return smu->ppt_funcs->set_power_limit(smu, limit_type, limit);
  
@@ -2988,6 +2301,471 @@ index ed9dac00ebfb..b3fd5e9df44c 100644
  		dev_err(smu->adev->dev,
  			"New power limit (%d) is out of range [%d,%d]\n",
  			limit, smu->min_power_limit, smu->max_power_limit);
+diff --git a/drivers/gpu/drm/xe/regs/xe_pcode_regs.h b/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
+index 8846eb9ce2a4..c7d5d782e3f9 100644
+--- a/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
+@@ -21,6 +21,9 @@
+ #define BMG_PACKAGE_POWER_SKU			XE_REG(0x138098)
+ #define BMG_PACKAGE_POWER_SKU_UNIT		XE_REG(0x1380dc)
+ #define BMG_PACKAGE_ENERGY_STATUS		XE_REG(0x138120)
++#define BMG_FAN_1_SPEED				XE_REG(0x138140)
++#define BMG_FAN_2_SPEED				XE_REG(0x138170)
++#define BMG_FAN_3_SPEED				XE_REG(0x1381a0)
+ #define BMG_VRAM_TEMPERATURE			XE_REG(0x1382c0)
+ #define BMG_PACKAGE_TEMPERATURE			XE_REG(0x138434)
+ #define BMG_PACKAGE_RAPL_LIMIT			XE_REG(0x138440)
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index 0482f26aa480..0564164935c6 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -314,6 +314,8 @@ struct xe_device {
+ 		u8 has_atomic_enable_pte_bit:1;
+ 		/** @info.has_device_atomics_on_smem: Supports device atomics on SMEM */
+ 		u8 has_device_atomics_on_smem:1;
++		/** @info.has_fan_control: Device supports fan control */
++		u8 has_fan_control:1;
+ 		/** @info.has_flat_ccs: Whether flat CCS metadata is used */
+ 		u8 has_flat_ccs:1;
+ 		/** @info.has_heci_cscfi: device has heci cscfi */
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index 48d80ffdf7bb..eb293aec36a0 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/hwmon-sysfs.h>
+ #include <linux/hwmon.h>
++#include <linux/jiffies.h>
+ #include <linux/types.h>
+ #include <linux/units.h>
+ 
+@@ -27,6 +28,7 @@ enum xe_hwmon_reg {
+ 	REG_PKG_POWER_SKU_UNIT,
+ 	REG_GT_PERF_STATUS,
+ 	REG_PKG_ENERGY_STATUS,
++	REG_FAN_SPEED,
+ };
+ 
+ enum xe_hwmon_reg_operation {
+@@ -42,6 +44,13 @@ enum xe_hwmon_channel {
+ 	CHANNEL_MAX,
+ };
+ 
++enum xe_fan_channel {
++	FAN_1,
++	FAN_2,
++	FAN_3,
++	FAN_MAX,
++};
++
+ /*
+  * SF_* - scale factors for particular quantities according to hwmon spec.
+  */
+@@ -61,6 +70,16 @@ struct xe_hwmon_energy_info {
+ 	long accum_energy;
+ };
+ 
++/**
++ * struct xe_hwmon_fan_info - to cache previous fan reading
++ */
++struct xe_hwmon_fan_info {
++	/** @reg_val_prev: previous fan reg val */
++	u32 reg_val_prev;
++	/** @time_prev: previous timestamp */
++	u64 time_prev;
++};
++
+ /**
+  * struct xe_hwmon - xe hwmon data structure
+  */
+@@ -79,6 +98,8 @@ struct xe_hwmon {
+ 	int scl_shift_time;
+ 	/** @ei: Energy info for energyN_input */
+ 	struct xe_hwmon_energy_info ei[CHANNEL_MAX];
++	/** @fi: Fan info for fanN_input */
++	struct xe_hwmon_fan_info fi[FAN_MAX];
+ };
+ 
+ static struct xe_reg xe_hwmon_get_reg(struct xe_hwmon *hwmon, enum xe_hwmon_reg hwmon_reg,
+@@ -144,6 +165,14 @@ static struct xe_reg xe_hwmon_get_reg(struct xe_hwmon *hwmon, enum xe_hwmon_reg
+ 			return PCU_CR_PACKAGE_ENERGY_STATUS;
+ 		}
+ 		break;
++	case REG_FAN_SPEED:
++		if (channel == FAN_1)
++			return BMG_FAN_1_SPEED;
++		else if (channel == FAN_2)
++			return BMG_FAN_2_SPEED;
++		else if (channel == FAN_3)
++			return BMG_FAN_3_SPEED;
++		break;
+ 	default:
+ 		drm_warn(&xe->drm, "Unknown xe hwmon reg id: %d\n", hwmon_reg);
+ 		break;
+@@ -454,6 +483,7 @@ static const struct hwmon_channel_info * const hwmon_info[] = {
+ 	HWMON_CHANNEL_INFO(curr, HWMON_C_LABEL, HWMON_C_CRIT | HWMON_C_LABEL),
+ 	HWMON_CHANNEL_INFO(in, HWMON_I_INPUT | HWMON_I_LABEL, HWMON_I_INPUT | HWMON_I_LABEL),
+ 	HWMON_CHANNEL_INFO(energy, HWMON_E_INPUT | HWMON_E_LABEL, HWMON_E_INPUT | HWMON_E_LABEL),
++	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT, HWMON_F_INPUT, HWMON_F_INPUT),
+ 	NULL
+ };
+ 
+@@ -480,6 +510,19 @@ static int xe_hwmon_pcode_write_i1(const struct xe_hwmon *hwmon, u32 uval)
+ 			      (uval & POWER_SETUP_I1_DATA_MASK));
+ }
+ 
++static int xe_hwmon_pcode_read_fan_control(const struct xe_hwmon *hwmon, u32 subcmd, u32 *uval)
++{
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++
++	/* Platforms that don't return correct value */
++	if (hwmon->xe->info.platform == XE_DG2 && subcmd == FSC_READ_NUM_FANS) {
++		*uval = 2;
++		return 0;
++	}
++
++	return xe_pcode_read(root_tile, PCODE_MBOX(FAN_SPEED_CONTROL, subcmd, 0), uval, NULL);
++}
++
+ static int xe_hwmon_power_curr_crit_read(struct xe_hwmon *hwmon, int channel,
+ 					 long *value, u32 scale_factor)
+ {
+@@ -705,6 +748,75 @@ xe_hwmon_energy_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ 	}
+ }
+ 
++static umode_t
++xe_hwmon_fan_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
++{
++	u32 uval;
++
++	if (!hwmon->xe->info.has_fan_control)
++		return 0;
++
++	switch (attr) {
++	case hwmon_fan_input:
++		if (xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_NUM_FANS, &uval))
++			return 0;
++
++		return channel < uval ? 0444 : 0;
++	default:
++		return 0;
++	}
++}
++
++static int
++xe_hwmon_fan_input_read(struct xe_hwmon *hwmon, int channel, long *val)
++{
++	struct xe_mmio *mmio = xe_root_tile_mmio(hwmon->xe);
++	struct xe_hwmon_fan_info *fi = &hwmon->fi[channel];
++	u64 rotations, time_now, time;
++	u32 reg_val;
++	int ret = 0;
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	reg_val = xe_mmio_read32(mmio, xe_hwmon_get_reg(hwmon, REG_FAN_SPEED, channel));
++	time_now = get_jiffies_64();
++
++	/*
++	 * HW register value is accumulated count of pulses from PWM fan with the scale
++	 * of 2 pulses per rotation.
++	 */
++	rotations = (reg_val - fi->reg_val_prev) / 2;
++
++	time = jiffies_delta_to_msecs(time_now - fi->time_prev);
++	if (unlikely(!time)) {
++		ret = -EAGAIN;
++		goto unlock;
++	}
++
++	/*
++	 * Calculate fan speed in RPM by time averaging two subsequent readings in minutes.
++	 * RPM = number of rotations * msecs per minute / time in msecs
++	 */
++	*val = DIV_ROUND_UP_ULL(rotations * (MSEC_PER_SEC * 60), time);
++
++	fi->reg_val_prev = reg_val;
++	fi->time_prev = time_now;
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++	return ret;
++}
++
++static int
++xe_hwmon_fan_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
++{
++	switch (attr) {
++	case hwmon_fan_input:
++		return xe_hwmon_fan_input_read(hwmon, channel, val);
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++
+ static umode_t
+ xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
+ 		    u32 attr, int channel)
+@@ -730,6 +842,9 @@ xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
+ 	case hwmon_energy:
+ 		ret = xe_hwmon_energy_is_visible(hwmon, attr, channel);
+ 		break;
++	case hwmon_fan:
++		ret = xe_hwmon_fan_is_visible(hwmon, attr, channel);
++		break;
+ 	default:
+ 		ret = 0;
+ 		break;
+@@ -765,6 +880,9 @@ xe_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32 attr,
+ 	case hwmon_energy:
+ 		ret = xe_hwmon_energy_read(hwmon, attr, channel, val);
+ 		break;
++	case hwmon_fan:
++		ret = xe_hwmon_fan_read(hwmon, attr, channel, val);
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+@@ -842,7 +960,7 @@ static void
+ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
+ {
+ 	struct xe_mmio *mmio = xe_root_tile_mmio(hwmon->xe);
+-	long energy;
++	long energy, fan_speed;
+ 	u64 val_sku_unit = 0;
+ 	int channel;
+ 	struct xe_reg pkg_power_sku_unit;
+@@ -866,6 +984,11 @@ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
+ 	for (channel = 0; channel < CHANNEL_MAX; channel++)
+ 		if (xe_hwmon_is_visible(hwmon, hwmon_energy, hwmon_energy_input, channel))
+ 			xe_hwmon_energy_get(hwmon, channel, &energy);
++
++	/* Initialize 'struct xe_hwmon_fan_info' with initial fan register reading. */
++	for (channel = 0; channel < FAN_MAX; channel++)
++		if (xe_hwmon_is_visible(hwmon, hwmon_fan, hwmon_fan_input, channel))
++			xe_hwmon_fan_input_read(hwmon, channel, &fan_speed);
+ }
+ 
+ static void xe_hwmon_mutex_destroy(void *arg)
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index f4d108dc49b1..977d0b07b9d7 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -62,6 +62,7 @@ struct xe_device_desc {
+ 	u8 is_dgfx:1;
+ 
+ 	u8 has_display:1;
++	u8 has_fan_control:1;
+ 	u8 has_heci_gscfi:1;
+ 	u8 has_heci_cscfi:1;
+ 	u8 has_llc:1;
+@@ -303,6 +304,7 @@ static const struct xe_device_desc dg2_desc = {
+ 
+ 	DG2_FEATURES,
+ 	.has_display = true,
++	.has_fan_control = true,
+ };
+ 
+ static const __maybe_unused struct xe_device_desc pvc_desc = {
+@@ -337,6 +339,7 @@ static const struct xe_device_desc bmg_desc = {
+ 	PLATFORM(BATTLEMAGE),
+ 	.dma_mask_size = 46,
+ 	.has_display = true,
++	.has_fan_control = true,
+ 	.has_heci_cscfi = 1,
+ };
+ 
+@@ -576,6 +579,7 @@ static int xe_info_init_early(struct xe_device *xe,
+ 
+ 	xe->info.dma_mask_size = desc->dma_mask_size;
+ 	xe->info.is_dgfx = desc->is_dgfx;
++	xe->info.has_fan_control = desc->has_fan_control;
+ 	xe->info.has_heci_gscfi = desc->has_heci_gscfi;
+ 	xe->info.has_heci_cscfi = desc->has_heci_cscfi;
+ 	xe->info.has_llc = desc->has_llc;
+diff --git a/drivers/gpu/drm/xe/xe_pcode_api.h b/drivers/gpu/drm/xe/xe_pcode_api.h
+index 2bae9afdbd35..e622ae17f08d 100644
+--- a/drivers/gpu/drm/xe/xe_pcode_api.h
++++ b/drivers/gpu/drm/xe/xe_pcode_api.h
+@@ -49,6 +49,9 @@
+ /* Domain IDs (param2) */
+ #define     PCODE_MBOX_DOMAIN_HBM		0x2
+ 
++#define   FAN_SPEED_CONTROL			0x7D
++#define     FSC_READ_NUM_FANS			0x4
++
+ #define PCODE_SCRATCH(x)		XE_REG(0x138320 + ((x) * 4))
+ /* PCODE_SCRATCH0 */
+ #define   AUXINFO_REG_OFFSET		REG_GENMASK(17, 15)
+diff --git a/drivers/hid/amd-sfh-hid/amd_sfh_client.c b/drivers/hid/amd-sfh-hid/amd_sfh_client.c
+index 3438d392920f..867019955b10 100644
+--- a/drivers/hid/amd-sfh-hid/amd_sfh_client.c
++++ b/drivers/hid/amd-sfh-hid/amd_sfh_client.c
+@@ -146,6 +146,8 @@ static const char *get_sensor_name(int idx)
+ 		return "gyroscope";
+ 	case mag_idx:
+ 		return "magnetometer";
++	case tms_idx:
++		return "tablet-mode-switch";
+ 	case als_idx:
+ 	case ACS_IDX: /* ambient color sensor */
+ 		return "ALS";
+diff --git a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
+index 1c1fd63330c9..7fd486a279b5 100644
+--- a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
++++ b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.c
+@@ -29,6 +29,7 @@
+ #define ACEL_EN		BIT(0)
+ #define GYRO_EN		BIT(1)
+ #define MAGNO_EN	BIT(2)
++#define TMS_EN		BIT(15)
+ #define HPD_EN		BIT(16)
+ #define ALS_EN		BIT(19)
+ #define ACS_EN		BIT(22)
+@@ -232,6 +233,9 @@ int amd_mp2_get_sensor_num(struct amd_mp2_dev *privdata, u8 *sensor_id)
+ 	if (MAGNO_EN & activestatus)
+ 		sensor_id[num_of_sensors++] = mag_idx;
+ 
++	if (TMS_EN & activestatus)
++		sensor_id[num_of_sensors++] = tms_idx;
++
+ 	if (ALS_EN & activestatus)
+ 		sensor_id[num_of_sensors++] = als_idx;
+ 
+diff --git a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.h b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.h
+index 05e400a4a83e..617f0265b707 100644
+--- a/drivers/hid/amd-sfh-hid/amd_sfh_pcie.h
++++ b/drivers/hid/amd-sfh-hid/amd_sfh_pcie.h
+@@ -79,6 +79,7 @@ enum sensor_idx {
+ 	accel_idx = 0,
+ 	gyro_idx = 1,
+ 	mag_idx = 2,
++	tms_idx = 15,
+ 	als_idx = 19
+ };
+ 
+diff --git a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.c b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.c
+index ef1f9be8b893..516a07bf3be6 100644
+--- a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.c
++++ b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.c
+@@ -47,6 +47,11 @@ static int get_report_descriptor(int sensor_idx, u8 *rep_desc)
+ 		memcpy(rep_desc, comp3_report_descriptor,
+ 		       sizeof(comp3_report_descriptor));
+ 		break;
++	case tms_idx: /* tablet mode switch */
++		memset(rep_desc, 0, sizeof(tms_report_descriptor));
++		memcpy(rep_desc, tms_report_descriptor,
++		       sizeof(tms_report_descriptor));
++		break;
+ 	case als_idx: /* ambient light sensor */
+ 	case ACS_IDX: /* ambient color sensor */
+ 		memset(rep_desc, 0, sizeof(als_report_descriptor));
+@@ -97,6 +102,16 @@ static u32 get_descr_sz(int sensor_idx, int descriptor_name)
+ 			return sizeof(struct magno_feature_report);
+ 		}
+ 		break;
++	case tms_idx:
++		switch (descriptor_name) {
++		case descr_size:
++			return sizeof(tms_report_descriptor);
++		case input_size:
++			return sizeof(struct tms_input_report);
++		case feature_size:
++			return sizeof(struct tms_feature_report);
++		}
++		break;
+ 	case als_idx:
+ 	case ACS_IDX: /* ambient color sensor */
+ 		switch (descriptor_name) {
+@@ -140,6 +155,7 @@ static u8 get_feature_report(int sensor_idx, int report_id, u8 *feature_report)
+ 	struct accel3_feature_report acc_feature;
+ 	struct gyro_feature_report gyro_feature;
+ 	struct magno_feature_report magno_feature;
++	struct tms_feature_report tms_feature;
+ 	struct hpd_feature_report hpd_feature;
+ 	struct als_feature_report als_feature;
+ 	u8 report_size = 0;
+@@ -175,6 +191,11 @@ static u8 get_feature_report(int sensor_idx, int report_id, u8 *feature_report)
+ 		memcpy(feature_report, &magno_feature, sizeof(magno_feature));
+ 		report_size = sizeof(magno_feature);
+ 		break;
++	case tms_idx:  /* tablet mode switch */
++		get_common_features(&tms_feature.common_property, report_id);
++		memcpy(feature_report, &tms_feature, sizeof(tms_feature));
++		report_size = sizeof(tms_feature);
++		break;
+ 	case als_idx:  /* ambient light sensor */
+ 	case ACS_IDX: /* ambient color sensor */
+ 		get_common_features(&als_feature.common_property, report_id);
+@@ -214,6 +235,7 @@ static u8 get_input_report(u8 current_index, int sensor_idx, int report_id,
+ 	struct accel3_input_report acc_input;
+ 	struct gyro_input_report gyro_input;
+ 	struct hpd_input_report hpd_input;
++	struct tms_input_report tms_input;
+ 	struct als_input_report als_input;
+ 	struct hpd_status hpdstatus;
+ 	u8 report_size = 0;
+@@ -247,6 +269,11 @@ static u8 get_input_report(u8 current_index, int sensor_idx, int report_id,
+ 		memcpy(input_report, &magno_input, sizeof(magno_input));
+ 		report_size = sizeof(magno_input);
+ 		break;
++case tms_idx: /* tablet mode switch */
++		get_common_inputs(&tms_input.common_property, report_id);
++		report_size = sizeof(tms_input);
++		memcpy(input_report, &tms_input, sizeof(tms_input));
++		break;
+ 	case als_idx: /* Als */
+ 	case ACS_IDX: /* ambient color sensor */
+ 		get_common_inputs(&als_input.common_property, report_id);
+diff --git a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.h b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.h
+index 882434b1501f..afcdac989cb6 100644
+--- a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.h
++++ b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_desc.h
+@@ -114,4 +114,12 @@ struct hpd_input_report {
+ 	u8 human_presence;
+ } __packed;
+ 
++struct tms_feature_report {
++	struct common_feature_property common_property;
++} __packed;
++
++struct tms_input_report {
++	struct common_input_property common_property;
++} __packed;
++
+ #endif
+diff --git a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_report_desc.h b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_report_desc.h
+index 67ec2d6a417d..4dc87d684776 100644
+--- a/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_report_desc.h
++++ b/drivers/hid/amd-sfh-hid/hid_descriptor/amd_sfh_hid_report_desc.h
+@@ -665,6 +665,26 @@ static const u8 als_report_descriptor[] = {
+ 0xC0			/* HID end collection */
+ };
+ 
++/* TABLET MODE SWITCH */
++__maybe_unused // Used by sfh1.0, but not yet implemented in sfh1.1
++static const u8 tms_report_descriptor[] = {
++0x06, 0x43, 0xFF,  // Usage Page (Vendor Defined 0xFF43)
++0x0A, 0x02, 0x02,  // Usage (0x0202)
++0xA1, 0x01, // Collection (Application)
++0x85, 0x11, //   Report ID (17)
++0x15, 0x00, //   Logical Minimum (0)
++0x25, 0x01, //   Logical Maximum (1)
++0x35, 0x00, //   Physical Minimum (0)
++0x45, 0x01, //   Physical Maximum (1)
++0x65, 0x00, //   Unit (None)
++0x55, 0x00, //   Unit Exponent (0)
++0x75, 0x01, //   Report Size (1)
++0x95, 0x98, //   Report Count (-104)
++0x81, 0x03, //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
++0x91, 0x03, //   Output (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
++0xC1, 0x00, // End Collection
++};
++
+ /* BIOMETRIC PRESENCE*/
+ static const u8 hpd_report_descriptor[] = {
+ 0x05, 0x20,          /* Usage page */
 diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
 index b5cbb57ee5f6..a0f7fa1518c6 100644
 --- a/drivers/input/evdev.c
@@ -3053,10 +2831,10 @@ index b5cbb57ee5f6..a0f7fa1518c6 100644
  }
  
 diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 02a2919f4e5a..67fde4125238 100644
+index 9dfdb63220d7..91aeee72a15e 100644
 --- a/drivers/md/dm-crypt.c
 +++ b/drivers/md/dm-crypt.c
-@@ -3305,6 +3305,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+@@ -3284,6 +3284,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
  			goto bad;
  	}
  
@@ -3098,10 +2876,10 @@ index 2177b9d63a8f..c179507cedc4 100644
  obj-$(CONFIG_VIDEO_DEV) += v4l2-dv-timings.o videodev.o
 diff --git a/drivers/media/v4l2-core/v4l2loopback.c b/drivers/media/v4l2-core/v4l2loopback.c
 new file mode 100644
-index 000000000000..468d47f4950b
+index 000000000000..74bd8125caa3
 --- /dev/null
 +++ b/drivers/media/v4l2-core/v4l2loopback.c
-@@ -0,0 +1,3292 @@
+@@ -0,0 +1,3313 @@
 +/* -*- c-file-style: "linux" -*- */
 +/*
 + * v4l2loopback.c  --  video4linux2 loopback driver
@@ -3137,6 +2915,10 @@ index 000000000000..468d47f4950b
 +#include <linux/miscdevice.h>
 +#include "v4l2loopback.h"
 +
++#define V4L2LOOPBACK_CTL_ADD_legacy 0x4C80
++#define V4L2LOOPBACK_CTL_REMOVE_legacy 0x4C81
++#define V4L2LOOPBACK_CTL_QUERY_legacy 0x4C82
++
 +#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
 +#error This module is not supported on kernels before 4.0.0.
 +#endif
@@ -3151,6 +2933,10 @@ index 000000000000..468d47f4950b
 +
 +#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 7, 0)
 +#define VFL_TYPE_VIDEO VFL_TYPE_GRABBER
++#endif
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 2, 0)
++#define timer_delete_sync del_timer_sync
 +#endif
 +
 +#define V4L2LOOPBACK_VERSION_CODE                                              \
@@ -4892,8 +4678,8 @@ index 000000000000..468d47f4950b
 +static void buffer_written(struct v4l2_loopback_device *dev,
 +			   struct v4l2l_buffer *buf)
 +{
-+	del_timer_sync(&dev->sustain_timer);
-+	del_timer_sync(&dev->timeout_timer);
++	timer_delete_sync(&dev->sustain_timer);
++	timer_delete_sync(&dev->timeout_timer);
 +
 +	spin_lock_bh(&dev->list_lock);
 +	list_move_tail(&buf->list_head, &dev->outbufs_list);
@@ -5470,8 +5256,8 @@ index 000000000000..468d47f4950b
 +	}
 +
 +	if (atomic_dec_and_test(&dev->open_count)) {
-+		del_timer_sync(&dev->sustain_timer);
-+		del_timer_sync(&dev->timeout_timer);
++		timer_delete_sync(&dev->sustain_timer);
++		timer_delete_sync(&dev->timeout_timer);
 +		if (!dev->keep_format) {
 +			mutex_lock(&dev->image_mutex);
 +			free_buffers(dev);
@@ -6076,6 +5862,7 @@ index 000000000000..468d47f4950b
 +	struct v4l2_loopback_config *confptr = &conf;
 +	int device_nr, capture_nr, output_nr;
 +	int ret;
++	const __u32 version = V4L2LOOPBACK_VERSION_CODE;
 +
 +	ret = mutex_lock_killable(&v4l2loopback_ctl_mutex);
 +	if (ret)
@@ -6088,6 +5875,7 @@ index 000000000000..468d47f4950b
 +		break;
 +		/* add a v4l2loopback device (pair), based on the user-provided specs */
 +	case V4L2LOOPBACK_CTL_ADD:
++	case V4L2LOOPBACK_CTL_ADD_legacy:
 +		if (parm) {
 +			if ((ret = copy_from_user(&conf, (void *)parm,
 +						  sizeof(conf))) < 0)
@@ -6100,7 +5888,8 @@ index 000000000000..468d47f4950b
 +		break;
 +		/* remove a v4l2loopback device (both capture and output) */
 +	case V4L2LOOPBACK_CTL_REMOVE:
-+		ret = v4l2loopback_lookup((int)parm, &dev);
++	case V4L2LOOPBACK_CTL_REMOVE_legacy:
++		ret = v4l2loopback_lookup((__u32)parm, &dev);
 +		if (ret >= 0 && dev) {
 +			ret = -EBUSY;
 +			if (dev->open_count.counter > 0)
@@ -6113,6 +5902,7 @@ index 000000000000..468d47f4950b
 +		 * this is mostly about limits (which cannot be queried directly with  VIDIOC_G_FMT and friends
 +		 */
 +	case V4L2LOOPBACK_CTL_QUERY:
++	case V4L2LOOPBACK_CTL_QUERY_legacy:
 +		if (!parm)
 +			break;
 +		if ((ret = copy_from_user(&conf, (void *)parm, sizeof(conf))) <
@@ -6160,6 +5950,15 @@ index 000000000000..468d47f4950b
 +		conf.debug = debug;
 +		MARK();
 +		if (copy_to_user((void *)parm, &conf, sizeof(conf))) {
++			ret = -EFAULT;
++			break;
++		}
++		ret = 0;
++		break;
++	case V4L2LOOPBACK_CTL_VERSION:
++		if (!parm)
++			break;
++		if (copy_to_user((void *)parm, &version, sizeof(version))) {
 +			ret = -EFAULT;
 +			break;
 +		}
@@ -6396,10 +6195,10 @@ index 000000000000..468d47f4950b
 +module_exit(v4l2loopback_cleanup_module);
 diff --git a/drivers/media/v4l2-core/v4l2loopback.h b/drivers/media/v4l2-core/v4l2loopback.h
 new file mode 100644
-index 000000000000..ec0be6cbe97d
+index 000000000000..e48e0ce5949d
 --- /dev/null
 +++ b/drivers/media/v4l2-core/v4l2loopback.h
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,108 @@
 +/* SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note */
 +/*
 + * v4l2loopback.h
@@ -6413,7 +6212,7 @@ index 000000000000..ec0be6cbe97d
 +#define _V4L2LOOPBACK_H
 +
 +#define V4L2LOOPBACK_VERSION_MAJOR 0
-+#define V4L2LOOPBACK_VERSION_MINOR 14
++#define V4L2LOOPBACK_VERSION_MINOR 15
 +#define V4L2LOOPBACK_VERSION_BUGFIX 0
 +
 +/* /dev/v4l2loopback interface */
@@ -6434,8 +6233,8 @@ index 000000000000..ec0be6cbe97d
 +         * or one (and only one) of them must be -1
 +         *
 +         */
-+	int output_nr;
-+	int unused; /*capture_nr;*/
++	__s32 output_nr;
++	__s32 unused; /*capture_nr;*/
 +
 +	/**
 +         * a nice name for your device
@@ -6447,27 +6246,27 @@ index 000000000000..ec0be6cbe97d
 +         * allowed frame size
 +         * if too low, default values are used
 +         */
-+	unsigned int min_width;
-+	unsigned int max_width;
-+	unsigned int min_height;
-+	unsigned int max_height;
++	__u32 min_width;
++	__u32 max_width;
++	__u32 min_height;
++	__u32 max_height;
 +
 +	/**
 +         * number of buffers to allocate for the queue
 +         * if set to <=0, default values are used
 +         */
-+	int max_buffers;
++	__s32 max_buffers;
 +
 +	/**
 +         * how many consumers are allowed to open this device concurrently
 +         * if set to <=0, default values are used
 +         */
-+	int max_openers;
++	__s32 max_openers;
 +
 +	/**
 +         * set the debugging level for this device
 +         */
-+	int debug;
++	__s32 debug;
 +
 +	/**
 +         * whether to announce OUTPUT/CAPTURE capabilities exclusively
@@ -6476,8 +6275,16 @@ index 000000000000..ec0be6cbe97d
 +	 * NOTE: this is going to be removed once separate output/capture
 +	 *       devices are implemented
 +         */
-+	int announce_all_caps;
++	__s32 announce_all_caps;
 +};
++
++#define V4L2LOOPBACK_CTL_IOCTLMAGIC '~'
++
++/* a pointer to an (unsigned int) that - on success - will hold
++ * the version code of the v4l2loopback module
++ * as returned by KERNEL_VERSION(MAJOR, MINOR, BUGFIX)
++ */
++#define V4L2LOOPBACK_CTL_VERSION _IOR(V4L2LOOPBACK_CTL_IOCTLMAGIC, 0, __u32)
 +
 +/* a pointer to a (struct v4l2_loopback_config) that has all values you wish to impose on the
 + * to-be-created device set.
@@ -6486,16 +6293,18 @@ index 000000000000..ec0be6cbe97d
 + * returns the device_nr of the OUTPUT device (which can be used with V4L2LOOPBACK_CTL_QUERY,
 + * to get more information on the device)
 + */
-+#define V4L2LOOPBACK_CTL_ADD 0x4C80
++#define V4L2LOOPBACK_CTL_ADD \
++	_IOW(V4L2LOOPBACK_CTL_IOCTLMAGIC, 1, struct v4l2_loopback_config)
++
++/* the device-number (either CAPTURE or OUTPUT) associated with the loopback-device */
++#define V4L2LOOPBACK_CTL_REMOVE _IOW(V4L2LOOPBACK_CTL_IOCTLMAGIC, 2, __u32)
 +
 +/* a pointer to a (struct v4l2_loopback_config) that has output_nr and/or capture_nr set
 + * (the two values must either refer to video-devices associated with the same loopback device
 + *  or exactly one of them must be <0
 + */
-+#define V4L2LOOPBACK_CTL_QUERY 0x4C82
-+
-+/* the device-number (either CAPTURE or OUTPUT) associated with the loopback-device */
-+#define V4L2LOOPBACK_CTL_REMOVE 0x4C81
++#define V4L2LOOPBACK_CTL_QUERY \
++	_IOWR(V4L2LOOPBACK_CTL_IOCTLMAGIC, 3, struct v4l2_loopback_config)
 +
 +#endif /* _V4L2LOOPBACK_H */
 diff --git a/drivers/media/v4l2-core/v4l2loopback_formats.h b/drivers/media/v4l2-core/v4l2loopback_formats.h
@@ -7433,7 +7242,7 @@ index 000000000000..e105e6f5cc91
 +MODULE_AUTHOR("Daniel Drake <drake@endlessm.com>");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 82b21e34c545..fa167d29821f 100644
+index 94daca15a096..4822a23dd357 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
 @@ -3747,6 +3747,106 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
@@ -7552,10 +7361,10 @@ index 82b21e34c545..fa167d29821f 100644
  };
  
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 37c24ffea65c..bd52d1e081b7 100644
+index 5a3c670aec27..831ffcf7c730 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1522,4 +1522,6 @@ endif # SCSI_LOWLEVEL
+@@ -1521,4 +1521,6 @@ endif # SCSI_LOWLEVEL
  
  source "drivers/scsi/device_handler/Kconfig"
  
@@ -7563,10 +7372,10 @@ index 37c24ffea65c..bd52d1e081b7 100644
 +
  endmenu
 diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 1313ddf2fd1a..5942e8f79159 100644
+index 16de3e41f94c..4e88f6e3e67b 100644
 --- a/drivers/scsi/Makefile
 +++ b/drivers/scsi/Makefile
-@@ -153,6 +153,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+@@ -152,6 +152,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
  obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
  
  obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
@@ -8737,11 +8546,43 @@ index 000000000000..878a3be0ba2b
 +module_init(vhba_init);
 +module_exit(vhba_exit);
 +
+diff --git a/fs/select.c b/fs/select.c
+index 7da531b1cf6b..0eaf3522abe9 100644
+--- a/fs/select.c
++++ b/fs/select.c
+@@ -857,7 +857,7 @@ static inline __poll_t do_pollfd(struct pollfd *pollfd, poll_table *pwait,
+ 	int fd = pollfd->fd;
+ 	__poll_t mask, filter;
+ 
+-	if (fd < 0)
++	if (unlikely(fd < 0))
+ 		return 0;
+ 
+ 	CLASS(fd, f)(fd);
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index fdda6b16263b..e63d17960c53 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -193,6 +193,14 @@ static inline void __mm_zero_struct_page(struct page *page)
+ 
+ extern int sysctl_max_map_count;
+ 
++extern bool sysctl_workingset_protection;
++extern u8 sysctl_anon_min_ratio;
++extern u8 sysctl_clean_low_ratio;
++extern u8 sysctl_clean_min_ratio;
++int vm_workingset_protection_update_handler(
++	const struct ctl_table *table, int write,
++	void __user *buffer, size_t *lenp, loff_t *ppos);
++
+ extern unsigned long sysctl_user_reserve_kbytes;
+ extern unsigned long sysctl_admin_reserve_kbytes;
+ 
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 47bfc6b1b632..435901dbc742 100644
+index 26baa78f1ca7..8fa2ff2682bc 100644
 --- a/include/linux/pagemap.h
 +++ b/include/linux/pagemap.h
-@@ -1373,7 +1373,7 @@ struct readahead_control {
+@@ -1341,7 +1341,7 @@ struct readahead_control {
  		._index = i,						\
  	}
  
@@ -8751,10 +8592,10 @@ index 47bfc6b1b632..435901dbc742 100644
  void page_cache_ra_unbounded(struct readahead_control *,
  		unsigned long nr_to_read, unsigned long lookahead_count);
 diff --git a/include/linux/user_namespace.h b/include/linux/user_namespace.h
-index 7183e5aca282..56573371a2f8 100644
+index a0bb6d012137..93129fea552e 100644
 --- a/include/linux/user_namespace.h
 +++ b/include/linux/user_namespace.h
-@@ -159,6 +159,8 @@ static inline void set_userns_rlimit_max(struct user_namespace *ns,
+@@ -168,6 +168,8 @@ static inline void set_userns_rlimit_max(struct user_namespace *ns,
  
  #ifdef CONFIG_USER_NS
  
@@ -8763,7 +8604,7 @@ index 7183e5aca282..56573371a2f8 100644
  static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
  {
  	if (ns)
-@@ -192,6 +194,8 @@ extern bool current_in_userns(const struct user_namespace *target_ns);
+@@ -201,6 +203,8 @@ extern bool current_in_userns(const struct user_namespace *target_ns);
  struct ns_common *ns_get_owner(struct ns_common *ns);
  #else
  
@@ -8773,7 +8614,7 @@ index 7183e5aca282..56573371a2f8 100644
  {
  	return &init_user_ns;
 diff --git a/include/linux/wait.h b/include/linux/wait.h
-index 6d90ad974408..d04768b01364 100644
+index 965a19809c7e..3d442267a256 100644
 --- a/include/linux/wait.h
 +++ b/include/linux/wait.h
 @@ -163,6 +163,7 @@ static inline bool wq_has_sleeper(struct wait_queue_head *wq_head)
@@ -8784,7 +8625,7 @@ index 6d90ad974408..d04768b01364 100644
  extern void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  extern void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  
-@@ -1192,6 +1193,7 @@ do {										\
+@@ -1195,6 +1196,7 @@ do {										\
   */
  void prepare_to_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
  bool prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
@@ -8793,10 +8634,10 @@ index 6d90ad974408..d04768b01364 100644
  void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
  long wait_woken(struct wait_queue_entry *wq_entry, unsigned mode, long timeout);
 diff --git a/init/Kconfig b/init/Kconfig
-index dc7b10a1fad2..32fc6107126a 100644
+index bf3a920064be..c524858118d2 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
-@@ -162,6 +162,10 @@ config THREAD_INFO_IN_TASK
+@@ -163,6 +163,10 @@ config THREAD_INFO_IN_TASK
  
  menu "General setup"
  
@@ -8807,7 +8648,7 @@ index dc7b10a1fad2..32fc6107126a 100644
  config BROKEN
  	bool
  
-@@ -1328,6 +1332,22 @@ config USER_NS
+@@ -1330,6 +1334,22 @@ config USER_NS
  
  	  If unsure, say N.
  
@@ -8830,7 +8671,7 @@ index dc7b10a1fad2..32fc6107126a 100644
  config PID_NS
  	bool "PID Namespaces"
  	default y
-@@ -1470,6 +1490,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
+@@ -1479,6 +1499,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
  	  with the "-O2" compiler flag for best performance and most
  	  helpful compile-time warnings.
  
@@ -8844,7 +8685,7 @@ index dc7b10a1fad2..32fc6107126a 100644
  	bool "Optimize for size (-Os)"
  	help
 diff --git a/kernel/Kconfig.hz b/kernel/Kconfig.hz
-index 38ef6d06888e..0f78364efd4f 100644
+index ce1435cb08b1..e1359db5561e 100644
 --- a/kernel/Kconfig.hz
 +++ b/kernel/Kconfig.hz
 @@ -40,6 +40,27 @@ choice
@@ -8899,7 +8740,7 @@ index 54ea59ff8fbe..18f87e0dd137 100644
  	help
  	  This option turns the kernel into a real-time kernel by replacing
 diff --git a/kernel/fork.c b/kernel/fork.c
-index ca2ca3884f76..d47d85b68dab 100644
+index 168681fc4b25..39e47bfaea58 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -106,6 +106,10 @@
@@ -8913,7 +8754,7 @@ index ca2ca3884f76..d47d85b68dab 100644
  #include <asm/pgalloc.h>
  #include <linux/uaccess.h>
  #include <asm/mmu_context.h>
-@@ -2171,6 +2175,10 @@ __latent_entropy struct task_struct *copy_process(
+@@ -2194,6 +2198,10 @@ __latent_entropy struct task_struct *copy_process(
  	if ((clone_flags & (CLONE_NEWUSER|CLONE_FS)) == (CLONE_NEWUSER|CLONE_FS))
  		return ERR_PTR(-EINVAL);
  
@@ -8924,7 +8765,7 @@ index ca2ca3884f76..d47d85b68dab 100644
  	/*
  	 * Thread groups must share signals as well, and detached threads
  	 * can only be started up within the thread group.
-@@ -3324,6 +3332,12 @@ int ksys_unshare(unsigned long unshare_flags)
+@@ -3354,6 +3362,12 @@ int ksys_unshare(unsigned long unshare_flags)
  	if (unshare_flags & CLONE_NEWNS)
  		unshare_flags |= CLONE_FS;
  
@@ -8960,25 +8801,25 @@ index 2ddb827e3bea..464049c4af3f 100644
  
  	return state;
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index f67b79c473dd..59e80ffc5ae2 100644
+index 8d0f462e8c8b..6122df2b471a 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -76,10 +76,19 @@ unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
   *
-  * (default: 0.75 msec * (1 + ilog(ncpus)), units: nanoseconds)
+  * (default: 0.70 msec * (1 + ilog(ncpus)), units: nanoseconds)
   */
 +#ifdef CONFIG_CACHY
 +unsigned int sysctl_sched_base_slice			= 350000ULL;
 +static unsigned int normalized_sysctl_sched_base_slice	= 350000ULL;
 +#else
- unsigned int sysctl_sched_base_slice			= 750000ULL;
- static unsigned int normalized_sysctl_sched_base_slice	= 750000ULL;
-+#endif
+ unsigned int sysctl_sched_base_slice			= 700000ULL;
+ static unsigned int normalized_sysctl_sched_base_slice	= 700000ULL;
++#endif /* CONFIG_CACHY */
  
 +#ifdef CONFIG_CACHY
-+const_debug unsigned int sysctl_sched_migration_cost	= 300000UL;
++__read_mostly unsigned int sysctl_sched_migration_cost	= 300000UL;
 +#else
- const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
+ __read_mostly unsigned int sysctl_sched_migration_cost	= 500000UL;
 +#endif
  
  static int __init setup_sched_thermal_decay_shift(char *str)
@@ -8996,29 +8837,11 @@ index f67b79c473dd..59e80ffc5ae2 100644
  
  #ifdef CONFIG_NUMA_BALANCING
  /* Restrict the NUMA promotion throughput (MB/s) for each target node. */
-@@ -9439,12 +9452,11 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
- 			return 0;
- 
- 		/* Prevent to re-select dst_cpu via env's CPUs: */
--		for_each_cpu_and(cpu, env->dst_grpmask, env->cpus) {
--			if (cpumask_test_cpu(cpu, p->cpus_ptr)) {
--				env->flags |= LBF_DST_PINNED;
--				env->new_dst_cpu = cpu;
--				break;
--			}
-+		cpu = cpumask_first_and_and(env->dst_grpmask, env->cpus, p->cpus_ptr);
-+
-+		if (cpu < nr_cpu_ids) {
-+			env->flags |= LBF_DST_PINNED;
-+			env->new_dst_cpu = cpu;
- 		}
- 
- 		return 0;
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1aa65a0ac586..4711759b84c2 100644
+index 47972f34ea70..0892942cf913 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2837,7 +2837,7 @@ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
+@@ -2790,7 +2790,7 @@ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
  
  extern void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags);
  
@@ -9070,10 +8893,10 @@ index 51e38f5f4701..c5cc616484ba 100644
  {
  	wq_entry->flags = flags;
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index cb57da499ebb..f7f1c25b30fe 100644
+index 3b7a7308e35b..fe7bec454345 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -80,6 +80,9 @@
+@@ -70,6 +70,9 @@
  #ifdef CONFIG_RT_MUTEXES
  #include <linux/rtmutex.h>
  #endif
@@ -9083,7 +8906,7 @@ index cb57da499ebb..f7f1c25b30fe 100644
  
  /* shared constants to be used in various sysctls */
  const int sysctl_vals[] = { 0, 1, 2, 3, 4, 100, 200, 1000, 3000, INT_MAX, 65535, -1 };
-@@ -1617,6 +1620,15 @@ static const struct ctl_table kern_table[] = {
+@@ -1595,6 +1598,15 @@ static const struct ctl_table kern_table[] = {
  		.mode		= 0644,
  		.proc_handler	= proc_dointvec,
  	},
@@ -9100,7 +8923,7 @@ index cb57da499ebb..f7f1c25b30fe 100644
  	{
  		.procname	= "tainted",
 diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
-index aa0b2e47f2f2..d74d857b1696 100644
+index 682f40d5632d..434a25f7b2ed 100644
 --- a/kernel/user_namespace.c
 +++ b/kernel/user_namespace.c
 @@ -22,6 +22,13 @@
@@ -9118,10 +8941,80 @@ index aa0b2e47f2f2..d74d857b1696 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 diff --git a/mm/Kconfig b/mm/Kconfig
-index 1b501db06417..c5b54d2197aa 100644
+index e113f713b493..825b5932debc 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
-@@ -691,7 +691,7 @@ config COMPACTION
+@@ -462,6 +462,69 @@ config ARCH_WANT_OPTIMIZE_HUGETLB_VMEMMAP
+ config ARCH_WANT_HUGETLB_VMEMMAP_PREINIT
+ 	bool
+ 
++config ANON_MIN_RATIO
++	int "Default value for vm.anon_min_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 1
++	help
++	  This option sets the default value for vm.anon_min_ratio sysctl knob.
++
++	  The vm.anon_min_ratio sysctl knob provides *hard* protection of
++	  anonymous pages. The anonymous pages on the current node won't be
++	  reclaimed under any conditions when their amount is below
++	  vm.anon_min_ratio. This knob may be used to prevent excessive swap
++	  thrashing when anonymous memory is low (for example, when memory is
++	  going to be overfilled by compressed data of zram module).
++
++	  Setting this value too high (close to MemTotal) can result in
++	  inability to swap and can lead to early OOM under memory pressure.
++
++config CLEAN_LOW_RATIO
++	int "Default value for vm.clean_low_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 15
++	help
++	  This option sets the default value for vm.clean_low_ratio sysctl knob.
++
++	  The vm.clean_low_ratio sysctl knob provides *best-effort*
++	  protection of clean file pages. The file pages on the current node
++	  won't be reclaimed under memory pressure when the amount of clean file
++	  pages is below vm.clean_low_ratio *unless* we threaten to OOM.
++	  Protection of clean file pages using this knob may be used when
++	  swapping is still possible to
++	    - prevent disk I/O thrashing under memory pressure;
++	    - improve performance in disk cache-bound tasks under memory
++	      pressure.
++
++	  Setting it to a high value may result in a early eviction of anonymous
++	  pages into the swap space by attempting to hold the protected amount
++	  of clean file pages in memory.
++
++config CLEAN_MIN_RATIO
++	int "Default value for vm.clean_min_ratio"
++	depends on SYSCTL
++	range 0 100
++	default 4
++	help
++	  This option sets the default value for vm.clean_min_ratio sysctl knob.
++
++	  The vm.clean_min_ratio sysctl knob provides *hard* protection of
++	  clean file pages. The file pages on the current node won't be
++	  reclaimed under memory pressure when the amount of clean file pages is
++	  below vm.clean_min_ratio. Hard protection of clean file pages using
++	  this knob may be used to
++	    - prevent disk I/O thrashing under memory pressure even with no free
++	      swap space;
++	    - improve performance in disk cache-bound tasks under memory
++	      pressure;
++	    - avoid high latency and prevent livelock in near-OOM conditions.
++
++	  Setting it to a high value may result in a early out-of-memory condition
++	  due to the inability to reclaim the protected amount of clean file pages
++	  when other types of pages cannot be reclaimed.
++
+ config HAVE_MEMBLOCK_PHYS_MAP
+ 	bool
+ 
+@@ -654,7 +717,7 @@ config COMPACTION
  config COMPACT_UNEVICTABLE_DEFAULT
  	int
  	depends on COMPACTION
@@ -9131,7 +9024,7 @@ index 1b501db06417..c5b54d2197aa 100644
  
  #
 diff --git a/mm/compaction.c b/mm/compaction.c
-index ae734de0038c..e4478d50a8b3 100644
+index ca71fd3c3181..2070b1e5106f 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
 @@ -1923,7 +1923,11 @@ static int sysctl_compact_unevictable_allowed __read_mostly = CONFIG_COMPACT_UNE
@@ -9147,7 +9040,7 @@ index ae734de0038c..e4478d50a8b3 100644
  static int __read_mostly sysctl_compact_memory;
  
 diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 373781b21e5c..e68aafc49f1f 100644
+index 47d76d03ce30..48615051a8cf 100644
 --- a/mm/huge_memory.c
 +++ b/mm/huge_memory.c
 @@ -64,7 +64,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
@@ -9162,8 +9055,20 @@ index 373781b21e5c..e68aafc49f1f 100644
  	(1<<TRANSPARENT_HUGEPAGE_DEFRAG_KHUGEPAGED_FLAG)|
  	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
  
+diff --git a/mm/mm_init.c b/mm/mm_init.c
+index eedce9321e13..8201039f1c1c 100644
+--- a/mm/mm_init.c
++++ b/mm/mm_init.c
+@@ -2732,6 +2732,7 @@ static void __init mem_init_print_info(void)
+ 		, K(totalhigh_pages())
+ #endif
+ 		);
++	printk(KERN_INFO "le9 Unofficial (le9uo) working set protection 1.15a by Masahito Suzuki (forked from hakavlad's original le9 patch)");
+ }
+ 
+ void __init __weak arch_mm_preinit(void)
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3147119a9a04..a0750befcb54 100644
+index c81624bc3969..f19314209557 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
 @@ -71,7 +71,11 @@ static long ratelimit_pages = 32;
@@ -9191,10 +9096,10 @@ index 3147119a9a04..a0750befcb54 100644
  EXPORT_SYMBOL_GPL(dirty_writeback_interval);
  
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 542d25f77be8..32892366580a 100644
+index 47fa713ccb4d..88ed0230312b 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -271,7 +271,11 @@ const char * const migratetype_names[MIGRATE_TYPES] = {
+@@ -274,7 +274,11 @@ const char * const migratetype_names[MIGRATE_TYPES] = {
  
  int min_free_kbytes = 1024;
  int user_min_free_kbytes = -1;
@@ -9204,13 +9109,13 @@ index 542d25f77be8..32892366580a 100644
  static int watermark_boost_factor __read_mostly = 15000;
 +#endif
  static int watermark_scale_factor = 10;
+ int defrag_mode;
  
- /* movable_zone is the "real" zone pages in ZONE_MOVABLE are taken from */
 diff --git a/mm/swap.c b/mm/swap.c
-index fc8281ef4241..a96248e4152f 100644
+index 77b2d5997873..443eb4a8b42b 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -1081,6 +1081,10 @@ void folio_batch_remove_exceptionals(struct folio_batch *fbatch)
+@@ -1091,6 +1091,10 @@ static const struct ctl_table swap_sysctl_table[] = {
   */
  void __init swap_setup(void)
  {
@@ -9221,12 +9126,59 @@ index fc8281ef4241..a96248e4152f 100644
  	unsigned long megs = totalram_pages() >> (20 - PAGE_SHIFT);
  
  	/* Use a smaller cluster for small-memory machines */
-@@ -1092,4 +1096,5 @@ void __init swap_setup(void)
+@@ -1098,6 +1102,7 @@ void __init swap_setup(void)
+ 		page_cluster = 2;
+ 	else
+ 		page_cluster = 3;
++#endif /* CONFIG_CACHY */
+ 	/*
  	 * Right now other parts of the system means that we
  	 * _really_ don't want to cluster much more
- 	 */
-+#endif
- }
+diff --git a/mm/util.c b/mm/util.c
+index 448117da071f..b9334775c51d 100644
+--- a/mm/util.c
++++ b/mm/util.c
+@@ -857,6 +857,40 @@ static const struct ctl_table util_sysctl_table[] = {
+ 		.mode		= 0644,
+ 		.proc_handler	= proc_doulongvec_minmax,
+ 	},
++	{
++		.procname	= "workingset_protection",
++		.data		= &sysctl_workingset_protection,
++		.maxlen		= sizeof(bool),
++		.mode		= 0644,
++		.proc_handler	= &proc_dobool,
++	},
++	{
++		.procname	= "anon_min_ratio",
++		.data		= &sysctl_anon_min_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
++	{
++		.procname	= "clean_low_ratio",
++		.data		= &sysctl_clean_low_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
++	{
++		.procname	= "clean_min_ratio",
++		.data		= &sysctl_clean_min_ratio,
++		.maxlen		= sizeof(u8),
++		.mode		= 0644,
++		.proc_handler	= &vm_workingset_protection_update_handler,
++		.extra1		= SYSCTL_ZERO,
++		.extra2		= SYSCTL_ONE_HUNDRED,
++	},
+ };
+ 
+ static int __init init_vm_util_sysctls(void)
 diff --git a/mm/vmpressure.c b/mm/vmpressure.c
 index bd5183dfd879..3a410f53a07c 100644
 --- a/mm/vmpressure.c
@@ -9244,10 +9196,38 @@ index bd5183dfd879..3a410f53a07c 100644
  
  /*
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index e9f3ae8158a6..faf9a30380d7 100644
+index 3783e45bfc92..75f48ea2b336 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -200,7 +200,11 @@ struct scan_control {
+@@ -148,6 +148,15 @@ struct scan_control {
+ 	/* The file folios on the current node are dangerously low */
+ 	unsigned int file_is_tiny:1;
+ 
++	/* The anonymous pages on the current node are below vm.anon_min_ratio */
++	unsigned int anon_below_min:1;
++
++	/* The clean file pages on the current node are below vm.clean_low_ratio */
++	unsigned int clean_below_low:1;
++
++	/* The clean file pages on the current node are below vm.clean_min_ratio */
++	unsigned int clean_below_min:1;
++
+ 	/* Always discard instead of demoting to lower tier memory */
+ 	unsigned int no_demotion:1;
+ 
+@@ -197,10 +206,23 @@ struct scan_control {
+ #define prefetchw_prev_lru_folio(_folio, _base, _field) do { } while (0)
+ #endif
+ 
++bool sysctl_workingset_protection __read_mostly = true;
++u8 sysctl_anon_min_ratio  __read_mostly = CONFIG_ANON_MIN_RATIO;
++u8 sysctl_clean_low_ratio __read_mostly = CONFIG_CLEAN_LOW_RATIO;
++u8 sysctl_clean_min_ratio __read_mostly = CONFIG_CLEAN_MIN_RATIO;
++static u64 sysctl_anon_min_ratio_kb  __read_mostly = 0;
++static u64 sysctl_clean_low_ratio_kb __read_mostly = 0;
++static u64 sysctl_clean_min_ratio_kb __read_mostly = 0;
++static u64 workingset_protection_prev_totalram __read_mostly = 0;
++
  /*
   * From 0 .. MAX_SWAPPINESS.  Higher means more swappy.
   */
@@ -9259,11 +9239,205 @@ index e9f3ae8158a6..faf9a30380d7 100644
  
  #ifdef CONFIG_MEMCG
  
+@@ -1147,6 +1169,10 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
+ 		if (!sc->may_unmap && folio_mapped(folio))
+ 			goto keep_locked;
+ 
++		if (folio_is_file_lru(folio) ? sc->clean_below_min :
++				(sc->anon_below_min && !sc->clean_below_min))
++			goto keep_locked;
++
+ 		/*
+ 		 * The number of dirty pages determines if a node is marked
+ 		 * reclaim_congested. kswapd will stall and start writing
+@@ -2521,6 +2547,15 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 		goto out;
+ 	}
+ 
++	/*
++	 * Force-scan anon if clean file pages is under vm.clean_low_ratio
++	 * or vm.clean_min_ratio.
++	 */
++	if (sc->clean_below_low || sc->clean_below_min) {
++		scan_balance = SCAN_ANON;
++		goto out;
++	}
++
+ 	/*
+ 	 * If there is enough inactive page cache, we do not reclaim
+ 	 * anything from the anonymous working right now.
+@@ -2638,6 +2673,14 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 			BUG();
+ 		}
+ 
++		/*
++		 * Hard protection of the working set.
++		 * Don't reclaim anon/file pages when the amount is
++		 * below the watermark of the same type.
++		 */
++		if (file ? sc->clean_below_min : sc->anon_below_min)
++			scan = 0;
++
+ 		nr[lru] = scan;
+ 	}
+ }
+@@ -2657,6 +2700,96 @@ static bool can_age_anon_pages(struct pglist_data *pgdat,
+ 	return can_demote(pgdat->node_id, sc);
+ }
+ 
++int vm_workingset_protection_update_handler(const struct ctl_table *table, int write,
++		void __user *buffer, size_t *lenp, loff_t *ppos)
++{
++	int ret = proc_dou8vec_minmax(table, write, buffer, lenp, ppos);
++	if (ret || !write)
++		return ret;
++
++	workingset_protection_prev_totalram = 0;
++
++	return 0;
++}
++
++static void prepare_workingset_protection(pg_data_t *pgdat, struct scan_control *sc)
++{
++	unsigned long node_mem_total;
++	struct sysinfo i;
++
++	if (!(sysctl_workingset_protection)) {
++		sc->anon_below_min = 0;
++		sc->clean_below_low = 0;
++		sc->clean_below_min = 0;
++		return;
++	}
++
++	if (likely(sysctl_anon_min_ratio  ||
++	           sysctl_clean_low_ratio ||
++		       sysctl_clean_min_ratio)) {
++#ifdef CONFIG_NUMA
++		si_meminfo_node(&i, pgdat->node_id);
++#else //CONFIG_NUMA
++		si_meminfo(&i);
++#endif //CONFIG_NUMA
++		node_mem_total = i.totalram;
++
++		if (unlikely(workingset_protection_prev_totalram != node_mem_total)) {
++			sysctl_anon_min_ratio_kb  =
++				node_mem_total * sysctl_anon_min_ratio  / 100;
++			sysctl_clean_low_ratio_kb =
++				node_mem_total * sysctl_clean_low_ratio / 100;
++			sysctl_clean_min_ratio_kb =
++				node_mem_total * sysctl_clean_min_ratio / 100;
++			workingset_protection_prev_totalram = node_mem_total;
++		}
++	}
++
++	/*
++	 * Check the number of anonymous pages to protect them from
++	 * reclaiming if their amount is below the specified.
++	 */
++	if (sysctl_anon_min_ratio) {
++		unsigned long reclaimable_anon;
++
++		reclaimable_anon =
++			node_page_state(pgdat, NR_ACTIVE_ANON) +
++			node_page_state(pgdat, NR_INACTIVE_ANON) +
++			node_page_state(pgdat, NR_ISOLATED_ANON);
++
++		sc->anon_below_min = reclaimable_anon < sysctl_anon_min_ratio_kb;
++	} else
++		sc->anon_below_min = 0;
++
++	/*
++	 * Check the number of clean file pages to protect them from
++	 * reclaiming if their amount is below the specified.
++	 */
++	if (sysctl_clean_low_ratio || sysctl_clean_min_ratio) {
++		unsigned long reclaimable_file, dirty, clean;
++
++		reclaimable_file =
++			node_page_state(pgdat, NR_ACTIVE_FILE) +
++			node_page_state(pgdat, NR_INACTIVE_FILE) +
++			node_page_state(pgdat, NR_ISOLATED_FILE);
++		dirty = node_page_state(pgdat, NR_FILE_DIRTY);
++		/*
++		 * node_page_state() sum can go out of sync since
++		 * all the values are not read at once.
++		 */
++		if (likely(reclaimable_file > dirty))
++			clean = reclaimable_file - dirty;
++		else
++			clean = 0;
++
++		sc->clean_below_low = clean < sysctl_clean_low_ratio_kb;
++		sc->clean_below_min = clean < sysctl_clean_min_ratio_kb;
++	} else {
++		sc->clean_below_low = 0;
++		sc->clean_below_min = 0;
++	}
++}
++
+ #ifdef CONFIG_LRU_GEN
+ 
+ #ifdef CONFIG_LRU_GEN_ENABLED
+@@ -4623,11 +4756,21 @@ static int get_tier_idx(struct lruvec *lruvec, int type)
+ 	return tier - 1;
+ }
+ 
+-static int get_type_to_scan(struct lruvec *lruvec, int swappiness)
++static int get_type_to_scan(struct lruvec *lruvec, struct scan_control *sc, int swappiness)
+ {
+ 	struct ctrl_pos sp, pv;
+ 
+-	if (swappiness <= MIN_SWAPPINESS + 1)
++	if (swappiness == MIN_SWAPPINESS)
++		return LRU_GEN_FILE;
++
++	if (sc->clean_below_min)
++		return LRU_GEN_ANON;
++	if (sc->anon_below_min)
++		return LRU_GEN_FILE;
++	if (sc->clean_below_low)
++		return LRU_GEN_ANON;
++
++	if (swappiness == MIN_SWAPPINESS + 1)
+ 		return LRU_GEN_FILE;
+ 
+ 	if (swappiness >= MAX_SWAPPINESS)
+@@ -4646,7 +4789,7 @@ static int isolate_folios(struct lruvec *lruvec, struct scan_control *sc, int sw
+ 			  int *type_scanned, struct list_head *list)
+ {
+ 	int i;
+-	int type = get_type_to_scan(lruvec, swappiness);
++	int type = get_type_to_scan(lruvec, sc, swappiness);
+ 
+ 	for_each_evictable_type(i, swappiness) {
+ 		int scanned;
+@@ -4889,6 +5032,12 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 
++	prepare_workingset_protection(pgdat, sc);
++
++	if (sysctl_workingset_protection && sc->clean_below_min &&
++			!can_reclaim_anon_pages(memcg, pgdat->node_id, sc))
++		return 0;
++
+ 	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
+ 	if (mem_cgroup_below_min(NULL, memcg))
+ 		return MEMCG_LRU_YOUNG;
+@@ -6027,6 +6176,8 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 	prepare_scan_control(pgdat, sc);
+ 
++	prepare_workingset_protection(pgdat, sc);
++
+ 	shrink_node_memcgs(pgdat, sc);
+ 
+ 	flush_reclaim_state(sc);
 diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index e4decfb270fa..38bff2d8a740 100644
+index dd5cf8914a28..b216088a6abd 100644
 --- a/net/ipv4/inet_connection_sock.c
 +++ b/net/ipv4/inet_connection_sock.c
-@@ -634,7 +634,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
+@@ -632,7 +632,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
  	 * having to remove and re-insert us on the wait queue.
  	 */
  	for (;;) {
@@ -9272,6 +9446,258 @@ index e4decfb270fa..38bff2d8a740 100644
  					  TASK_INTERRUPTIBLE);
  		release_sock(sk);
  		if (reqsk_queue_empty(&icsk->icsk_accept_queue))
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 13dcd86e74ca..338e1aec0eaa 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -50,18 +50,23 @@ endif
+ 
+ # ===========================================================================
+ 
++builtin_suffix := $(if $(filter %.a_thinlto_native, $(MAKECMDGOALS)),.a_thinlto_native,.a)
++ifeq ($(thinlto_final_pass),1)
++builtin_suffix :=.a_thinlto_native
++endif
++
+ # subdir-builtin and subdir-modorder may contain duplications. Use $(sort ...)
+-subdir-builtin := $(sort $(filter %/built-in.a, $(real-obj-y)))
++subdir-builtin := $(sort $(filter %/built-in$(builtin_suffix), $(real-obj-y)))
+ subdir-modorder := $(sort $(filter %/modules.order, $(obj-m)))
+ 
+ targets-for-builtin := $(extra-y)
+ 
+ ifneq ($(strip $(lib-y) $(lib-m) $(lib-)),)
+-targets-for-builtin += $(obj)/lib.a
++targets-for-builtin += $(obj)/lib$(builtin_suffix)
+ endif
+ 
+ ifdef need-builtin
+-targets-for-builtin += $(obj)/built-in.a
++targets-for-builtin += $(obj)/built-in$(builtin_suffix)
+ endif
+ 
+ targets-for-modules := $(foreach x, o mod, \
+@@ -337,6 +342,10 @@ $(obj)/%.o: $(obj)/%.S FORCE
+ targets += $(filter-out $(subdir-builtin), $(real-obj-y))
+ targets += $(filter-out $(subdir-modorder), $(real-obj-m))
+ targets += $(lib-y) $(always-y)
++ifeq ($(builtin_suffix),.a_thinlto_native)
++native_targets = $(patsubst,%.o,%.o_thinlto_native,$(targets))
++targets += $(native_targets)
++endif
+ 
+ # Linker scripts preprocessor (.lds.S -> .lds)
+ # ---------------------------------------------------------------------------
+@@ -347,6 +356,24 @@ quiet_cmd_cpp_lds_S = LDS     $@
+ $(obj)/%.lds: $(src)/%.lds.S FORCE
+ 	$(call if_changed_dep,cpp_lds_S)
+ 
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++# Generate .o_thinlto_native (obj) from .o (bitcode) file
++# ---------------------------------------------------------------------------
++quiet_cmd_cc_o_bc = CC $(quiet_modtag) $@
++
++cmd_cc_o_bc      = $(if $(filter bitcode, $(shell file -b $<)),$(CC) \
++		   $(filter-out -Wp% $(LINUXINCLUDE) %.h.gch %.h -D% \
++		   -flto=thin, $(c_flags)) \
++		   -Wno-unused-command-line-argument \
++		   -x ir -fthinlto-index=$<.thinlto.bc -c -o $@ \
++		   $(if $(findstring ../,$<), \
++		   $$(realpath --relative-to=$(srcroot) $<), $<), \
++		   cp $< $@)
++
++$(obj)/%.o_thinlto_native: $(obj)/%.o FORCE
++	$(call if_changed,cc_o_bc)
++endif
++
+ # ASN.1 grammar
+ # ---------------------------------------------------------------------------
+ quiet_cmd_asn1_compiler = ASN.1   $(basename $@).[ch]
+@@ -360,7 +387,7 @@ $(obj)/%.asn1.c $(obj)/%.asn1.h: $(src)/%.asn1 $(objtree)/scripts/asn1_compiler
+ # ---------------------------------------------------------------------------
+ 
+ # To build objects in subdirs, we need to descend into the directories
+-$(subdir-builtin): $(obj)/%/built-in.a: $(obj)/% ;
++$(subdir-builtin): $(obj)/%/built-in$(builtin_suffix): $(obj)/% ;
+ $(subdir-modorder): $(obj)/%/modules.order: $(obj)/% ;
+ 
+ #
+@@ -377,6 +404,12 @@ quiet_cmd_ar_builtin = AR      $@
+ $(obj)/built-in.a: $(real-obj-y) FORCE
+ 	$(call if_changed,ar_builtin)
+ 
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++# Rule to compile a set of .o_thinlto_native files into one .a_thinlto_native file.
++$(obj)/built-in.a_thinlto_native: $(patsubst %.o,%.o_thinlto_native,$(real-obj-y)) FORCE
++	$(call if_changed,ar_builtin)
++endif
++
+ # This is a list of build artifacts from the current Makefile and its
+ # sub-directories. The timestamp should be updated when any of the member files.
+ 
+@@ -394,6 +427,14 @@ $(obj)/modules.order: $(obj-m) FORCE
+ $(obj)/lib.a: $(lib-y) FORCE
+ 	$(call if_changed,ar)
+ 
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++quiet_cmd_ar_native = AR      $@
++      cmd_ar_native = rm -f $@; $(AR) cDPrsT $@ $(patsubst %.o,%.o_thinlto_native,$(real-prereqs))
++
++$(obj)/lib.a_thinlto_native: $(patsubst %.o,%.o_thinlto_native,$(lib-y)) FORCE
++	$(call if_changed,ar_native)
++endif
++
+ quiet_cmd_ld_multi_m = LD [M]  $@
+       cmd_ld_multi_m = $(LD) $(ld_flags) -r -o $@ @$< $(cmd_objtool)
+ 
+@@ -459,7 +500,8 @@ $(single-subdir-goals): $(single-subdirs)
+ PHONY += $(subdir-ym)
+ $(subdir-ym):
+ 	$(Q)$(MAKE) $(build)=$@ \
+-	need-builtin=$(if $(filter $@/built-in.a, $(subdir-builtin)),1) \
++	need-builtin=$(if $(filter $@/built-in$(builtin_suffix), $(subdir-builtin)),1) \
++	thinlto_final_pass=$(if $(filter .a_thinlto_native, $(builtin_suffix)),1) \
+ 	need-modorder=$(if $(filter $@/modules.order, $(subdir-modorder)),1) \
+ 	$(filter $@/%, $(single-subdir-goals))
+ 
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 2fe73cda0bdd..9cfd23590334 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -34,8 +34,13 @@ else
+ obj-m := $(filter-out %/, $(obj-m))
+ endif
+ 
++builtin_suffix := $(if $(filter %.a_thinlto_native, $(MAKECMDGOALS)),.a_thinlto_native,.a)
++ifeq ($(thinlto_final_pass),1)
++        builtin_suffix :=.a_thinlto_native
++endif
++
+ ifdef need-builtin
+-obj-y		:= $(patsubst %/, %/built-in.a, $(obj-y))
++obj-y		:= $(patsubst %/, %/built-in$(builtin_suffix), $(obj-y))
+ else
+ obj-y		:= $(filter-out %/, $(obj-y))
+ endif
+diff --git a/scripts/Makefile.vmlinux_o b/scripts/Makefile.vmlinux_o
+index b024ffb3e201..f9abc45a68b3 100644
+--- a/scripts/Makefile.vmlinux_o
++++ b/scripts/Makefile.vmlinux_o
+@@ -9,6 +9,14 @@ include $(srctree)/scripts/Kbuild.include
+ # for objtool
+ include $(srctree)/scripts/Makefile.lib
+ 
++ifeq ($(thinlto_final_pass),1)
++vmlinux_a := vmlinux.a_thinlto_native
++vmlinux_libs := $(patsubst %.a,%.a_thinlto_native,$(KBUILD_VMLINUX_LIBS))
++else
++vmlinux_a := vmlinux.a
++vmlinux_libs := $(KBUILD_VMLINUX_LIBS)
++endif
++
+ # Generate a linker script to ensure correct ordering of initcalls for Clang LTO
+ # ---------------------------------------------------------------------------
+ 
+@@ -18,7 +26,7 @@ quiet_cmd_gen_initcalls_lds = GEN     $@
+ 	$(PERL) $(real-prereqs) > $@
+ 
+ .tmp_initcalls.lds: $(srctree)/scripts/generate_initcall_order.pl \
+-		vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
++		$(vmlinux_a) $(vmlinux_libs) FORCE
+ 	$(call if_changed,gen_initcalls_lds)
+ 
+ targets := .tmp_initcalls.lds
+@@ -59,8 +67,8 @@ quiet_cmd_ld_vmlinux.o = LD      $@
+ 	$(LD) ${KBUILD_LDFLAGS} -r -o $@ \
+ 	$(vmlinux-o-ld-args-y) \
+ 	$(addprefix -T , $(initcalls-lds)) \
+-	--whole-archive vmlinux.a --no-whole-archive \
+-	--start-group $(KBUILD_VMLINUX_LIBS) --end-group \
++	--whole-archive $(vmlinux_a) --no-whole-archive \
++	--start-group $(vmlinux_libs) --end-group \
+ 	$(cmd_objtool)
+ 
+ define rule_ld_vmlinux.o
+@@ -68,7 +76,7 @@ define rule_ld_vmlinux.o
+ 	$(call cmd,gen_objtooldep)
+ endef
+ 
+-vmlinux.o: $(initcalls-lds) vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
++vmlinux.o: $(initcalls-lds) $(vmlinux_a) $(vmlinux_libs) FORCE
+ 	$(call if_changed_rule,ld_vmlinux.o)
+ 
+ targets += vmlinux.o
+diff --git a/scripts/Makefile.vmlinux_thinlink b/scripts/Makefile.vmlinux_thinlink
+new file mode 100644
+index 000000000000..13e4026c7d45
+--- /dev/null
++++ b/scripts/Makefile.vmlinux_thinlink
+@@ -0,0 +1,53 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++PHONY := __default
++__default: vmlinux.thinlink
++
++include include/config/auto.conf
++include $(srctree)/scripts/Kbuild.include
++
++
++# Generate a linker script to ensure correct ordering of initcalls for Clang LTO
++# ---------------------------------------------------------------------------
++
++quiet_cmd_gen_initcalls_lds = GEN     $@
++      cmd_gen_initcalls_lds = \
++	$(PYTHON3) $(srctree)/scripts/jobserver-exec \
++	$(PERL) $(real-prereqs) > $@
++
++.tmp_initcalls_thinlink.lds: $(srctree)/scripts/generate_initcall_order.pl \
++		vmlinux.a FORCE
++	$(call if_changed,gen_initcalls_lds)
++
++targets := .tmp_initcalls_thinlink.lds
++
++initcalls-lds := .tmp_initcalls_thinlink.lds
++
++quiet_cmd_ld_vmlinux.thinlink = LD      $@
++      cmd_ld_vmlinux.thinlink = \
++	$(AR) t vmlinux.a > .vmlinux_thinlto_bc_files; \
++	$(LD) ${KBUILD_LDFLAGS} -r $(addprefix -T , $(initcalls-lds)) \
++	--thinlto-index-only @.vmlinux_thinlto_bc_files; \
++	touch vmlinux.thinlink
++
++vmlinux.thinlink: vmlinux.a $(initcalls-lds) FORCE
++	$(call if_changed,ld_vmlinux.thinlink)
++
++targets += vmlinux.thinlink
++
++# Add FORCE to the prerequisites of a target to force it to be always rebuilt.
++# ---------------------------------------------------------------------------
++
++PHONY += FORCE
++FORCE:
++
++# Read all saved command lines and dependencies for the $(targets) we
++# may be building above, using $(if_changed{,_dep}). As an
++# optimization, we don't need to read them if the target does not
++# exist, we will rebuild anyway in that case.
++
++existing-targets := $(wildcard $(sort $(targets)))
++
++-include $(foreach f,$(existing-targets),$(dir $(f)).$(notdir $(f)).cmd)
++
++.PHONY: $(PHONY)
+diff --git a/scripts/head-object-list.txt b/scripts/head-object-list.txt
+index 7274dfc65af6..90710b87a387 100644
+--- a/scripts/head-object-list.txt
++++ b/scripts/head-object-list.txt
+@@ -18,6 +18,7 @@ arch/arm/kernel/head.o
+ arch/csky/kernel/head.o
+ arch/hexagon/kernel/head.o
+ arch/loongarch/kernel/head.o
++arch/loongarch/kernel/head.o_thinlto_native
+ arch/m68k/68000/head.o
+ arch/m68k/coldfire/head.o
+ arch/m68k/kernel/head.o
 -- 
-2.49.0.503.g6c0bd1fc70
+2.50.0.rc2
 
