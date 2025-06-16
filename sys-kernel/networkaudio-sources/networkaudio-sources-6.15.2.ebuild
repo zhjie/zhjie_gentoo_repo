@@ -35,8 +35,6 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
-    eapply "${FILESDIR}/gcc/more-ISA-levels-and-uarches-for-kernel-6.15-rc1+.patch"
-
     # cachy patch
     if use amd; then
         eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
