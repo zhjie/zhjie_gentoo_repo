@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="5"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt2"
@@ -17,7 +17,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa bmq diretta amd highhz t2 rt"
+IUSE="naa diretta amd highhz rt"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
@@ -50,19 +50,9 @@ src_prepare() {
         eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0007-fixes.patch"
-
-    # t2 mac patch
-    if use t2; then
-        eapply "${FILESDIR}/cachy/0008-t2.patch"
-    fi
-
-    # bmq scheduler
-    if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.15-r0.patch"
-    fi
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0005-cachy.patch"
+    eapply "${FILESDIR}/cachy/0006-fixes.patch"
 
     # highhz patch
     if use highhz; then
