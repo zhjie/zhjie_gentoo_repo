@@ -56,9 +56,9 @@ src_prepare() {
 
     # highhz patch
     if use highhz; then
-        eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
-        eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
-        eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz-0.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz-1.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz-2.patch"
     fi
 
     # diretta alsa host driver
@@ -66,6 +66,15 @@ src_prepare() {
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
         eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.04.25.patch"
     fi
+
+    # xanmod patch
+    eapply "${FILESDIR}/xanmod/xanmod/0005-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-sched-Add-yield_type-sysctl-to-reduce-or-disa.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0008-XANMOD-block-mq-deadline-Disable-front_merges-by-def.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0009-XANMOD-block-Set-rq_affinity-to-force-complete-I-O-r.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0010-XANMOD-blk-wbt-Set-wbt_default_latency_nsec-to-2msec.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0012-XANMOD-dcache-cache_pressure-50-decreases-the-rate-a.patch"
+    eapply "${FILESDIR}/xanmod/xanmod/0013-XANMOD-mm-Raise-max_map_count-default-value.patch"
 
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
