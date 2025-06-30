@@ -7,7 +7,7 @@ EAPI=8
 inherit unpacker systemd
 
 MY_PN=${PN/-bin/}
-VN="66"
+VN="67"
 
 DESCRIPTION="Network Audio Daemon"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
