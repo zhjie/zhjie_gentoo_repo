@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="5"
+K_GENPATCHES_VER="6"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt2"
@@ -51,8 +51,8 @@ src_prepare() {
     fi
 
     eapply "${FILESDIR}/cachy/0003-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0005-cachy.patch"
-    eapply "${FILESDIR}/cachy/0006-fixes.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0005-fixes.patch"
 
     # highhz patch
     if use highhz; then
