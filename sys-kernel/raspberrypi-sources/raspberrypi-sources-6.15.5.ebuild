@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_GENPATCHES_VER="6"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -14,7 +14,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
-IUSE="naa bmq diretta highhz"
+IUSE="naa diretta highhz"
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
 EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
@@ -52,20 +52,15 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0007-fixes.patch"
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0005-fixes.patch"
 
     # highhz patch
     if use highhz; then
         eapply "${FILESDIR}/highhz/0001-high-hz-0.patch"
         eapply "${FILESDIR}/highhz/0001-high-hz-1.patch"
         eapply "${FILESDIR}/highhz/0001-high-hz-2.patch"
-    fi
-
-    # bmq scheduler
-    if use bmq; then
-        eapply "${FILESDIR}/bmq/5020_BMQ-and-PDS-io-scheduler-v6.15-r0.patch"
     fi
 
     # diretta alsa host driver
