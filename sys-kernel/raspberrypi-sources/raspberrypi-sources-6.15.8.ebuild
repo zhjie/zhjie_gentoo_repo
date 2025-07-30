@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="6"
+K_GENPATCHES_VER="9"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
