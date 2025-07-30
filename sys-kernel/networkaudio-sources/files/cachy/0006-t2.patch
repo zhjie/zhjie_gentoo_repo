@@ -1,6 +1,6 @@
-From e92815fe147242efb325e93fb603b8a373223734 Mon Sep 17 00:00:00 2001
+From 573474d7dca703a36e5e068bf07cbf422b890ea2 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Sun, 6 Jul 2025 11:21:25 +0200
+Date: Fri, 25 Jul 2025 20:24:59 +0200
 Subject: [PATCH 6/6] t2
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -1693,7 +1693,7 @@ index ed34f5cd5a91..ed8b87f7556b 100644
  		.driver_data = APPLE_MAGIC_BACKLIGHT },
  
 diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
-index 4741ff626771..b991ed962366 100644
+index cd4215007d1a..4dd55546f446 100644
 --- a/drivers/hid/hid-core.c
 +++ b/drivers/hid/hid-core.c
 @@ -464,7 +464,10 @@ static int hid_parser_global(struct hid_parser *parser, struct hid_item *item)
@@ -1708,7 +1708,7 @@ index 4741ff626771..b991ed962366 100644
  			hid_err(parser->device, "invalid report_size %d\n",
  					parser->global.report_size);
  			return -1;
-@@ -2294,6 +2297,12 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
+@@ -2303,6 +2306,12 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
  	case BUS_I2C:
  		bus = "I2C";
  		break;
@@ -1722,7 +1722,7 @@ index 4741ff626771..b991ed962366 100644
  		bus = "VIRTUAL";
  		break;
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index 594cde034707..70efd28b6bc3 100644
+index 965ee2da07d2..4af0fa7c8eee 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
 @@ -93,6 +93,8 @@
@@ -2838,7 +2838,7 @@ index adfa329e917b..0787581a25cc 100644
  module_hid_driver(magicmouse_driver);
  
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 7ac8e16e6158..a1b251ea63fc 100644
+index 536a0a47518f..06afcce30119 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -73,6 +73,7 @@ MODULE_LICENSE("GPL");
@@ -2974,7 +2974,7 @@ index 7ac8e16e6158..a1b251ea63fc 100644
  	if (mtclass->quirks & MT_QUIRK_FIX_CONST_CONTACT_ID)
  		mt_fix_const_fields(hdev, HID_DG_CONTACTID);
  
-@@ -2304,6 +2351,11 @@ static const struct hid_device_id mt_devices[] = {
+@@ -2310,6 +2357,11 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_XIROKU,
  			USB_DEVICE_ID_XIROKU_CSR2) },
  
@@ -2987,7 +2987,7 @@ index 7ac8e16e6158..a1b251ea63fc 100644
  	{ .driver_data = MT_CLS_GOOGLE,
  		HID_DEVICE(HID_BUS_ANY, HID_GROUP_ANY, USB_VENDOR_ID_GOOGLE,
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index 7fefeb413ec3..1fba3b7f6d41 100644
+index 31508da93ba2..2cce36895a60 100644
 --- a/drivers/hid/hid-quirks.c
 +++ b/drivers/hid/hid-quirks.c
 @@ -314,6 +314,7 @@ static const struct hid_device_id hid_have_special_driver[] = {
@@ -2998,7 +2998,7 @@ index 7fefeb413ec3..1fba3b7f6d41 100644
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J213) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J214K) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J223) },
-@@ -969,14 +970,6 @@ static const struct hid_device_id hid_mouse_ignore_list[] = {
+@@ -972,14 +973,6 @@ static const struct hid_device_id hid_mouse_ignore_list[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_ANSI) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_ISO) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_JIS) },
@@ -6468,7 +6468,7 @@ index e540092d664d..9e17e8e56308 100644
  	kfree(iommu);
  }
 diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index 9d2d34c1b2ff..9fae97551672 100644
+index ff07ee2940f5..a495aa76e5ee 100644
 --- a/drivers/iommu/intel/iommu.c
 +++ b/drivers/iommu/intel/iommu.c
 @@ -1289,52 +1289,13 @@ static void iommu_disable_translation(struct intel_iommu *iommu)
@@ -6730,7 +6730,7 @@ index 9d2d34c1b2ff..9fae97551672 100644
  static DEVICE_ATTR_RO(domains_used);
  
 diff --git a/drivers/iommu/intel/iommu.h b/drivers/iommu/intel/iommu.h
-index 8661e0864701..fc12de633e28 100644
+index 814f5ed20018..a07a190c6d82 100644
 --- a/drivers/iommu/intel/iommu.h
 +++ b/drivers/iommu/intel/iommu.h
 @@ -722,7 +722,9 @@ struct intel_iommu {
@@ -13519,5 +13519,5 @@ index 784912f570e9..86adc23c851a 100755
  						last;
  					}
 -- 
-2.50.0.145.g83014dc05f
+2.50.1
 
