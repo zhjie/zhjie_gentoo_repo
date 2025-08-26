@@ -1,0 +1,30 @@
+From aa55be80232a5fa7b452aa185515233aeda9ab3f Mon Sep 17 00:00:00 2001
+From: Alexandre Frade <kernel@xanmod.org>
+Date: Mon, 28 Aug 2023 05:00:29 +0000
+Subject: [PATCH 01/20] XANMOD: x86/build: Add more CFLAGS optimizations
+
+Signed-off-by: Alexandre Frade <kernel@xanmod.org>
+---
+ arch/x86/Makefile | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/x86/Makefile b/arch/x86/Makefile
+index 1913d342969b..615e11605778 100644
+--- a/arch/x86/Makefile
++++ b/arch/x86/Makefile
+@@ -67,6 +67,12 @@ export REALMODE_CFLAGS
+ # e.g.: obj-y += foo_$(BITS).o
+ export BITS
+ 
++# More compiler optimizations
++ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
++KBUILD_CFLAGS += -O3 $(call cc-option,-fivopts)
++KBUILD_RUSTFLAGS += -Copt-level=3
++endif
++
+ #
+ # Prevent GCC from generating any FP code by mistake.
+ #
+-- 
+2.47.2
+

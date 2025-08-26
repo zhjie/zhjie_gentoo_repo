@@ -1,0 +1,69 @@
+From ff5936af941ca15113c2fed1599cc80d925d2c1d Mon Sep 17 00:00:00 2001
+From: Alexandre Frade <kernel@xanmod.org>
+Date: Sat, 19 Jul 2025 02:28:57 +0000
+Subject: [PATCH 02/20] XANMOD: x86/build: Add LLVM polyhedral loop optimizer
+ flags
+
+LLVM's Polly is able to optimize various loops throughout the kernel for cache
+locality. A mathematical representation of the program, based on
+polyhedra, is analysed to find opportunistic optimisations in memory
+access patterns which then leads to loop transformations.
+
+Polly is not built with LLVM by default, and requires LLVM to be compiled
+with the Polly "project". This can be done by adding Polly to
+-DLLVM_ENABLE_PROJECTS, for example:
+
+-DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;polly"
+
+Preliminary benchmarking seems to show an improvement of around two
+percent across perf benchmarks:
+
+Benchmark                         | Control    | Polly
+--------------------------------------------------------
+bonnie++ -x 2 -s 4096 -r 0        | 12.610s    | 12.547s
+perf bench futex requeue          | 33.553s    | 33.094s
+perf bench futex wake             |  1.032s    |  1.021s
+perf bench futex wake-parallel    |  1.049s    |  1.025s
+perf bench futex requeue          |  1.037s    |  1.020s
+
+Furthermore, Polly does not produce a much larger image size netting it
+to be a "free" optimisation. A comparison of a bzImage for a kernel with
+and without Polly is shown below:
+
+bzImage        | stat --printf="%s\n"
+-------------------------------------
+Control        | 9333728
+Polly          | 9345792
+
+Compile times were one percent different at best, which is well within
+the range of noise. Therefore, I can say with certainty that Polly has
+a minimal effect on compile times, if none.
+
+Link: https://github.com/CachyOS/kernel-patches/blob/master/6.15/misc/0001-clang-polly.patch
+
+Signed-off-by: Peter Jung <admin@ptr1337.dev>
+Signed-off-by: Alexandre Frade <kernel@xanmod.org>
+---
+ arch/x86/Makefile | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/x86/Makefile b/arch/x86/Makefile
+index 615e11605778..e23632a061f4 100644
+--- a/arch/x86/Makefile
++++ b/arch/x86/Makefile
+@@ -70,6 +70,12 @@ export BITS
+ # More compiler optimizations
+ ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
+ KBUILD_CFLAGS += -O3 $(call cc-option,-fivopts)
++KBUILD_CFLAGS += $(call cc-option,-mllvm=-polly -mllvm=-polly-ast-use-context \
++		 -mllvm=-polly-invariant-load-hoisting -mllvm=-polly-loopfusion-greedy \
++		 -mllvm=-polly-run-inliner -mllvm=-polly-vectorizer=stripmine)
++ifdef CONFIG_LD_DEAD_CODE_DATA_ELIMINATION
++KBUILD_CFLAGS += $(call cc-option,-mllvm=-polly-run-dce)
++endif
+ KBUILD_RUSTFLAGS += -Copt-level=3
+ endif
+ 
+-- 
+2.47.2
+

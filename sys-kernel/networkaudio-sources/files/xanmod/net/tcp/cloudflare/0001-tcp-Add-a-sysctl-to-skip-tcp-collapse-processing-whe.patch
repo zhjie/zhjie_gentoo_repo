@@ -1,4 +1,4 @@
-From 1b7e9ad0803cef8cf087bb67a6e4c8d63a02405b Mon Sep 17 00:00:00 2001
+From 4941d9d4ebd5acbee74245ce22f32eca2e320d98 Mon Sep 17 00:00:00 2001
 From: "mfreemon@cloudflare.com" <mfreemon@cloudflare.com>
 Date: Tue, 1 Mar 2022 17:06:02 -0600
 Subject: [PATCH] tcp: Add a sysctl to skip tcp collapse processing when the
@@ -40,10 +40,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  5 files changed, 52 insertions(+)
 
 diff --git a/include/net/netns/ipv4.h b/include/net/netns/ipv4.h
-index 650b2dc9199f..7e883949c0c9 100644
+index 6373e3f17da8..2d687d1c692a 100644
 --- a/include/net/netns/ipv4.h
 +++ b/include/net/netns/ipv4.h
-@@ -230,6 +230,7 @@ struct netns_ipv4 {
+@@ -240,6 +240,7 @@ struct netns_ipv4 {
  
  	u8 sysctl_fib_notify_on_flag_change;
  	u8 sysctl_tcp_syn_linear_timeouts;
@@ -52,11 +52,11 @@ index 650b2dc9199f..7e883949c0c9 100644
  #ifdef CONFIG_NET_L3_MASTER_DEV
  	u8 sysctl_udp_l3mdev_accept;
 diff --git a/include/trace/events/tcp.h b/include/trace/events/tcp.h
-index 1a40c41ff8c3..8aae3f9db2a5 100644
+index 95f59c1a6f57..9dd95e86d7c4 100644
 --- a/include/trace/events/tcp.h
 +++ b/include/trace/events/tcp.h
-@@ -213,6 +213,13 @@ DEFINE_EVENT(tcp_event_sk, tcp_rcv_space_adjust,
- 	TP_ARGS(sk)
+@@ -286,6 +286,13 @@ TRACE_EVENT(tcp_rcvbuf_grow,
+ 		  __entry->sock_cookie)
  );
  
 +DEFINE_EVENT(tcp_event_sk, tcp_collapse_max_bytes_exceeded,
@@ -88,10 +88,10 @@ index 3a43010d726f..c17f47f95845 100644
  		.procname	= "tcp_pingpong_thresh",
  		.data		= &init_net.ipv4.sysctl_tcp_pingpong_thresh,
 diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
-index b849d76b24da..fd2118a23b8f 100644
+index 7991a7589109..6042d9246894 100644
 --- a/net/ipv4/tcp_input.c
 +++ b/net/ipv4/tcp_input.c
-@@ -5682,6 +5682,7 @@ static bool tcp_prune_ofo_queue(struct sock *sk, const struct sk_buff *in_skb)
+@@ -5693,6 +5693,7 @@ static bool tcp_prune_ofo_queue(struct sock *sk, const struct sk_buff *in_skb)
  static int tcp_prune_queue(struct sock *sk, const struct sk_buff *in_skb)
  {
  	struct tcp_sock *tp = tcp_sk(sk);
@@ -99,7 +99,7 @@ index b849d76b24da..fd2118a23b8f 100644
  
  	NET_INC_STATS(sock_net(sk), LINUX_MIB_PRUNECALLED);
  
-@@ -5693,6 +5694,39 @@ static int tcp_prune_queue(struct sock *sk, const struct sk_buff *in_skb)
+@@ -5704,6 +5705,39 @@ static int tcp_prune_queue(struct sock *sk, const struct sk_buff *in_skb)
  	if (atomic_read(&sk->sk_rmem_alloc) <= sk->sk_rcvbuf)
  		return 0;
  
@@ -139,7 +139,7 @@ index b849d76b24da..fd2118a23b8f 100644
  	tcp_collapse_ofo_queue(sk);
  	if (!skb_queue_empty(&sk->sk_receive_queue))
  		tcp_collapse(sk, &sk->sk_receive_queue, NULL,
-@@ -5711,6 +5745,8 @@ static int tcp_prune_queue(struct sock *sk, const struct sk_buff *in_skb)
+@@ -5722,6 +5756,8 @@ static int tcp_prune_queue(struct sock *sk, const struct sk_buff *in_skb)
  	if (atomic_read(&sk->sk_rmem_alloc) <= sk->sk_rcvbuf)
  		return 0;
  
@@ -149,10 +149,10 @@ index b849d76b24da..fd2118a23b8f 100644
  	 * drop receive data on the floor.  It will get retransmitted
  	 * and hopefully then we'll have sufficient space.
 diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index 8cce0d5489da..df3818b7cdb9 100644
+index 6a14f9e6fef6..3103dbcc0bdc 100644
 --- a/net/ipv4/tcp_ipv4.c
 +++ b/net/ipv4/tcp_ipv4.c
-@@ -3541,6 +3541,7 @@ static int __net_init tcp_sk_init(struct net *net)
+@@ -3542,6 +3542,7 @@ static int __net_init tcp_sk_init(struct net *net)
  
  	net->ipv4.sysctl_tcp_syn_linear_timeouts = 4;
  	net->ipv4.sysctl_tcp_shrink_window = 0;

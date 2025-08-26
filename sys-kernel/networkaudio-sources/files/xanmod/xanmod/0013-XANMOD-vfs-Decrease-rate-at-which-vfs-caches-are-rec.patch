@@ -1,8 +1,8 @@
-From 185191cd2a98629f35cb5cd6c0116ceb33635dd8 Mon Sep 17 00:00:00 2001
+From 29bff014ffe0d6179dadb9d7882632c57d93822c Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
-Date: Mon, 29 Jan 2018 16:59:22 +0000
-Subject: [PATCH 12/19] XANMOD: dcache: cache_pressure = 50 decreases the rate
- at which VFS caches are reclaimed
+Date: Mon, 28 Jul 2025 17:20:16 +0000
+Subject: [PATCH 13/20] XANMOD: vfs: Decrease rate at which vfs caches are
+ reclaimed
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
 ---
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/dcache.c b/fs/dcache.c
-index bd5aa136153a..7e9ce8835d77 100644
+index 03d58b2d4fa3..8750a35120d0 100644
 --- a/fs/dcache.c
 +++ b/fs/dcache.c
 @@ -73,7 +73,7 @@
@@ -19,9 +19,9 @@ index bd5aa136153a..7e9ce8835d77 100644
   */
 -static int sysctl_vfs_cache_pressure __read_mostly = 100;
 +static int sysctl_vfs_cache_pressure __read_mostly = 50;
+ static int sysctl_vfs_cache_pressure_denom __read_mostly = 100;
  
  unsigned long vfs_pressure_ratio(unsigned long val)
- {
 -- 
 2.47.2
 

@@ -1,7 +1,7 @@
-From fa6afaf41316657a46bc70c9e942051e15e837fd Mon Sep 17 00:00:00 2001
+From 3ad875b148a5b6cd734767979c0e99abde0cd27d Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Sun, 15 Sep 2024 23:03:38 +0000
-Subject: [PATCH 06/19] XANMOD: sched: Add yield_type sysctl to reduce or
+Subject: [PATCH 07/20] XANMOD: sched: Add yield_type sysctl to reduce or
  disable sched_yield
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -11,10 +11,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  2 files changed, 26 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index c326de1344fb..2f123b8eaacb 100644
+index 547c1f05b667..7b978a608f12 100644
 --- a/kernel/sched/syscalls.c
 +++ b/kernel/sched/syscalls.c
-@@ -1349,15 +1349,29 @@ SYSCALL_DEFINE3(sched_getaffinity, pid_t, pid, unsigned int, len,
+@@ -1350,15 +1350,29 @@ SYSCALL_DEFINE3(sched_getaffinity, pid_t, pid, unsigned int, len,
  	return ret;
  }
  
@@ -46,10 +46,10 @@ index c326de1344fb..2f123b8eaacb 100644
  	preempt_disable();
  	rq_unlock_irq(rq, &rf);
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 3b7a7308e35b..e1d7554b16d5 100644
+index 9b4f0cff76ea..e99919af8697 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -80,6 +80,8 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
+@@ -73,6 +73,8 @@ EXPORT_SYMBOL_GPL(sysctl_long_vals);
  
  #if defined(CONFIG_SYSCTL)
  
@@ -58,10 +58,10 @@ index 3b7a7308e35b..e1d7554b16d5 100644
  /* Constants used for minimum and maximum */
  static const int ngroups_max = NGROUPS_MAX;
  static const int cap_last_cap = CAP_LAST_CAP;
-@@ -1595,6 +1597,15 @@ static const struct ctl_table kern_table[] = {
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec,
- 	},
+@@ -1581,6 +1583,15 @@ int proc_do_static_key(const struct ctl_table *table, int write,
+ }
+ 
+ static const struct ctl_table kern_table[] = {
 +	{
 +		.procname	= "yield_type",
 +		.data		= &sysctl_sched_yield_type,
@@ -72,8 +72,8 @@ index 3b7a7308e35b..e1d7554b16d5 100644
 +		.extra2		= SYSCTL_TWO,
 +	},
  #ifdef CONFIG_USER_NS
-        {
-               	.procname	= "unprivileged_userns_clone",
+ 	{
+ 		.procname	= "unprivileged_userns_clone",
 -- 
 2.47.2
 

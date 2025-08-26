@@ -1,7 +1,7 @@
-From 6c75a84f9f89c848e76650cc66672246fa62843f Mon Sep 17 00:00:00 2001
+From 6412c4a256e906ab8bbcddc1be56910613f3c375 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Mon, 16 Sep 2024 15:36:01 +0000
-Subject: [PATCH 09/19] XANMOD: block: Set rq_affinity to force complete I/O
+Subject: [PATCH 10/20] XANMOD: block: Set rq_affinity to force complete I/O
  requests on same CPU
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,10 +10,10 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 9a1f0ee40b56..e0dc23a234ce 100644
+index 181a0deadc9e..56031f7aa114 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -647,7 +647,8 @@ enum {
+@@ -655,7 +655,8 @@ enum {
  	QUEUE_FLAG_MAX
  };
  

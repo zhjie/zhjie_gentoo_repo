@@ -1,0 +1,24 @@
+From d034a044b32f6b646b9b5f798d1b707b2ba02dfc Mon Sep 17 00:00:00 2001
+From: Alexandre Frade <kernel@xanmod.org>
+Date: Mon, 24 Apr 2023 04:50:34 +0000
+Subject: [PATCH 20/20] XANMOD: scripts/setlocalversion: Move localversion*
+ files to the end
+
+Signed-off-by: Alexandre Frade <kernel@xanmod.org>
+---
+ scripts/setlocalversion | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/setlocalversion b/scripts/setlocalversion
+index 6ce26e12342f..362978dd86a4 100755
+--- a/scripts/setlocalversion
++++ b/scripts/setlocalversion
+@@ -208,4 +208,4 @@ elif [ "${LOCALVERSION+set}" != "set" ]; then
+ 	scm_version="$(scm_version --short)"
+ fi
+ 
+-echo "${KERNELVERSION}${file_localversion}${config_localversion}${LOCALVERSION}${scm_version}"
++echo "${KERNELVERSION}${config_localversion}${LOCALVERSION}${scm_version}${file_localversion}"
+-- 
+2.47.2
+

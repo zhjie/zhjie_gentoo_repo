@@ -1,7 +1,7 @@
-From 3cd805916cf93d70ef73a006ed54c737c1bb44ca Mon Sep 17 00:00:00 2001
+From dc18410893372cca1aad9e912fd119f462b2d89a Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Thu, 11 May 2023 19:41:41 +0000
-Subject: [PATCH 05/19] XANMOD: fair: Set scheduler tunable latencies to
+Subject: [PATCH 06/20] XANMOD: fair: Set scheduler tunable latencies to
  unscaled
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 0fb9bf995a47..89e16271b007 100644
+index 7a14da5396fb..233d64825077 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -69,7 +69,7 @@

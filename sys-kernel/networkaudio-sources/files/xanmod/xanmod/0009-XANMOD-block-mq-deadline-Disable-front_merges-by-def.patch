@@ -1,7 +1,7 @@
-From 83f38053e977907d085d7f27a24f1b2844a03f1c Mon Sep 17 00:00:00 2001
+From 5a6a3325e1d23b8981e9ed747276a2b6d7d316a2 Mon Sep 17 00:00:00 2001
 From: Alexandre Frade <kernel@xanmod.org>
 Date: Thu, 6 Jan 2022 16:59:01 +0000
-Subject: [PATCH 08/19] XANMOD: block/mq-deadline: Disable front_merges by
+Subject: [PATCH 09/20] XANMOD: block/mq-deadline: Disable front_merges by
  default
 
 Signed-off-by: Alexandre Frade <kernel@xanmod.org>
@@ -10,7 +10,7 @@ Signed-off-by: Alexandre Frade <kernel@xanmod.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 233c9712ec57..0f8218a2650a 100644
+index f3e38471d140..79e0e54542c7 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
 @@ -600,7 +600,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)

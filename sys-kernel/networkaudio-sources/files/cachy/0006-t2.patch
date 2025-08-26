@@ -1,27 +1,25 @@
-From 573474d7dca703a36e5e068bf07cbf422b890ea2 Mon Sep 17 00:00:00 2001
+From d0e3c9cbbd21c49d9a5e3d1060407e61c6945012 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 25 Jul 2025 20:24:59 +0200
+Date: Thu, 21 Aug 2025 14:52:31 +0200
 Subject: [PATCH 6/6] t2
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
- Documentation/core-api/printk-formats.rst     |   32 +
  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |    3 +
- drivers/gpu/drm/i915/display/intel_ddi.c      |    4 +
+ drivers/gpu/drm/i915/display/intel_ddi.c      |    3 +
  drivers/gpu/drm/i915/display/intel_fbdev.c    |    6 +-
  drivers/gpu/drm/i915/display/intel_quirks.c   |   15 +
  drivers/gpu/drm/i915/display/intel_quirks.h   |    1 +
- drivers/gpu/drm/tiny/appletbdrm.c             |    4 +-
  drivers/gpu/vga/vga_switcheroo.c              |    7 +-
  drivers/hid/Kconfig                           |   11 +-
  drivers/hid/Makefile                          |    4 +
  drivers/hid/dockchannel-hid/Kconfig           |   14 +
  drivers/hid/dockchannel-hid/Makefile          |    6 +
  drivers/hid/dockchannel-hid/dockchannel-hid.c | 1213 +++++++++++++++++
- drivers/hid/hid-apple.c                       |   45 +-
+ drivers/hid/hid-apple.c                       |   62 +-
  drivers/hid/hid-core.c                        |   11 +-
  drivers/hid/hid-ids.h                         |   25 +-
- drivers/hid/hid-magicmouse.c                  |  908 ++++++++++--
+ drivers/hid/hid-magicmouse.c                  |  924 +++++++++++--
  drivers/hid/hid-multitouch.c                  |   62 +-
  drivers/hid/hid-quirks.c                      |    9 +-
  drivers/hid/spi-hid/Kconfig                   |   26 +
@@ -30,9 +28,6 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/hid/spi-hid/spi-hid-apple-of.c        |  151 ++
  drivers/hid/spi-hid/spi-hid-apple.h           |   35 +
  drivers/hwmon/applesmc.c                      | 1138 ++++++++++++----
- drivers/iommu/intel/dmar.c                    |    4 +
- drivers/iommu/intel/iommu.c                   |  113 +-
- drivers/iommu/intel/iommu.h                   |   21 +-
  drivers/pci/vgaarb.c                          |    1 +
  drivers/platform/x86/apple-gmux.c             |   18 +
  drivers/soc/apple/Kconfig                     |   24 +
@@ -69,10 +64,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/staging/apple-bce/vhci/vhci.h         |   52 +
  include/linux/hid.h                           |    6 +-
  include/linux/soc/apple/dockchannel.h         |   26 +
- lib/tests/printf_kunit.c                      |   39 +-
- lib/vsprintf.c                                |   40 +-
- scripts/checkpatch.pl                         |    2 +-
- 67 files changed, 10943 insertions(+), 533 deletions(-)
+ 59 files changed, 10795 insertions(+), 458 deletions(-)
  create mode 100644 drivers/hid/dockchannel-hid/Kconfig
  create mode 100644 drivers/hid/dockchannel-hid/Makefile
  create mode 100644 drivers/hid/dockchannel-hid/dockchannel-hid.c
@@ -111,54 +103,11 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  create mode 100644 drivers/staging/apple-bce/vhci/vhci.h
  create mode 100644 include/linux/soc/apple/dockchannel.h
 
-diff --git a/Documentation/core-api/printk-formats.rst b/Documentation/core-api/printk-formats.rst
-index 4bdc394e86af..f531873bb3c9 100644
---- a/Documentation/core-api/printk-formats.rst
-+++ b/Documentation/core-api/printk-formats.rst
-@@ -648,6 +648,38 @@ Examples::
- 	%p4cc	Y10  little-endian (0x20303159)
- 	%p4cc	NV12 big-endian (0xb231564e)
- 
-+Generic FourCC code
-+-------------------
-+
-+::
-+	%p4c[h[R]lb]	gP00 (0x67503030)
-+
-+Print a generic FourCC code, as both ASCII characters and its numerical
-+value as hexadecimal.
-+
-+The generic FourCC code is always printed in the big-endian format,
-+the most significant byte first. This is the opposite of V4L/DRM FourCCs.
-+
-+The additional ``h``, ``hR``, ``l``, and ``b`` specifiers define what
-+endianness is used to load the stored bytes. The data might be interpreted
-+using the host, reversed host byte order, little-endian, or big-endian.
-+
-+Passed by reference.
-+
-+Examples for a little-endian machine, given &(u32)0x67503030::
-+
-+	%p4ch	gP00 (0x67503030)
-+	%p4chR	00Pg (0x30305067)
-+	%p4cl	gP00 (0x67503030)
-+	%p4cb	00Pg (0x30305067)
-+
-+Examples for a big-endian machine, given &(u32)0x67503030::
-+
-+	%p4ch	gP00 (0x67503030)
-+	%p4chR	00Pg (0x30305067)
-+	%p4cl	00Pg (0x30305067)
-+	%p4cb	gP00 (0x67503030)
-+
- Rust
- ----
- 
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index 6ef3fedc1233..59deaa42c062 100644
+index a5db963da610..90d83b721ed3 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -2281,6 +2281,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
+@@ -2315,6 +2315,9 @@ static int amdgpu_pci_probe(struct pci_dev *pdev,
  	int ret, retry = 0, i;
  	bool supports_atomic = false;
  
@@ -169,18 +118,10 @@ index 6ef3fedc1233..59deaa42c062 100644
  	    (pdev->class >> 8) == PCI_CLASS_DISPLAY_OTHER) {
  		if (drm_firmware_drivers_only() && amdgpu_modeset == -1)
 diff --git a/drivers/gpu/drm/i915/display/intel_ddi.c b/drivers/gpu/drm/i915/display/intel_ddi.c
-index f38c998935b9..1df3ddb366f4 100644
+index d58f8fc37326..38df2d26baf2 100644
 --- a/drivers/gpu/drm/i915/display/intel_ddi.c
 +++ b/drivers/gpu/drm/i915/display/intel_ddi.c
-@@ -4848,6 +4848,7 @@ static int intel_ddi_init_hdmi_connector(struct intel_digital_port *dig_port)
- 
- static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
- {
-+	struct intel_display *display = to_intel_display(dig_port);
- 	struct drm_i915_private *dev_priv = to_i915(dig_port->base.base.dev);
- 
- 	if (dig_port->base.port != PORT_A)
-@@ -4856,6 +4857,9 @@ static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
+@@ -4832,6 +4832,9 @@ static bool intel_ddi_a_force_4_lanes(struct intel_digital_port *dig_port)
  	if (dig_port->ddi_a_4_lanes)
  		return false;
  
@@ -191,7 +132,7 @@ index f38c998935b9..1df3ddb366f4 100644
  	 *                     supported configuration
  	 */
 diff --git a/drivers/gpu/drm/i915/display/intel_fbdev.c b/drivers/gpu/drm/i915/display/intel_fbdev.c
-index adc19d5607de..64882765aa0a 100644
+index 2dc4029d71ed..eaa82801ef01 100644
 --- a/drivers/gpu/drm/i915/display/intel_fbdev.c
 +++ b/drivers/gpu/drm/i915/display/intel_fbdev.c
 @@ -224,10 +224,10 @@ int intel_fbdev_driver_fbdev_probe(struct drm_fb_helper *helper,
@@ -202,7 +143,7 @@ index adc19d5607de..64882765aa0a 100644
 -	     sizes->fb_height > fb->base.height)) {
 +	    (sizes->fb_width != fb->base.width ||
 +	     sizes->fb_height != fb->base.height)) {
- 		drm_dbg_kms(&dev_priv->drm,
+ 		drm_dbg_kms(display->drm,
 -			    "BIOS fb too small (%dx%d), we require (%dx%d),"
 +			    "BIOS fb not valid (%dx%d), we require (%dx%d),"
  			    " releasing it\n",
@@ -253,28 +194,6 @@ index cafdebda7535..a5296f82776e 100644
  };
  
  void intel_init_quirks(struct intel_display *display);
-diff --git a/drivers/gpu/drm/tiny/appletbdrm.c b/drivers/gpu/drm/tiny/appletbdrm.c
-index 4370ba22dd88..8643216bad98 100644
---- a/drivers/gpu/drm/tiny/appletbdrm.c
-+++ b/drivers/gpu/drm/tiny/appletbdrm.c
-@@ -214,7 +214,7 @@ static int appletbdrm_read_response(struct appletbdrm_device *adev,
- 	}
- 
- 	if (response->msg != expected_response) {
--		drm_err(drm, "Unexpected response from device (expected %p4cc found %p4cc)\n",
-+		drm_err(drm, "Unexpected response from device (expected %p4cl found %p4cl)\n",
- 			&expected_response, &response->msg);
- 		return -EIO;
- 	}
-@@ -288,7 +288,7 @@ static int appletbdrm_get_information(struct appletbdrm_device *adev)
- 	}
- 
- 	if (pixel_format != APPLETBDRM_PIXEL_FORMAT) {
--		drm_err(drm, "Encountered unknown pixel format (%p4cc)\n", &pixel_format);
-+		drm_err(drm, "Encountered unknown pixel format (%p4cl)\n", &pixel_format);
- 		ret = -EINVAL;
- 		goto free_info;
- 	}
 diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
 index 18f2c92beff8..3de1bca45ed2 100644
 --- a/drivers/gpu/vga/vga_switcheroo.c
@@ -294,7 +213,7 @@ index 18f2c92beff8..3de1bca45ed2 100644
  	}
  
 diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-index aeb4eabf3007..e7688c7fdc56 100644
+index 5bc1f086b855..1c2522d95934 100644
 --- a/drivers/hid/Kconfig
 +++ b/drivers/hid/Kconfig
 @@ -129,7 +129,7 @@ config HID_APPLE
@@ -306,7 +225,7 @@ index aeb4eabf3007..e7688c7fdc56 100644
  	help
  	Support for some Apple devices which less or more break
  	HID specification.
-@@ -717,11 +717,13 @@ config LOGIWHEELS_FF
+@@ -727,11 +727,13 @@ config LOGIWHEELS_FF
  
  config HID_MAGICMOUSE
  	tristate "Apple Magic Mouse/Trackpad multi-touch support"
@@ -321,7 +240,7 @@ index aeb4eabf3007..e7688c7fdc56 100644
  
  config HID_MALTRON
  	tristate "Maltron L90 keyboard"
-@@ -771,6 +773,7 @@ config HID_MULTITOUCH
+@@ -781,6 +783,7 @@ config HID_MULTITOUCH
  	  Say Y here if you have one of the following devices:
  	  - 3M PCT touch screens
  	  - ActionStar dual touch panels
@@ -329,7 +248,7 @@ index aeb4eabf3007..e7688c7fdc56 100644
  	  - Atmel panels
  	  - Cando dual touch panels
  	  - Chunghwa panels
-@@ -1437,4 +1440,8 @@ endif # HID
+@@ -1445,4 +1448,8 @@ endif # HID
  
  source "drivers/hid/usbhid/Kconfig"
  
@@ -339,10 +258,10 @@ index aeb4eabf3007..e7688c7fdc56 100644
 +
  endif # HID_SUPPORT
 diff --git a/drivers/hid/Makefile b/drivers/hid/Makefile
-index 85af5331ebd2..a0f58475434c 100644
+index 958f67193c85..f67db3d5d18f 100644
 --- a/drivers/hid/Makefile
 +++ b/drivers/hid/Makefile
-@@ -177,3 +177,7 @@ obj-$(CONFIG_ASUS_ALLY_HID)  += asus-ally-hid/
+@@ -176,3 +176,7 @@ obj-$(CONFIG_AMD_SFH_HID)       += amd-sfh-hid/
  obj-$(CONFIG_SURFACE_HID_CORE)  += surface-hid/
  
  obj-$(CONFIG_INTEL_THC_HID)     += intel-thc-hid/
@@ -1602,7 +1521,7 @@ index 000000000000..a712a724ded3
 +MODULE_AUTHOR("Hector Martin <marcan@marcan.st>");
 +MODULE_LICENSE("Dual MIT/GPL");
 diff --git a/drivers/hid/hid-apple.c b/drivers/hid/hid-apple.c
-index ed34f5cd5a91..ed8b87f7556b 100644
+index 3bed3f0c90c2..21ff5d1da011 100644
 --- a/drivers/hid/hid-apple.c
 +++ b/drivers/hid/hid-apple.c
 @@ -486,6 +486,7 @@ static int hidinput_apple_event(struct hid_device *hid, struct input_dev *input,
@@ -1630,7 +1549,7 @@ index ed34f5cd5a91..ed8b87f7556b 100644
  		else if (hid->product < 0x21d || hid->product >= 0x300)
  			table = powerbook_fn_keys;
  		else
-@@ -910,6 +921,13 @@ static int apple_probe(struct hid_device *hdev,
+@@ -911,6 +922,13 @@ static int apple_probe(struct hid_device *hdev,
  	struct apple_sc *asc;
  	int ret;
  
@@ -1644,7 +1563,45 @@ index ed34f5cd5a91..ed8b87f7556b 100644
  	asc = devm_kzalloc(&hdev->dev, sizeof(*asc), GFP_KERNEL);
  	if (asc == NULL) {
  		hid_err(hdev, "can't alloc apple descriptor\n");
-@@ -1127,21 +1145,28 @@ static const struct hid_device_id apple_devices[] = {
+@@ -934,12 +952,10 @@ static int apple_probe(struct hid_device *hdev,
+ 		return ret;
+ 	}
+ 
+-	if (quirks & APPLE_RDESC_BATTERY) {
+-		timer_setup(&asc->battery_timer, apple_battery_timer_tick, 0);
+-		mod_timer(&asc->battery_timer,
+-			  jiffies + msecs_to_jiffies(APPLE_BATTERY_TIMEOUT_MS));
+-		apple_fetch_battery(hdev);
+-	}
++	timer_setup(&asc->battery_timer, apple_battery_timer_tick, 0);
++	mod_timer(&asc->battery_timer,
++		  jiffies + msecs_to_jiffies(APPLE_BATTERY_TIMEOUT_MS));
++	apple_fetch_battery(hdev);
+ 
+ 	if (quirks & APPLE_BACKLIGHT_CTL)
+ 		apple_backlight_init(hdev);
+@@ -953,9 +969,7 @@ static int apple_probe(struct hid_device *hdev,
+ 	return 0;
+ 
+ out_err:
+-	if (quirks & APPLE_RDESC_BATTERY)
+-		timer_delete_sync(&asc->battery_timer);
+-
++	timer_delete_sync(&asc->battery_timer);
+ 	hid_hw_stop(hdev);
+ 	return ret;
+ }
+@@ -964,8 +978,7 @@ static void apple_remove(struct hid_device *hdev)
+ {
+ 	struct apple_sc *asc = hid_get_drvdata(hdev);
+ 
+-	if (asc->quirks & APPLE_RDESC_BATTERY)
+-		timer_delete_sync(&asc->battery_timer);
++	timer_delete_sync(&asc->battery_timer);
+ 
+ 	hid_hw_stop(hdev);
+ }
+@@ -1133,21 +1146,28 @@ static const struct hid_device_id apple_devices[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_JIS),
  		.driver_data = APPLE_HAS_FN | APPLE_RDESC_JIS },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J140K),
@@ -1681,7 +1638,7 @@ index ed34f5cd5a91..ed8b87f7556b 100644
  	{ HID_BLUETOOTH_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_ALU_WIRELESS_2009_ANSI),
  		.driver_data = APPLE_NUMLOCK_EMULATION | APPLE_HAS_FN },
  	{ HID_BLUETOOTH_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_ALU_WIRELESS_2009_ISO),
-@@ -1169,6 +1194,10 @@ static const struct hid_device_id apple_devices[] = {
+@@ -1175,6 +1195,10 @@ static const struct hid_device_id apple_devices[] = {
  		.driver_data = APPLE_HAS_FN | APPLE_ISO_TILDE_QUIRK | APPLE_RDESC_BATTERY },
  	{ HID_BLUETOOTH_DEVICE(BT_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_MAGIC_KEYBOARD_NUMPAD_2021),
  		.driver_data = APPLE_HAS_FN | APPLE_ISO_TILDE_QUIRK },
@@ -1693,10 +1650,10 @@ index ed34f5cd5a91..ed8b87f7556b 100644
  		.driver_data = APPLE_MAGIC_BACKLIGHT },
  
 diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
-index cd4215007d1a..4dd55546f446 100644
+index 4fd3fff4661c..cd6c1cc7d010 100644
 --- a/drivers/hid/hid-core.c
 +++ b/drivers/hid/hid-core.c
-@@ -464,7 +464,10 @@ static int hid_parser_global(struct hid_parser *parser, struct hid_item *item)
+@@ -468,7 +468,10 @@ static int hid_parser_global(struct hid_parser *parser, struct hid_item *item)
  
  	case HID_GLOBAL_ITEM_TAG_REPORT_SIZE:
  		parser->global.report_size = item_udata(item);
@@ -1708,7 +1665,7 @@ index cd4215007d1a..4dd55546f446 100644
  			hid_err(parser->device, "invalid report_size %d\n",
  					parser->global.report_size);
  			return -1;
-@@ -2303,6 +2306,12 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
+@@ -2307,6 +2310,12 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
  	case BUS_I2C:
  		bus = "I2C";
  		break;
@@ -1722,7 +1679,7 @@ index cd4215007d1a..4dd55546f446 100644
  		bus = "VIRTUAL";
  		break;
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index 965ee2da07d2..4af0fa7c8eee 100644
+index 9458af1c2630..bc2fba4e7a4d 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
 @@ -93,6 +93,8 @@
@@ -1734,7 +1691,7 @@ index 965ee2da07d2..4af0fa7c8eee 100644
  #define USB_DEVICE_ID_APPLE_MIGHTYMOUSE	0x0304
  #define USB_DEVICE_ID_APPLE_MAGICMOUSE	0x030d
  #define USB_DEVICE_ID_APPLE_MAGICMOUSE2	0x0269
-@@ -172,14 +174,15 @@
+@@ -173,14 +175,15 @@
  #define USB_DEVICE_ID_APPLE_WELLSPRING9_ANSI	0x0272
  #define USB_DEVICE_ID_APPLE_WELLSPRING9_ISO		0x0273
  #define USB_DEVICE_ID_APPLE_WELLSPRING9_JIS		0x0274
@@ -1758,7 +1715,7 @@ index 965ee2da07d2..4af0fa7c8eee 100644
  #define USB_DEVICE_ID_APPLE_FOUNTAIN_TP_ONLY	0x030a
  #define USB_DEVICE_ID_APPLE_GEYSER1_TP_ONLY	0x030b
  #define USB_DEVICE_ID_APPLE_IRCONTROL	0x8240
-@@ -193,6 +196,12 @@
+@@ -194,6 +197,12 @@
  #define USB_DEVICE_ID_APPLE_MAGIC_KEYBOARD_NUMPAD_2021   0x029f
  #define USB_DEVICE_ID_APPLE_TOUCHBAR_BACKLIGHT 0x8102
  #define USB_DEVICE_ID_APPLE_TOUCHBAR_DISPLAY 0x8302
@@ -1772,7 +1729,7 @@ index 965ee2da07d2..4af0fa7c8eee 100644
  #define USB_VENDOR_ID_ASETEK			0x2433
  #define USB_DEVICE_ID_ASETEK_INVICTA		0xf300
 diff --git a/drivers/hid/hid-magicmouse.c b/drivers/hid/hid-magicmouse.c
-index adfa329e917b..0787581a25cc 100644
+index 226682762db3..328df8118384 100644
 --- a/drivers/hid/hid-magicmouse.c
 +++ b/drivers/hid/hid-magicmouse.c
 @@ -60,8 +60,14 @@ MODULE_PARM_DESC(report_undeciphered, "Report undeciphered multi-touch state fie
@@ -1949,7 +1906,7 @@ index adfa329e917b..0787581a25cc 100644
  		short scroll_x;
  		short scroll_y;
  		short scroll_x_hr;
-@@ -143,14 +275,186 @@ struct magicmouse_sc {
+@@ -143,14 +275,187 @@ struct magicmouse_sc {
  		u8 size;
  		bool scroll_x_active;
  		bool scroll_y_active;
@@ -2013,6 +1970,7 @@ index adfa329e917b..0787581a25cc 100644
 +			feature = feature_mt_trackpad2_usb;
 +			break;
 +		case USB_DEVICE_ID_APPLE_MAGICMOUSE2:
++		case USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC:
 +			feature_size = sizeof(feature_mt_mouse2);
 +			feature = feature_mt_mouse2;
 +			break;
@@ -2138,7 +2096,7 @@ index adfa329e917b..0787581a25cc 100644
  static int magicmouse_firm_touch(struct magicmouse_sc *msc)
  {
  	int touch = -1;
-@@ -192,7 +496,7 @@ static void magicmouse_emit_buttons(struct magicmouse_sc *msc, int state)
+@@ -192,7 +497,7 @@ static void magicmouse_emit_buttons(struct magicmouse_sc *msc, int state)
  		} else if (last_state != 0) {
  			state = last_state;
  		} else if ((id = magicmouse_firm_touch(msc)) >= 0) {
@@ -2147,7 +2105,7 @@ index adfa329e917b..0787581a25cc 100644
  			if (x < middle_button_start)
  				state = 1;
  			else if (x > middle_button_stop)
-@@ -255,8 +559,8 @@ static void magicmouse_emit_touch(struct magicmouse_sc *msc, int raw_id, u8 *tda
+@@ -256,8 +561,8 @@ static void magicmouse_emit_touch(struct magicmouse_sc *msc, int raw_id, u8 *tda
  
  	/* Store tracking ID and other fields. */
  	msc->tracking_ids[raw_id] = id;
@@ -2158,7 +2116,7 @@ index adfa329e917b..0787581a25cc 100644
  	msc->touches[id].size = size;
  
  	/* If requested, emulate a scroll wheel by detecting small
-@@ -385,6 +689,14 @@ static int magicmouse_raw_event(struct hid_device *hdev,
+@@ -387,6 +692,14 @@ static int magicmouse_raw_event(struct hid_device *hdev,
  		struct hid_report *report, u8 *data, int size)
  {
  	struct magicmouse_sc *msc = hid_get_drvdata(hdev);
@@ -2173,7 +2131,7 @@ index adfa329e917b..0787581a25cc 100644
  	struct input_dev *input = msc->input;
  	int x = 0, y = 0, ii, clicks = 0, npoints;
  
-@@ -515,6 +827,191 @@ static int magicmouse_raw_event(struct hid_device *hdev,
+@@ -518,6 +831,191 @@ static int magicmouse_raw_event(struct hid_device *hdev,
  	return 1;
  }
  
@@ -2365,7 +2323,7 @@ index adfa329e917b..0787581a25cc 100644
  static int magicmouse_event(struct hid_device *hdev, struct hid_field *field,
  		struct hid_usage *usage, __s32 value)
  {
-@@ -532,7 +1029,17 @@ static int magicmouse_event(struct hid_device *hdev, struct hid_field *field,
+@@ -536,7 +1034,17 @@ static int magicmouse_event(struct hid_device *hdev, struct hid_field *field,
  	return 0;
  }
  
@@ -2384,7 +2342,7 @@ index adfa329e917b..0787581a25cc 100644
  {
  	int error;
  	int mt_flags = 0;
-@@ -610,7 +1117,7 @@ static int magicmouse_setup_input(struct input_dev *input, struct hid_device *hd
+@@ -615,7 +1123,7 @@ static int magicmouse_setup_input(struct input_dev *input, struct hid_device *hd
  
  	__set_bit(EV_ABS, input->evbit);
  
@@ -2393,7 +2351,7 @@ index adfa329e917b..0787581a25cc 100644
  	if (error)
  		return error;
  	input_set_abs_params(input, ABS_MT_TOUCH_MAJOR, 0, 255 << 2,
-@@ -689,6 +1196,171 @@ static int magicmouse_setup_input(struct input_dev *input, struct hid_device *hd
+@@ -695,6 +1203,171 @@ static int magicmouse_setup_input(struct input_dev *input, struct hid_device *hd
  	 */
  	__clear_bit(EV_REP, input->evbit);
  
@@ -2565,7 +2523,7 @@ index adfa329e917b..0787581a25cc 100644
  	return 0;
  }
  
-@@ -730,55 +1402,6 @@ static int magicmouse_input_configured(struct hid_device *hdev,
+@@ -736,86 +1409,17 @@ static int magicmouse_input_configured(struct hid_device *hdev,
  	return 0;
  }
  
@@ -2580,19 +2538,25 @@ index adfa329e917b..0787581a25cc 100644
 -	int ret;
 -	int feature_size;
 -
--	if (hdev->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 ||
--	    hdev->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC) {
--		if (hdev->vendor == BT_VENDOR_ID_APPLE) {
+-	switch (hdev->product) {
+-	case USB_DEVICE_ID_APPLE_MAGICTRACKPAD2:
+-	case USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC:
+-		switch (hdev->vendor) {
+-		case BT_VENDOR_ID_APPLE:
 -			feature_size = sizeof(feature_mt_trackpad2_bt);
 -			feature = feature_mt_trackpad2_bt;
--		} else { /* USB_VENDOR_ID_APPLE */
+-			break;
+-		default: /* USB_VENDOR_ID_APPLE */
 -			feature_size = sizeof(feature_mt_trackpad2_usb);
 -			feature = feature_mt_trackpad2_usb;
 -		}
--	} else if (hdev->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2) {
+-		break;
+-	case USB_DEVICE_ID_APPLE_MAGICMOUSE2:
+-	case USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC:
 -		feature_size = sizeof(feature_mt_mouse2);
 -		feature = feature_mt_mouse2;
--	} else {
+-		break;
+-	default:
 -		feature_size = sizeof(feature_mt);
 -		feature = feature_mt;
 -	}
@@ -2618,10 +2582,40 @@ index adfa329e917b..0787581a25cc 100644
 -		hid_err(msc->hdev, "unable to request touch data (%d)\n", ret);
 -}
 -
+-static bool is_usb_magicmouse2(__u32 vendor, __u32 product)
+-{
+-	if (vendor != USB_VENDOR_ID_APPLE)
+-		return false;
+-	return product == USB_DEVICE_ID_APPLE_MAGICMOUSE2 ||
+-	       product == USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC;
+-}
+-
+-static bool is_usb_magictrackpad2(__u32 vendor, __u32 product)
+-{
+-	if (vendor != USB_VENDOR_ID_APPLE)
+-		return false;
+-	return product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 ||
+-	       product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC;
+-}
+-
  static int magicmouse_fetch_battery(struct hid_device *hdev)
  {
  #ifdef CONFIG_HID_BATTERY_STRENGTH
-@@ -825,12 +1448,62 @@ static int magicmouse_probe(struct hid_device *hdev,
+ 	struct hid_report_enum *report_enum;
+ 	struct hid_report *report;
+ 
+-	if (!hdev->battery ||
+-	    (!is_usb_magicmouse2(hdev->vendor, hdev->product) &&
+-	     !is_usb_magictrackpad2(hdev->vendor, hdev->product)))
++	if (!hdev->battery || hdev->vendor != USB_VENDOR_ID_APPLE ||
++	    (hdev->product != USB_DEVICE_ID_APPLE_MAGICMOUSE2 &&
++	     hdev->product != USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC &&
++	     hdev->product != USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 &&
++	     hdev->product != USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC))
+ 		return -1;
+ 
+ 	report_enum = &hdev->report_enum[hdev->battery_report_type];
+@@ -852,12 +1456,62 @@ static int magicmouse_probe(struct hid_device *hdev,
  	struct hid_report *report;
  	int ret;
  
@@ -2684,106 +2678,118 @@ index adfa329e917b..0787581a25cc 100644
  	msc->scroll_accel = SCROLL_ACCEL_DEFAULT;
  	msc->hdev = hdev;
  	INIT_DEFERRABLE_WORK(&msc->work, magicmouse_enable_mt_work);
-@@ -868,25 +1541,51 @@ static int magicmouse_probe(struct hid_device *hdev,
- 		goto err_stop_hw;
+@@ -877,17 +1531,17 @@ static int magicmouse_probe(struct hid_device *hdev,
+ 		return ret;
  	}
  
--	if (id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE)
--		report = hid_register_report(hdev, HID_INPUT_REPORT,
--			MOUSE_REPORT_ID, 0);
--	else if (id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2)
--		report = hid_register_report(hdev, HID_INPUT_REPORT,
--			MOUSE2_REPORT_ID, 0);
--	else if (id->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 ||
--		 id->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC) {
--		if (id->vendor == BT_VENDOR_ID_APPLE)
--			report = hid_register_report(hdev, HID_INPUT_REPORT,
--				TRACKPAD2_BT_REPORT_ID, 0);
--		else /* USB_VENDOR_ID_APPLE */
-+	switch (id->bus) {
-+	case BUS_SPI:
-+		report = hid_register_report(hdev, HID_INPUT_REPORT, SPI_REPORT_ID, 0);
-+		break;
-+	case BUS_HOST:
-+		report = hid_register_report(hdev, HID_INPUT_REPORT, MTP_REPORT_ID, 0);
-+		break;
-+	default:
-+		switch (id->product) {
-+		case USB_DEVICE_ID_APPLE_MAGICMOUSE:
-+			report = hid_register_report(hdev, HID_INPUT_REPORT, MOUSE_REPORT_ID, 0);
-+			break;
-+		case USB_DEVICE_ID_APPLE_MAGICMOUSE2:
-+			report = hid_register_report(hdev, HID_INPUT_REPORT, MOUSE2_REPORT_ID, 0);
-+			break;
-+		case USB_DEVICE_ID_APPLE_MAGICTRACKPAD2:
-+		case USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC:
-+			switch (id->vendor) {
-+ 			case BT_VENDOR_ID_APPLE:
-+ 				report = hid_register_report(hdev, HID_INPUT_REPORT,
-+					TRACKPAD2_BT_REPORT_ID, 0);
-+				break;
-+			default:
-+				report = hid_register_report(hdev, HID_INPUT_REPORT,
-+					TRACKPAD2_USB_REPORT_ID, 0);
-+			}
-+			break;
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J140K:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J132:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J680:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J680_ALT:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J213:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J214K:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J223:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J230K:
-+		case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J152F:
- 			report = hid_register_report(hdev, HID_INPUT_REPORT,
+-	if (is_usb_magicmouse2(id->vendor, id->product) ||
+-	    is_usb_magictrackpad2(id->vendor, id->product)) {
+-		timer_setup(&msc->battery_timer, magicmouse_battery_timer_tick, 0);
+-		mod_timer(&msc->battery_timer,
+-			  jiffies + msecs_to_jiffies(USB_BATTERY_TIMEOUT_MS));
+-		magicmouse_fetch_battery(hdev);
+-	}
+-
+-	if (is_usb_magicmouse2(id->vendor, id->product) ||
+-	    (is_usb_magictrackpad2(id->vendor, id->product) &&
+-	     hdev->type != HID_TYPE_USBMOUSE))
++	timer_setup(&msc->battery_timer, magicmouse_battery_timer_tick, 0);
++	mod_timer(&msc->battery_timer,
++		  jiffies + msecs_to_jiffies(USB_BATTERY_TIMEOUT_MS));
++	magicmouse_fetch_battery(hdev);
++
++	if (id->vendor == USB_VENDOR_ID_APPLE &&
++	    (id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2 ||
++	     id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC ||
++	     ((id->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 ||
++	       id->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC) &&
++	      hdev->type != HID_TYPE_USBMOUSE)))
+ 		return 0;
+ 
+ 	if (!msc->input) {
+@@ -916,11 +1570,29 @@ static int magicmouse_probe(struct hid_device *hdev,
  				TRACKPAD2_USB_REPORT_ID, 0);
--	} else { /* USB_DEVICE_ID_APPLE_MAGICTRACKPAD */
+ 		}
+ 		break;
+-	default: /* USB_DEVICE_ID_APPLE_MAGICTRACKPAD */
 -		report = hid_register_report(hdev, HID_INPUT_REPORT,
 -			TRACKPAD_REPORT_ID, 0);
--		report = hid_register_report(hdev, HID_INPUT_REPORT,
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J140K:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J132:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J680:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J680_ALT:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J213:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J214K:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J223:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J230K:
++	case USB_DEVICE_ID_APPLE_WELLSPRINGT2_J152F:
+ 		report = hid_register_report(hdev, HID_INPUT_REPORT,
 -			DOUBLE_REPORT_ID, 0);
-+			break;
-+		default: /* USB_DEVICE_ID_APPLE_MAGICTRACKPAD */
++			TRACKPAD2_USB_REPORT_ID, 0);
++		break;
++	default: /* USB_DEVICE_ID_APPLE_MAGICTRACKPAD */
++		if (id->bus == BUS_SPI) {
++			report = hid_register_report(hdev, HID_INPUT_REPORT, SPI_REPORT_ID, 0);
++		} else if (id->bus == BUS_HOST) {
++			report = hid_register_report(hdev, HID_INPUT_REPORT, MTP_REPORT_ID, 0);
++		} else {
 +			report = hid_register_report(hdev, HID_INPUT_REPORT,
 +				TRACKPAD_REPORT_ID, 0);
 +			report = hid_register_report(hdev, HID_INPUT_REPORT,
 +				DOUBLE_REPORT_ID, 0);
-+		}		
++		}
  	}
  
  	if (!report) {
-@@ -896,21 +1595,14 @@ static int magicmouse_probe(struct hid_device *hdev,
+@@ -930,6 +1602,10 @@ static int magicmouse_probe(struct hid_device *hdev,
  	}
  	report->size = 6;
  
--	/*
--	 * Some devices repond with 'invalid report id' when feature
--	 * report switching it into multitouch mode is sent to it.
--	 *
--	 * This results in -EIO from the _raw low-level transport callback,
--	 * but there seems to be no other way of switching the mode.
--	 * Thus the super-ugly hacky success check below.
--	 */
--	ret = magicmouse_enable_multitouch(hdev);
--	if (ret != -EIO && ret < 0) {
--		hid_err(hdev, "unable to request touch data (%d)\n", ret);
--		goto err_stop_hw;
--	}
--	if (ret == -EIO && id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2) {
--		schedule_delayed_work(&msc->work, msecs_to_jiffies(500));
 +	/* MTP devices do not need the MT enable, this is handled by the MTP driver */
 +	if (id->bus == BUS_HOST)
 +		return 0;
 +
-+	/* SPI devices need to watch for reset events to re-send the MT enable */
-+	if (id->bus == BUS_SPI) {
-+		report = hid_register_report(hdev, HID_INPUT_REPORT, SPI_RESET_REPORT_ID, 0);
-+		report->size = 2;
- 	}
+ 	/*
+ 	 * Some devices repond with 'invalid report id' when feature
+ 	 * report switching it into multitouch mode is sent to it.
+@@ -950,10 +1626,7 @@ static int magicmouse_probe(struct hid_device *hdev,
  
  	return 0;
-@@ -981,10 +1673,42 @@ static const struct hid_device_id magic_mice[] = {
+ err_stop_hw:
+-	if (is_usb_magicmouse2(id->vendor, id->product) ||
+-	    is_usb_magictrackpad2(id->vendor, id->product))
+-		timer_delete_sync(&msc->battery_timer);
+-
++	timer_delete_sync(&msc->battery_timer);
+ 	hid_hw_stop(hdev);
+ 	return ret;
+ }
+@@ -964,9 +1637,7 @@ static void magicmouse_remove(struct hid_device *hdev)
+ 
+ 	if (msc) {
+ 		cancel_delayed_work_sync(&msc->work);
+-		if (is_usb_magicmouse2(hdev->vendor, hdev->product) ||
+-		    is_usb_magictrackpad2(hdev->vendor, hdev->product))
+-			timer_delete_sync(&msc->battery_timer);
++		timer_delete_sync(&msc->battery_timer);
+ 	}
+ 
+ 	hid_hw_stop(hdev);
+@@ -983,8 +1654,11 @@ static const __u8 *magicmouse_report_fixup(struct hid_device *hdev, __u8 *rdesc,
+ 	 *   0x05, 0x01,       // Usage Page (Generic Desktop)        0
+ 	 *   0x09, 0x02,       // Usage (Mouse)                       2
+ 	 */
+-	if ((is_usb_magicmouse2(hdev->vendor, hdev->product) ||
+-	     is_usb_magictrackpad2(hdev->vendor, hdev->product)) &&
++	if (hdev->vendor == USB_VENDOR_ID_APPLE &&
++	    (hdev->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2 ||
++	     hdev->product == USB_DEVICE_ID_APPLE_MAGICMOUSE2_USBC ||
++	     hdev->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2 ||
++	     hdev->product == USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC) &&
+ 	    *rsize == 83 && rdesc[46] == 0x84 && rdesc[58] == 0x85) {
+ 		hid_info(hdev,
+ 			 "fixing up magicmouse battery report descriptor\n");
+@@ -1023,10 +1697,42 @@ static const struct hid_device_id magic_mice[] = {
  		USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC), .driver_data = 0 },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE,
  		USB_DEVICE_ID_APPLE_MAGICTRACKPAD2_USBC), .driver_data = 0 },
@@ -2826,7 +2832,7 @@ index adfa329e917b..0787581a25cc 100644
  static struct hid_driver magicmouse_driver = {
  	.name = "magicmouse",
  	.id_table = magic_mice,
-@@ -995,6 +1719,10 @@ static struct hid_driver magicmouse_driver = {
+@@ -1037,6 +1743,10 @@ static struct hid_driver magicmouse_driver = {
  	.event = magicmouse_event,
  	.input_mapping = magicmouse_input_mapping,
  	.input_configured = magicmouse_input_configured,
@@ -2838,7 +2844,7 @@ index adfa329e917b..0787581a25cc 100644
  module_hid_driver(magicmouse_driver);
  
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 536a0a47518f..06afcce30119 100644
+index a1c54ffe02b4..294516a8f541 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -73,6 +73,7 @@ MODULE_LICENSE("GPL");
@@ -2974,7 +2980,7 @@ index 536a0a47518f..06afcce30119 100644
  	if (mtclass->quirks & MT_QUIRK_FIX_CONST_CONTACT_ID)
  		mt_fix_const_fields(hdev, HID_DG_CONTACTID);
  
-@@ -2310,6 +2357,11 @@ static const struct hid_device_id mt_devices[] = {
+@@ -2320,6 +2367,11 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_XIROKU,
  			USB_DEVICE_ID_XIROKU_CSR2) },
  
@@ -2987,7 +2993,7 @@ index 536a0a47518f..06afcce30119 100644
  	{ .driver_data = MT_CLS_GOOGLE,
  		HID_DEVICE(HID_BUS_ANY, HID_GROUP_ANY, USB_VENDOR_ID_GOOGLE,
 diff --git a/drivers/hid/hid-quirks.c b/drivers/hid/hid-quirks.c
-index 31508da93ba2..2cce36895a60 100644
+index 9bf9ce8dc803..ff11f1ad344d 100644
 --- a/drivers/hid/hid-quirks.c
 +++ b/drivers/hid/hid-quirks.c
 @@ -314,6 +314,7 @@ static const struct hid_device_id hid_have_special_driver[] = {
@@ -2998,7 +3004,7 @@ index 31508da93ba2..2cce36895a60 100644
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J213) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J214K) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRINGT2_J223) },
-@@ -972,14 +973,6 @@ static const struct hid_device_id hid_mouse_ignore_list[] = {
+@@ -973,14 +974,6 @@ static const struct hid_device_id hid_mouse_ignore_list[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_ANSI) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_ISO) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING9_JIS) },
@@ -6445,331 +6451,6 @@ index fc6d6a9053ce..698f44794453 100644
  MODULE_DESCRIPTION("Apple SMC");
  MODULE_LICENSE("GPL v2");
  MODULE_DEVICE_TABLE(dmi, applesmc_whitelist);
-diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
-index e540092d664d..9e17e8e56308 100644
---- a/drivers/iommu/intel/dmar.c
-+++ b/drivers/iommu/intel/dmar.c
-@@ -1099,6 +1099,9 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
- 	spin_lock_init(&iommu->device_rbtree_lock);
- 	mutex_init(&iommu->iopf_lock);
- 	iommu->node = NUMA_NO_NODE;
-+	spin_lock_init(&iommu->lock);
-+	ida_init(&iommu->domain_ida);
-+	mutex_init(&iommu->did_lock);
- 
- 	ver = readl(iommu->reg + DMAR_VER_REG);
- 	pr_info("%s: reg_base_addr %llx ver %d:%d cap %llx ecap %llx\n",
-@@ -1195,6 +1198,7 @@ static void free_iommu(struct intel_iommu *iommu)
- 	if (iommu->reg)
- 		unmap_iommu(iommu);
- 
-+	ida_destroy(&iommu->domain_ida);
- 	ida_free(&dmar_seq_ids, iommu->seq_id);
- 	kfree(iommu);
- }
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index ff07ee2940f5..a495aa76e5ee 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -1289,52 +1289,13 @@ static void iommu_disable_translation(struct intel_iommu *iommu)
- 	raw_spin_unlock_irqrestore(&iommu->register_lock, flag);
- }
- 
--static int iommu_init_domains(struct intel_iommu *iommu)
--{
--	u32 ndomains;
--
--	ndomains = cap_ndoms(iommu->cap);
--	pr_debug("%s: Number of Domains supported <%d>\n",
--		 iommu->name, ndomains);
--
--	spin_lock_init(&iommu->lock);
--
--	iommu->domain_ids = bitmap_zalloc(ndomains, GFP_KERNEL);
--	if (!iommu->domain_ids)
--		return -ENOMEM;
--
--	/*
--	 * If Caching mode is set, then invalid translations are tagged
--	 * with domain-id 0, hence we need to pre-allocate it. We also
--	 * use domain-id 0 as a marker for non-allocated domain-id, so
--	 * make sure it is not used for a real domain.
--	 */
--	set_bit(0, iommu->domain_ids);
--
--	/*
--	 * Vt-d spec rev3.0 (section 6.2.3.1) requires that each pasid
--	 * entry for first-level or pass-through translation modes should
--	 * be programmed with a domain id different from those used for
--	 * second-level or nested translation. We reserve a domain id for
--	 * this purpose. This domain id is also used for identity domain
--	 * in legacy mode.
--	 */
--	set_bit(FLPT_DEFAULT_DID, iommu->domain_ids);
--
--	return 0;
--}
--
- static void disable_dmar_iommu(struct intel_iommu *iommu)
- {
--	if (!iommu->domain_ids)
--		return;
--
- 	/*
- 	 * All iommu domains must have been detached from the devices,
- 	 * hence there should be no domain IDs in use.
- 	 */
--	if (WARN_ON(bitmap_weight(iommu->domain_ids, cap_ndoms(iommu->cap))
--		    > NUM_RESERVED_DID))
-+	if (WARN_ON(!ida_is_empty(&iommu->domain_ida)))
- 		return;
- 
- 	if (iommu->gcmd & DMA_GCMD_TE)
-@@ -1343,11 +1304,6 @@ static void disable_dmar_iommu(struct intel_iommu *iommu)
- 
- static void free_dmar_iommu(struct intel_iommu *iommu)
- {
--	if (iommu->domain_ids) {
--		bitmap_free(iommu->domain_ids);
--		iommu->domain_ids = NULL;
--	}
--
- 	if (iommu->copied_tables) {
- 		bitmap_free(iommu->copied_tables);
- 		iommu->copied_tables = NULL;
-@@ -1380,7 +1336,6 @@ static bool first_level_by_default(struct intel_iommu *iommu)
- int domain_attach_iommu(struct dmar_domain *domain, struct intel_iommu *iommu)
- {
- 	struct iommu_domain_info *info, *curr;
--	unsigned long ndomains;
- 	int num, ret = -ENOSPC;
- 
- 	if (domain->domain.type == IOMMU_DOMAIN_SVA)
-@@ -1390,40 +1345,36 @@ int domain_attach_iommu(struct dmar_domain *domain, struct intel_iommu *iommu)
- 	if (!info)
- 		return -ENOMEM;
- 
--	spin_lock(&iommu->lock);
-+	guard(mutex)(&iommu->did_lock);
- 	curr = xa_load(&domain->iommu_array, iommu->seq_id);
- 	if (curr) {
- 		curr->refcnt++;
--		spin_unlock(&iommu->lock);
- 		kfree(info);
- 		return 0;
- 	}
- 
--	ndomains = cap_ndoms(iommu->cap);
--	num = find_first_zero_bit(iommu->domain_ids, ndomains);
--	if (num >= ndomains) {
-+	num = ida_alloc_range(&iommu->domain_ida, IDA_START_DID,
-+			      cap_ndoms(iommu->cap) - 1, GFP_KERNEL);
-+	if (num < 0) {
- 		pr_err("%s: No free domain ids\n", iommu->name);
- 		goto err_unlock;
- 	}
- 
--	set_bit(num, iommu->domain_ids);
- 	info->refcnt	= 1;
- 	info->did	= num;
- 	info->iommu	= iommu;
- 	curr = xa_cmpxchg(&domain->iommu_array, iommu->seq_id,
--			  NULL, info, GFP_ATOMIC);
-+			  NULL, info, GFP_KERNEL);
- 	if (curr) {
- 		ret = xa_err(curr) ? : -EBUSY;
- 		goto err_clear;
- 	}
- 
--	spin_unlock(&iommu->lock);
- 	return 0;
- 
- err_clear:
--	clear_bit(info->did, iommu->domain_ids);
-+	ida_free(&iommu->domain_ida, info->did);
- err_unlock:
--	spin_unlock(&iommu->lock);
- 	kfree(info);
- 	return ret;
- }
-@@ -1435,15 +1386,14 @@ void domain_detach_iommu(struct dmar_domain *domain, struct intel_iommu *iommu)
- 	if (domain->domain.type == IOMMU_DOMAIN_SVA)
- 		return;
- 
--	spin_lock(&iommu->lock);
-+	guard(mutex)(&iommu->did_lock);
- 	info = xa_load(&domain->iommu_array, iommu->seq_id);
- 	if (--info->refcnt == 0) {
--		clear_bit(info->did, iommu->domain_ids);
-+		ida_free(&iommu->domain_ida, info->did);
- 		xa_erase(&domain->iommu_array, iommu->seq_id);
- 		domain->nid = NUMA_NO_NODE;
- 		kfree(info);
- 	}
--	spin_unlock(&iommu->lock);
- }
- 
- static void domain_exit(struct dmar_domain *domain)
-@@ -1681,9 +1631,8 @@ __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
- 	}
- 
- 	attr = prot & (DMA_PTE_READ | DMA_PTE_WRITE | DMA_PTE_SNP);
--	attr |= DMA_FL_PTE_PRESENT;
- 	if (domain->use_first_level) {
--		attr |= DMA_FL_PTE_US | DMA_FL_PTE_ACCESS;
-+		attr |= DMA_FL_PTE_PRESENT | DMA_FL_PTE_US | DMA_FL_PTE_ACCESS;
- 		if (prot & DMA_PTE_WRITE)
- 			attr |= DMA_FL_PTE_DIRTY;
- 	}
-@@ -2043,7 +1992,7 @@ static int copy_context_table(struct intel_iommu *iommu,
- 
- 		did = context_domain_id(&ce);
- 		if (did >= 0 && did < cap_ndoms(iommu->cap))
--			set_bit(did, iommu->domain_ids);
-+			ida_alloc_range(&iommu->domain_ida, did, did, GFP_KERNEL);
- 
- 		set_context_copied(iommu, bus, devfn);
- 		new_ce[idx] = ce;
-@@ -2170,11 +2119,6 @@ static int __init init_dmars(void)
- 		}
- 
- 		intel_iommu_init_qi(iommu);
--
--		ret = iommu_init_domains(iommu);
--		if (ret)
--			goto free_iommu;
--
- 		init_translation_status(iommu);
- 
- 		if (translation_pre_enabled(iommu) && !is_kdump_kernel()) {
-@@ -2652,9 +2596,7 @@ static int intel_iommu_add(struct dmar_drhd_unit *dmaru)
- 	if (iommu->gcmd & DMA_GCMD_TE)
- 		iommu_disable_translation(iommu);
- 
--	ret = iommu_init_domains(iommu);
--	if (ret == 0)
--		ret = iommu_alloc_root_entry(iommu);
-+	ret = iommu_alloc_root_entry(iommu);
- 	if (ret)
- 		goto out;
- 
-@@ -2745,7 +2687,6 @@ static struct dmar_satc_unit *dmar_find_matched_satc_unit(struct pci_dev *dev)
- 	struct device *tmp;
- 	int i;
- 
--	dev = pci_physfn(dev);
- 	rcu_read_lock();
- 
- 	list_for_each_entry_rcu(satcu, &dmar_satc_units, list) {
-@@ -2762,15 +2703,16 @@ static struct dmar_satc_unit *dmar_find_matched_satc_unit(struct pci_dev *dev)
- 	return satcu;
- }
- 
--static int dmar_ats_supported(struct pci_dev *dev, struct intel_iommu *iommu)
-+static bool dmar_ats_supported(struct pci_dev *dev, struct intel_iommu *iommu)
- {
--	int i, ret = 1;
--	struct pci_bus *bus;
- 	struct pci_dev *bridge = NULL;
--	struct device *tmp;
--	struct acpi_dmar_atsr *atsr;
- 	struct dmar_atsr_unit *atsru;
- 	struct dmar_satc_unit *satcu;
-+	struct acpi_dmar_atsr *atsr;
-+	bool supported = true;
-+	struct pci_bus *bus;
-+	struct device *tmp;
-+	int i;
- 
- 	dev = pci_physfn(dev);
- 	satcu = dmar_find_matched_satc_unit(dev);
-@@ -2788,11 +2730,11 @@ static int dmar_ats_supported(struct pci_dev *dev, struct intel_iommu *iommu)
- 		bridge = bus->self;
- 		/* If it's an integrated device, allow ATS */
- 		if (!bridge)
--			return 1;
-+			return true;
- 		/* Connected via non-PCIe: no ATS */
- 		if (!pci_is_pcie(bridge) ||
- 		    pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)
--			return 0;
-+			return false;
- 		/* If we found the root port, look it up in the ATSR */
- 		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT)
- 			break;
-@@ -2811,11 +2753,11 @@ static int dmar_ats_supported(struct pci_dev *dev, struct intel_iommu *iommu)
- 		if (atsru->include_all)
- 			goto out;
- 	}
--	ret = 0;
-+	supported = false;
- out:
- 	rcu_read_unlock();
- 
--	return ret;
-+	return supported;
- }
- 
- int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
-@@ -2973,9 +2915,14 @@ static ssize_t domains_used_show(struct device *dev,
- 				 struct device_attribute *attr, char *buf)
- {
- 	struct intel_iommu *iommu = dev_to_intel_iommu(dev);
--	return sysfs_emit(buf, "%d\n",
--			  bitmap_weight(iommu->domain_ids,
--					cap_ndoms(iommu->cap)));
-+	unsigned int count = 0;
-+	int id;
-+
-+	for (id = 0; id < cap_ndoms(iommu->cap); id++)
-+		if (ida_exists(&iommu->domain_ida, id))
-+			count++;
-+
-+	return sysfs_emit(buf, "%d\n", count);
- }
- static DEVICE_ATTR_RO(domains_used);
- 
-diff --git a/drivers/iommu/intel/iommu.h b/drivers/iommu/intel/iommu.h
-index 814f5ed20018..a07a190c6d82 100644
---- a/drivers/iommu/intel/iommu.h
-+++ b/drivers/iommu/intel/iommu.h
-@@ -722,7 +722,9 @@ struct intel_iommu {
- 	unsigned char	name[16];    /* Device Name */
- 
- #ifdef CONFIG_INTEL_IOMMU
--	unsigned long 	*domain_ids; /* bitmap of domains */
-+	/* mutex to protect domain_ida */
-+	struct mutex	did_lock;
-+	struct ida	domain_ida; /* domain id allocator */
- 	unsigned long	*copied_tables; /* bitmap of copied tables */
- 	spinlock_t	lock; /* protect context, domain ids */
- 	struct root_entry *root_entry; /* virtual address */
-@@ -810,11 +812,22 @@ static inline struct dmar_domain *to_dmar_domain(struct iommu_domain *dom)
- }
- 
- /*
-- * Domain ID reserved for pasid entries programmed for first-level
-- * only and pass-through transfer modes.
-+ * Domain ID 0 and 1 are reserved:
-+ *
-+ * If Caching mode is set, then invalid translations are tagged
-+ * with domain-id 0, hence we need to pre-allocate it. We also
-+ * use domain-id 0 as a marker for non-allocated domain-id, so
-+ * make sure it is not used for a real domain.
-+ *
-+ * Vt-d spec rev3.0 (section 6.2.3.1) requires that each pasid
-+ * entry for first-level or pass-through translation modes should
-+ * be programmed with a domain id different from those used for
-+ * second-level or nested translation. We reserve a domain id for
-+ * this purpose. This domain id is also used for identity domain
-+ * in legacy mode.
-  */
- #define FLPT_DEFAULT_DID		1
--#define NUM_RESERVED_DID		2
-+#define IDA_START_DID			2
- 
- /* Retrieve the domain ID which has allocated to the domain */
- static inline u16
 diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
 index 78748e8d2dba..2b2b558cebe6 100644
 --- a/drivers/pci/vgaarb.c
@@ -13319,7 +13000,7 @@ index 000000000000..6c2e22622f4c
 +
 +#endif //BCE_VHCI_H
 diff --git a/include/linux/hid.h b/include/linux/hid.h
-index a1305210b2fd..98aad4880f84 100644
+index 7f260e0e2049..0075b9956d05 100644
 --- a/include/linux/hid.h
 +++ b/include/linux/hid.h
 @@ -594,7 +594,9 @@ struct hid_input {
@@ -13374,150 +13055,6 @@ index 000000000000..0b7093935ddf
 +
 +#endif
 +#endif
-diff --git a/lib/tests/printf_kunit.c b/lib/tests/printf_kunit.c
-index 2c9f6170bacd..bc54cca2d7a6 100644
---- a/lib/tests/printf_kunit.c
-+++ b/lib/tests/printf_kunit.c
-@@ -701,21 +701,46 @@ static void fwnode_pointer(struct kunit *kunittest)
- 	software_node_unregister_node_group(group);
- }
- 
-+struct fourcc_struct {
-+	u32 code;
-+	const char *str;
-+};
-+
-+static void fourcc_pointer_test(struct kunit *kunittest, const struct fourcc_struct *fc,
-+				size_t n, const char *fmt)
-+{
-+	size_t i;
-+
-+	for (i = 0; i < n; i++)
-+		test(fc[i].str, fmt, &fc[i].code);
-+}
-+
- static void fourcc_pointer(struct kunit *kunittest)
- {
--	struct {
--		u32 code;
--		char *str;
--	} const try[] = {
-+	static const struct fourcc_struct try_cc[] = {
- 		{ 0x3231564e, "NV12 little-endian (0x3231564e)", },
- 		{ 0xb231564e, "NV12 big-endian (0xb231564e)", },
- 		{ 0x10111213, ".... little-endian (0x10111213)", },
- 		{ 0x20303159, "Y10  little-endian (0x20303159)", },
- 	};
--	unsigned int i;
-+	static const struct fourcc_struct try_ch[] = {
-+		{ 0x41424344, "ABCD (0x41424344)", },
-+	};
-+	static const struct fourcc_struct try_chR[] = {
-+		{ 0x41424344, "DCBA (0x44434241)", },
-+	};
-+	static const struct fourcc_struct try_cl[] = {
-+		{ (__force u32)cpu_to_le32(0x41424344), "ABCD (0x41424344)", },
-+	};
-+	static const struct fourcc_struct try_cb[] = {
-+		{ (__force u32)cpu_to_be32(0x41424344), "ABCD (0x41424344)", },
-+	};
- 
--	for (i = 0; i < ARRAY_SIZE(try); i++)
--		test(try[i].str, "%p4cc", &try[i].code);
-+	fourcc_pointer_test(kunittest, try_cc, ARRAY_SIZE(try_cc), "%p4cc");
-+	fourcc_pointer_test(kunittest, try_ch, ARRAY_SIZE(try_ch), "%p4ch");
-+	fourcc_pointer_test(kunittest, try_chR, ARRAY_SIZE(try_chR), "%p4chR");
-+	fourcc_pointer_test(kunittest, try_cl, ARRAY_SIZE(try_cl), "%p4cl");
-+	fourcc_pointer_test(kunittest, try_cb, ARRAY_SIZE(try_cb), "%p4cb");
- }
- 
- static void
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 01699852f30c..d8a2ec083ace 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -1793,27 +1793,49 @@ char *fourcc_string(char *buf, char *end, const u32 *fourcc,
- 	char output[sizeof("0123 little-endian (0x01234567)")];
- 	char *p = output;
- 	unsigned int i;
-+	bool pixel_fmt = false;
- 	u32 orig, val;
- 
--	if (fmt[1] != 'c' || fmt[2] != 'c')
-+	if (fmt[1] != 'c')
- 		return error_string(buf, end, "(%p4?)", spec);
- 
- 	if (check_pointer(&buf, end, fourcc, spec))
- 		return buf;
- 
- 	orig = get_unaligned(fourcc);
--	val = orig & ~BIT(31);
-+	switch (fmt[2]) {
-+	case 'h':
-+		if (fmt[3] == 'R')
-+			orig = swab32(orig);
-+		break;
-+	case 'l':
-+		orig = (__force u32)cpu_to_le32(orig);
-+		break;
-+	case 'b':
-+		orig = (__force u32)cpu_to_be32(orig);
-+		break;
-+	case 'c':
-+		/* Pixel formats are printed LSB-first */
-+		pixel_fmt = true;
-+		break;
-+	default:
-+		return error_string(buf, end, "(%p4?)", spec);
-+	}
-+
-+	val = pixel_fmt ? swab32(orig & ~BIT(31)) : orig;
- 
- 	for (i = 0; i < sizeof(u32); i++) {
--		unsigned char c = val >> (i * 8);
-+		unsigned char c = val >> ((3 - i) * 8);
- 
- 		/* Print non-control ASCII characters as-is, dot otherwise */
- 		*p++ = isascii(c) && isprint(c) ? c : '.';
- 	}
- 
--	*p++ = ' ';
--	strcpy(p, orig & BIT(31) ? "big-endian" : "little-endian");
--	p += strlen(p);
-+	if (pixel_fmt) {
-+		*p++ = ' ';
-+		strcpy(p, orig & BIT(31) ? "big-endian" : "little-endian");
-+		p += strlen(p);
-+	}
- 
- 	*p++ = ' ';
- 	*p++ = '(';
-@@ -2374,6 +2396,12 @@ early_param("no_hash_pointers", no_hash_pointers_enable);
-  *       read the documentation (path below) first.
-  * - 'NF' For a netdev_features_t
-  * - '4cc' V4L2 or DRM FourCC code, with endianness and raw numerical value.
-+ * - '4c[h[R]lb]' For generic FourCC code with raw numerical value. Both are
-+ *	 displayed in the big-endian format. This is the opposite of V4L2 or
-+ *	 DRM FourCCs.
-+ *	 The additional specifiers define what endianness is used to load
-+ *	 the stored bytes. The data might be interpreted using the host,
-+ *	 reversed host byte order, little-endian, or big-endian.
-  * - 'h[CDN]' For a variable-length buffer, it prints it as a hex string with
-  *            a certain separator (' ' by default):
-  *              C colon
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 784912f570e9..86adc23c851a 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -6905,7 +6905,7 @@ sub process {
- 					    ($extension eq "f" &&
- 					     defined $qualifier && $qualifier !~ /^w/) ||
- 					    ($extension eq "4" &&
--					     defined $qualifier && $qualifier !~ /^cc/)) {
-+					     defined $qualifier && $qualifier !~ /^c(?:[hlbc]|hR)$/)) {
- 						$bad_specifier = $specifier;
- 						last;
- 					}
 -- 
 2.50.1
 
