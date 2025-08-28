@@ -52,24 +52,6 @@ Subject: [PATCH] high-hz
  kernel/rcu/tree_nocb.h                        |   2 +-
  52 files changed, 205 insertions(+), 97 deletions(-)
 
-diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
-index 75cd4699e7b3ee..38777863cf900d 100644
---- a/arch/arm/kernel/setup.c
-+++ b/arch/arm/kernel/setup.c
-@@ -1302,11 +1302,11 @@ static int c_show(struct seq_file *m, void *v)
- #if defined(CONFIG_SMP)
- 		seq_printf(m, "BogoMIPS\t: %lu.%02lu\n",
- 			   per_cpu(cpu_data, i).loops_per_jiffy / (500000UL/HZ),
--			   (per_cpu(cpu_data, i).loops_per_jiffy / (5000UL/HZ)) % 100);
-+			   ((per_cpu(cpu_data, i).loops_per_jiffy * HZ) / 5000UL) % 100);
- #else
- 		seq_printf(m, "BogoMIPS\t: %lu.%02lu\n",
- 			   loops_per_jiffy / (500000/HZ),
--			   (loops_per_jiffy / (5000/HZ)) % 100);
-+			   ((loops_per_jiffy * HZ) / 5000) % 100);
- #endif
- 		/* dump out the processor features */
- 		seq_puts(m, "Features\t: ");
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
 index 87f8d0e5e314a8..5000a185c1b8fd 100644
 --- a/arch/arm/kernel/smp.c
@@ -83,19 +65,6 @@ index 87f8d0e5e314a8..5000a185c1b8fd 100644
  
  	hyp_mode_check();
  }
-diff --git a/arch/arm64/kernel/cpuinfo.c b/arch/arm64/kernel/cpuinfo.c
-index eb4378c23b3c3e..6db6caa396e216 100644
---- a/arch/arm64/kernel/cpuinfo.c
-+++ b/arch/arm64/kernel/cpuinfo.c
-@@ -193,7 +193,7 @@ static int c_show(struct seq_file *m, void *v)
- 
- 		seq_printf(m, "BogoMIPS\t: %lu.%02lu\n",
- 			   loops_per_jiffy / (500000UL/HZ),
--			   loops_per_jiffy / (5000UL/HZ) % 100);
-+			   (loops_per_jiffy * HZ) / 5000UL % 100);
- 
- 		/*
- 		 * Dump out the common processor features in a single line.
 diff --git a/arch/x86/kernel/cpu/proc.c b/arch/x86/kernel/cpu/proc.c
 index 099b6f0d96bdc1..977bb9fba16500 100644
 --- a/arch/x86/kernel/cpu/proc.c
