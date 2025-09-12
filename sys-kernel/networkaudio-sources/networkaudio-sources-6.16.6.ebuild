@@ -4,13 +4,13 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="4"
+K_GENPATCHES_VER="8"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt3"
 MINOR_VERSION="0"
 
-inherit check-reqs kernel-2
+inherit kernel-2
 detect_version
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
@@ -25,11 +25,6 @@ RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MIN
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
 
-pkg_pretend() {
-    CHECKREQS_DISK_BUILD="4G"
-    check-reqs_pkg_pretend
-}
-
 src_unpack() {
     unpack "${RT_PATCH}"
     mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
@@ -40,8 +35,6 @@ src_unpack() {
 }
 
 src_prepare() {
-    kernel-2_src_prepare
-
     # naa patch
     if use naa; then
         eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
@@ -52,7 +45,6 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
-    # cachy patch
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
     eapply "${FILESDIR}/cachy/0003-block.patch"
     eapply "${FILESDIR}/cachy/0004-cachy.patch"
@@ -70,11 +62,6 @@ src_prepare() {
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
         eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.04.25.patch"
     fi
-
-    # xanmod patch
-    eapply "${FILESDIR}/xanmod/xanmod/0006-XANMOD-fair-Set-scheduler-tunable-latencies-to-unsca.patch"
-    eapply "${FILESDIR}/xanmod/xanmod/0007-XANMOD-sched-Add-yield_type-sysctl-to-reduce-or-disa.patch"
-    eapply "${FILESDIR}/xanmod/xanmod/0014-XANMOD-mm-Raise-max_map_count-default-value.patch"
 
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
@@ -144,7 +131,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-#Add_localversion_for_-RT_release.patch
+# Add_localversion_for_-RT_release.patch
     )
 
     for p in "${rt_patches[@]}"; do
@@ -155,14 +142,4 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 
     rm "${S}/tools/testing/selftests/tc-testing/action-ebpf"
     eapply_user
-}
-
-pkg_postinst() {
-    kernel-2_pkg_postinst
-    einfo "For more info on this patchset, and how to report problems, see:"
-    einfo "${HOMEPAGE}"
-}
-
-pkg_postrm() {
-    kernel-2_pkg_postrm
 }
