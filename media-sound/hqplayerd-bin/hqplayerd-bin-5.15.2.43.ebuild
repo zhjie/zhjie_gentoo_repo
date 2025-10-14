@@ -54,11 +54,12 @@ src_prepare() {
 
 	default
 
-	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd || die
+	patchelf --replace-needed libomp.so.5 libomp.so usr/bin/hqplayerd    || die
+	patchelf --replace-needed libxml2.so.2 libxml2.so.16 usr/bin/hqplayerd || die
 
 	if ! use upnp; then
-		patchelf --remove-needed librygel-renderer-2.6.so.2 usr/bin/hqplayerd || die
-		patchelf --remove-needed librygel-core-2.6.so.2     usr/bin/hqplayerd || die
+		patchelf --remove-needed librygel-renderer-2.8.so.2 usr/bin/hqplayerd || die
+		patchelf --remove-needed librygel-core-2.8.so.2     usr/bin/hqplayerd || die
 	fi
 }
 
