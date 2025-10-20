@@ -1,117 +1,102 @@
-From 52c770b098896f021c7bd1d7d24898132cf907c4 Mon Sep 17 00:00:00 2001
+From 18cc2846f764610ebbc8ae385cbb7a5ba0d0a027 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Tue, 9 Sep 2025 20:13:04 +0200
+Date: Wed, 15 Oct 2025 15:43:47 +0200
 Subject: [PATCH 5/6] fixes
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
- .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c | 39 ++++++++++++++++++-
- drivers/gpu/drm/drm_atomic_uapi.c             | 23 +++++------
- drivers/gpu/drm/i915/display/intel_dsb.c      |  4 ++
- drivers/watchdog/intel_oc_wdt.c               |  8 ++--
- scripts/package/PKGBUILD                      |  5 +++
- 5 files changed, 63 insertions(+), 16 deletions(-)
+ drivers/gpu/drm/i915/display/intel_psr.c          | 12 ++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 13 +++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 12 +++++++++---
+ scripts/package/PKGBUILD                          |  5 +++++
+ 4 files changed, 27 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_atomic_uapi.c b/drivers/gpu/drm/drm_atomic_uapi.c
-index c2726af6698e..317303cf5b8c 100644
---- a/drivers/gpu/drm/drm_atomic_uapi.c
-+++ b/drivers/gpu/drm/drm_atomic_uapi.c
-@@ -1077,19 +1077,20 @@ int drm_atomic_set_property(struct drm_atomic_state *state,
- 		}
+diff --git a/drivers/gpu/drm/i915/display/intel_psr.c b/drivers/gpu/drm/i915/display/intel_psr.c
+index 41988e193a415..d19e3e7a94511 100644
+--- a/drivers/gpu/drm/i915/display/intel_psr.c
++++ b/drivers/gpu/drm/i915/display/intel_psr.c
+@@ -3364,6 +3364,7 @@ static void _psr_flush_handle(struct intel_dp *intel_dp)
+ 	struct intel_display *display = to_intel_display(intel_dp);
  
- 		if (async_flip) {
--			/* check if the prop does a nop change */
--			if ((prop != config->prop_fb_id &&
--			     prop != config->prop_in_fence_fd &&
--			     prop != config->prop_fb_damage_clips)) {
--				ret = drm_atomic_plane_get_property(plane, plane_state,
--								    prop, &old_val);
--				ret = drm_atomic_check_prop_changes(ret, old_val, prop_value, prop);
--			}
-+			/* no-op changes are always allowed */
-+			ret = drm_atomic_plane_get_property(plane, plane_state,
-+							    prop, &old_val);
-+			ret = drm_atomic_check_prop_changes(ret, old_val, prop_value, prop);
+ 	if (DISPLAY_VER(display) < 20 && intel_dp->psr.psr2_sel_fetch_enabled) {
++		/* Selective fetch prior LNL */
+ 		if (intel_dp->psr.psr2_sel_fetch_cff_enabled) {
+ 			/* can we turn CFF off? */
+ 			if (intel_dp->psr.busy_frontbuffer_bits == 0)
+@@ -3382,12 +3383,19 @@ static void _psr_flush_handle(struct intel_dp *intel_dp)
+ 		intel_psr_configure_full_frame_update(intel_dp);
  
--			/* ask the driver if this non-primary plane is supported */
--			if (plane->type != DRM_PLANE_TYPE_PRIMARY) {
--				ret = -EINVAL;
-+			/* fail everything that isn't no-op or a pure flip */
-+			if (ret && prop != config->prop_fb_id &&
-+			    prop != config->prop_in_fence_fd &&
-+			    prop != config->prop_fb_damage_clips) {
-+				break;
-+			}
+ 		intel_psr_force_update(intel_dp);
++	} else if (!intel_dp->psr.psr2_sel_fetch_enabled) {
++		/*
++		 * PSR1 on all platforms
++		 * PSR2 HW tracking
++		 * Panel Replay Full frame update
++		 */
++		intel_psr_force_update(intel_dp);
+ 	} else {
++		/* Selective update LNL onwards */
+ 		intel_psr_exit(intel_dp);
+ 	}
  
-+			if (ret && plane->type != DRM_PLANE_TYPE_PRIMARY) {
-+				/* ask the driver if this non-primary plane is supported */
- 				if (plane_funcs && plane_funcs->atomic_async_check)
- 					ret = plane_funcs->atomic_async_check(plane, state, true);
+-	if ((!intel_dp->psr.psr2_sel_fetch_enabled || DISPLAY_VER(display) >= 20) &&
+-	    !intel_dp->psr.busy_frontbuffer_bits)
++	if (!intel_dp->psr.active && !intel_dp->psr.busy_frontbuffer_bits)
+ 		queue_work(display->wq.unordered, &intel_dp->psr.work);
+ }
  
-diff --git a/drivers/gpu/drm/i915/display/intel_dsb.c b/drivers/gpu/drm/i915/display/intel_dsb.c
-index 481488d1fe67..271229500c62 100644
---- a/drivers/gpu/drm/i915/display/intel_dsb.c
-+++ b/drivers/gpu/drm/i915/display/intel_dsb.c
-@@ -808,6 +808,10 @@ struct intel_dsb *intel_dsb_prepare(struct intel_atomic_state *state,
- 	if (!display->params.enable_dsb)
- 		return NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 8805ab344895a..0065c2ead56b1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -938,19 +938,12 @@ u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct iwl_mvm *mvm,
  
-+	/* TODO: DSB is broken in Xe KMD, so disabling it until fixed */
-+	if (!IS_ENABLED(I915))
-+		return NULL;
-+
- 	dsb = kzalloc(sizeof(*dsb), GFP_KERNEL);
- 	if (!dsb)
- 		goto out;
-diff --git a/drivers/watchdog/intel_oc_wdt.c b/drivers/watchdog/intel_oc_wdt.c
-index 7c0551106981..a39892c10770 100644
---- a/drivers/watchdog/intel_oc_wdt.c
-+++ b/drivers/watchdog/intel_oc_wdt.c
-@@ -41,6 +41,7 @@
- struct intel_oc_wdt {
- 	struct watchdog_device wdd;
- 	struct resource *ctrl_res;
-+	struct watchdog_info info;
- 	bool locked;
- };
- 
-@@ -115,7 +116,6 @@ static const struct watchdog_ops intel_oc_wdt_ops = {
- 
- static int intel_oc_wdt_setup(struct intel_oc_wdt *oc_wdt)
+ u16 iwl_mvm_mac_ctxt_get_beacon_flags(const struct iwl_fw *fw, u8 rate_idx)
  {
--	struct watchdog_info *info;
- 	unsigned long val;
++	u16 flags = iwl_mvm_mac80211_idx_to_hwrate(fw, rate_idx);
+ 	bool is_new_rate = iwl_fw_lookup_cmd_ver(fw, BEACON_TEMPLATE_CMD, 0) > 10;
+-	u16 flags, cck_flag;
+-
+-	if (is_new_rate) {
+-		flags = iwl_mvm_mac80211_idx_to_hwrate(fw, rate_idx);
+-		cck_flag = IWL_MAC_BEACON_CCK;
+-	} else {
+-		cck_flag = IWL_MAC_BEACON_CCK_V1;
+-		flags = iwl_fw_rate_idx_to_plcp(rate_idx);
+-	}
  
- 	val = inl(INTEL_OC_WDT_CTRL_REG(oc_wdt));
-@@ -134,7 +134,6 @@ static int intel_oc_wdt_setup(struct intel_oc_wdt *oc_wdt)
- 		set_bit(WDOG_HW_RUNNING, &oc_wdt->wdd.status);
+ 	if (rate_idx <= IWL_LAST_CCK_RATE)
+-		flags |= cck_flag;
++		flags |= is_new_rate ? IWL_MAC_BEACON_CCK
++			  : IWL_MAC_BEACON_CCK_V1;
  
- 		if (oc_wdt->locked) {
--			info = (struct watchdog_info *)&intel_oc_wdt_info;
- 			/*
- 			 * Set nowayout unconditionally as we cannot stop
- 			 * the watchdog.
-@@ -145,7 +144,7 @@ static int intel_oc_wdt_setup(struct intel_oc_wdt *oc_wdt)
- 			 * and inform the core we can't change it.
- 			 */
- 			oc_wdt->wdd.timeout = (val & INTEL_OC_WDT_TOV) + 1;
--			info->options &= ~WDIOF_SETTIMEOUT;
-+			oc_wdt->info.options &= ~WDIOF_SETTIMEOUT;
+ 	return flags;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 62da0132f3838..a62f5288dfd06 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -169,9 +169,15 @@ int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
  
- 			dev_info(oc_wdt->wdd.parent,
- 				 "Register access locked, heartbeat fixed at: %u s\n",
-@@ -193,7 +192,8 @@ static int intel_oc_wdt_probe(struct platform_device *pdev)
- 	wdd->min_timeout = INTEL_OC_WDT_MIN_TOV;
- 	wdd->max_timeout = INTEL_OC_WDT_MAX_TOV;
- 	wdd->timeout = INTEL_OC_WDT_DEF_TOV;
--	wdd->info = &intel_oc_wdt_info;
-+	oc_wdt->info = intel_oc_wdt_info;
-+	wdd->info = &oc_wdt->info;
- 	wdd->ops = &intel_oc_wdt_ops;
- 	wdd->parent = dev;
+ u8 iwl_mvm_mac80211_idx_to_hwrate(const struct iwl_fw *fw, int rate_idx)
+ {
+-	return (rate_idx >= IWL_FIRST_OFDM_RATE ?
+-		rate_idx - IWL_FIRST_OFDM_RATE :
+-		rate_idx);
++	if (iwl_fw_lookup_cmd_ver(fw, TX_CMD, 0) > 8)
++		/* In the new rate legacy rates are indexed:
++		 * 0 - 3 for CCK and 0 - 7 for OFDM.
++		 */
++		return (rate_idx >= IWL_FIRST_OFDM_RATE ?
++			rate_idx - IWL_FIRST_OFDM_RATE :
++			rate_idx);
++
++	return iwl_fw_rate_idx_to_plcp(rate_idx);
+ }
  
+ u8 iwl_mvm_mac80211_ac_to_ucode_ac(enum ieee80211_ac_numbers ac)
 diff --git a/scripts/package/PKGBUILD b/scripts/package/PKGBUILD
-index 452374d63c24..08f80d7c5df0 100644
+index 452374d63c244..08f80d7c5df05 100644
 --- a/scripts/package/PKGBUILD
 +++ b/scripts/package/PKGBUILD
 @@ -90,6 +90,11 @@ _package-headers() {
@@ -128,4 +113,76 @@ index 452374d63c24..08f80d7c5df0 100644
  	cp System.map "${builddir}/System.map"
 -- 
 2.51.0
+
+From df1b7cc45e820a9ecd4ba945e4c4c4a628276cab Mon Sep 17 00:00:00 2001
+From: Inochi Amaoto <inochiama@gmail.com>
+Date: Tue, 14 Oct 2025 09:46:07 +0800
+Subject: [PATCH] PCI: vmd: override irq_startup()/irq_shutdown() in
+ vmd_init_dev_msi_info()
+
+Since commit 54f45a30c0d0 ("PCI/MSI: Add startup/shutdown for per
+device domains") set callback irq_startup() and irq_shutdown() of
+the struct pci_msi[x]_template, __irq_startup() will always invokes
+irq_startup() callback instead of irq_enable() callback overridden
+in vmd_init_dev_msi_info(). This will not start the irq correctly.
+
+Also override irq_startup()/irq_shutdown() in vmd_init_dev_msi_info(),
+so the irq_startup() can invoke the real logic.
+
+Fixes: 54f45a30c0d0 ("PCI/MSI: Add startup/shutdown for per device domains")
+Reported-by: Kenneth Crudup <kenny@panix.com>
+Closes: https://lore.kernel.org/all/8a923590-5b3a-406f-a324-7bd1cf894d8f@panix.com/
+Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
+Tested-by: Kenneth R. Crudup <kenny@panix.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Closes: https://lore.kernel.org/r/8a923590-5b3a-406f-a324-7bd1cf894d8f@panix.com/
+Closes: https://lore.kernel.org/r/4b392af8847cc19720ffcd53865f60ab3edc56b3.camel@sapience.com
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220658
+Closes: https://lore.kernel.org/r/8d6887a5-60bc-423c-8f7a-87b4ab739f6a@hartkopp.net
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://patch.msgid.link/20251014014607.612586-1-inochiama@gmail.com
+---
+ drivers/pci/controller/vmd.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 1bd5bf4a6097..b4b62b9ccc45 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -192,6 +192,12 @@ static void vmd_pci_msi_enable(struct irq_data *data)
+ 	data->chip->irq_unmask(data);
+ }
+ 
++static unsigned int vmd_pci_msi_startup(struct irq_data *data)
++{
++	vmd_pci_msi_enable(data);
++	return 0;
++}
++
+ static void vmd_irq_disable(struct irq_data *data)
+ {
+ 	struct vmd_irq *vmdirq = data->chip_data;
+@@ -210,6 +216,11 @@ static void vmd_pci_msi_disable(struct irq_data *data)
+ 	vmd_irq_disable(data->parent_data);
+ }
+ 
++static void vmd_pci_msi_shutdown(struct irq_data *data)
++{
++	vmd_pci_msi_disable(data);
++}
++
+ static struct irq_chip vmd_msi_controller = {
+ 	.name			= "VMD-MSI",
+ 	.irq_compose_msi_msg	= vmd_compose_msi_msg,
+@@ -309,6 +320,8 @@ static bool vmd_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
+ 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
+ 		return false;
+ 
++	info->chip->irq_startup		= vmd_pci_msi_startup;
++	info->chip->irq_shutdown	= vmd_pci_msi_shutdown;
+ 	info->chip->irq_enable		= vmd_pci_msi_enable;
+ 	info->chip->irq_disable		= vmd_pci_msi_disable;
+ 	return true;
+-- 
+2.51.1.dirty
 

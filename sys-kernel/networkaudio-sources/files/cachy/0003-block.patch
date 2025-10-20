@@ -1,6 +1,6 @@
-From b8b90cb31a29b64d0f20085cf70801035fd35533 Mon Sep 17 00:00:00 2001
+From 796b90c4f4bd90c5c4c4132e232cba438cafaad8 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 5 Sep 2025 16:44:50 +0200
+Date: Wed, 15 Oct 2025 15:43:19 +0200
 Subject: [PATCH 3/6] block
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
@@ -11,11 +11,11 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  3 files changed, 96 insertions(+), 16 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 9483c529c958..6dd6a8f131a8 100644
+index 4a8d3d96bfe49..4c0c9e1252112 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -467,6 +467,21 @@ static struct bfq_io_cq *bfq_bic_lookup(struct request_queue *q)
- 	return icq;
+@@ -460,6 +460,21 @@ static struct bfq_io_cq *bfq_bic_lookup(struct request_queue *q)
+ 	return icq_to_bic(ioc_lookup_icq(q));
  }
  
 +static struct bfq_io_cq *bfq_bic_try_lookup(struct request_queue *q)
@@ -36,12 +36,13 @@ index 9483c529c958..6dd6a8f131a8 100644
  /*
   * Scheduler run of queue, if there are requests pending and no one in the
   * driver that will restart queueing.
-@@ -2463,10 +2478,21 @@ static bool bfq_bio_merge(struct request_queue *q, struct bio *bio,
- 	 * returned by bfq_bic_lookup does not go away before
- 	 * bfqd->lock is taken.
- 	 */
+@@ -2448,11 +2463,22 @@ static bool bfq_bio_merge(struct request_queue *q, struct bio *bio,
+ 		unsigned int nr_segs)
+ {
+ 	struct bfq_data *bfqd = q->elevator->elevator_data;
 -	struct bfq_io_cq *bic = bfq_bic_lookup(q);
 +	struct bfq_io_cq *bic = bfq_bic_try_lookup(q);
+ 	struct request *free = NULL;
  	bool ret;
  
 -	spin_lock_irq(&bfqd->lock);
@@ -60,7 +61,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  
  	if (bic) {
  		/*
-@@ -5315,6 +5341,18 @@ static struct request *bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
+@@ -5301,6 +5327,18 @@ static struct request *bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
  	struct bfq_queue *in_serv_queue;
  	bool waiting_rq, idle_timer_disabled = false;
  
@@ -79,7 +80,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	spin_lock_irq(&bfqd->lock);
  
  	in_serv_queue = bfqd->in_service_queue;
-@@ -5326,6 +5364,7 @@ static struct request *bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
+@@ -5312,6 +5350,7 @@ static struct request *bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
  			waiting_rq && !bfq_bfqq_wait_request(in_serv_queue);
  	}
  
@@ -87,7 +88,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	spin_unlock_irq(&bfqd->lock);
  	bfq_update_dispatch_stats(hctx->queue, rq,
  			idle_timer_disabled ? in_serv_queue : NULL,
-@@ -6248,10 +6287,9 @@ static inline void bfq_update_insert_stats(struct request_queue *q,
+@@ -6233,10 +6272,9 @@ static inline void bfq_update_insert_stats(struct request_queue *q,
  
  static struct bfq_queue *bfq_init_rq(struct request *rq);
  
@@ -99,7 +100,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	struct bfq_data *bfqd = q->elevator->elevator_data;
  	struct bfq_queue *bfqq;
  	bool idle_timer_disabled = false;
-@@ -6313,7 +6351,7 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
+@@ -6298,7 +6336,7 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
  
  		rq = list_first_entry(list, struct request, queuelist);
  		list_del_init(&rq->queuelist);
@@ -108,7 +109,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	}
  }
  
-@@ -7245,6 +7283,8 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_queue *eq)
+@@ -7218,6 +7256,8 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_queue *eq)
  	q->elevator = eq;
  	spin_unlock_irq(&q->queue_lock);
  
@@ -117,7 +118,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	/*
  	 * Our fallback bfqq if bfq_find_alloc_queue() runs into OOM issues.
  	 * Grab a permanent reference to it, so that the normal code flow
-@@ -7362,8 +7402,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_queue *eq)
+@@ -7335,8 +7375,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_queue *eq)
  	/* see comments on the definition of next field inside bfq_data */
  	bfqd->actuator_load_threshold = 4;
  
@@ -127,7 +128,7 @@ index 9483c529c958..6dd6a8f131a8 100644
  	 * The invocation of the next bfq_create_group_hierarchy
  	 * function is the head of a chain of function calls
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 31217f196f4f..a250c559976f 100644
+index 34a498e6b2a51..bef03e57b0a53 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
 @@ -504,12 +504,22 @@ struct bfq_io_cq {
@@ -163,7 +164,7 @@ index 31217f196f4f..a250c559976f 100644
  	 * bic associated with the task issuing current bio for
  	 * merging. This and the next field are used as a support to
 diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index b9b7cdf1d3c9..91e5acde679a 100644
+index 2e689b2c40213..6b3f981e2cab1 100644
 --- a/block/mq-deadline.c
 +++ b/block/mq-deadline.c
 @@ -79,10 +79,20 @@ struct dd_per_prio {
@@ -223,7 +224,7 @@ index b9b7cdf1d3c9..91e5acde679a 100644
  	spin_unlock(&dd->lock);
  
  	return rq;
-@@ -565,6 +586,9 @@ static int dd_init_sched(struct request_queue *q, struct elevator_queue *eq)
+@@ -555,6 +576,9 @@ static int dd_init_sched(struct request_queue *q, struct elevator_queue *eq)
  
  	eq->elevator_data = dd;
  
@@ -233,7 +234,7 @@ index b9b7cdf1d3c9..91e5acde679a 100644
  	for (prio = 0; prio <= DD_PRIO_MAX; prio++) {
  		struct dd_per_prio *per_prio = &dd->per_prio[prio];
  
-@@ -581,7 +605,6 @@ static int dd_init_sched(struct request_queue *q, struct elevator_queue *eq)
+@@ -571,7 +595,6 @@ static int dd_init_sched(struct request_queue *q, struct elevator_queue *eq)
  	dd->last_dir = DD_WRITE;
  	dd->fifo_batch = fifo_batch;
  	dd->prio_aging_expire = prio_aging_expire;
@@ -241,7 +242,7 @@ index b9b7cdf1d3c9..91e5acde679a 100644
  
  	/* We dispatch from request queue wide instead of hw queue */
  	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
-@@ -633,7 +656,19 @@ static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
+@@ -624,7 +647,19 @@ static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
  	struct request *free = NULL;
  	bool ret;
  
@@ -262,7 +263,7 @@ index b9b7cdf1d3c9..91e5acde679a 100644
  	ret = blk_mq_sched_try_merge(q, bio, nr_segs, &free);
  	spin_unlock(&dd->lock);
  
-@@ -646,10 +681,9 @@ static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
+@@ -637,10 +672,9 @@ static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
  /*
   * add rq to rbtree and fifo
   */
@@ -274,7 +275,7 @@ index b9b7cdf1d3c9..91e5acde679a 100644
  	struct deadline_data *dd = q->elevator->elevator_data;
  	const enum dd_data_dir data_dir = rq_data_dir(rq);
  	u16 ioprio = req_get_ioprio(rq);
-@@ -707,7 +741,7 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
+@@ -698,7 +732,7 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
  
  		rq = list_first_entry(list, struct request, queuelist);
  		list_del_init(&rq->queuelist);

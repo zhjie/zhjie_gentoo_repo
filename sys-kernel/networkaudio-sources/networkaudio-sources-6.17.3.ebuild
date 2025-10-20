@@ -4,11 +4,11 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="11"
+K_GENPATCHES_VER="5"
 K_EXP_GENPATCHES_NOUSE="1"
 
-RT_VERSION="rt3"
-MINOR_VERSION="0"
+RT_VERSION="rt5"
+MINOR_VERSION="1"
 
 inherit kernel-2
 detect_version
@@ -19,8 +19,8 @@ LICENSE+=" CDDL"
 KEYWORDS="amd64"
 IUSE="naa diretta highhz rt"
 
-# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
-RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
+RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
+# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
@@ -74,10 +74,24 @@ src_prepare() {
 ###########################################################################
 # Posted and applied
 ###########################################################################
+# Netfilter backports for pipapo + BH-locking
+0001-netfilter-ctnetlink-remove-refcounting-in-dying-list.patch
+0002-netfilter-nft_set_pipapo_avx2-Drop-the-comment-regar.patch
+0003-netfilter-nft_set_pipapo_avx2-split-lookup-function-.patch
+0004-netfilter-nft_set_pipapo-use-avx2-algorithm-for-inse.patch
+0005-netfilter-nft_set_pipapo-Store-real-pointer-adjust-l.patch
+0006-netfilter-nft_set_pipapo-Use-nested-BH-locking-for-n.patch
+netfilter-nft_set_pipapo-use-0-genmask-for-packetpat.patch
+netfilter-nft_set_pipapo_avx2-fix-skip-of-expired-en.patch
 
 ###########################################################################
 # Posted
 ###########################################################################
+# Final bits for BH-lock removal
+0001-workqueue-Provide-a-handshake-for-canceling-BH-worke.patch
+0002-softirq-Provide-a-handshake-for-canceling-tasklets-v.patch
+0003-softirq-Allow-to-drop-the-softirq-BKL-lock-on-PREEMP.patch
+net-gro_cells-Use-nested-BH-locking-for-gro_cell.patch
 
 ###########################################################################
 # John's printk queue
@@ -131,7 +145,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-# Add_localversion_for_-RT_release.patch
+#Add_localversion_for_-RT_release.patch
     )
 
     for p in "${rt_patches[@]}"; do
