@@ -1,4 +1,4 @@
-From 18cc2846f764610ebbc8ae385cbb7a5ba0d0a027 Mon Sep 17 00:00:00 2001
+From 422fe9a19c74603773e389df493fa1a97dd4302c Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
 Date: Wed, 15 Oct 2025 15:43:47 +0200
 Subject: [PATCH 5/6] fixes
@@ -12,7 +12,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  4 files changed, 27 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/display/intel_psr.c b/drivers/gpu/drm/i915/display/intel_psr.c
-index 41988e193a415..d19e3e7a94511 100644
+index 41988e193a41..d19e3e7a9451 100644
 --- a/drivers/gpu/drm/i915/display/intel_psr.c
 +++ b/drivers/gpu/drm/i915/display/intel_psr.c
 @@ -3364,6 +3364,7 @@ static void _psr_flush_handle(struct intel_dp *intel_dp)
@@ -46,7 +46,7 @@ index 41988e193a415..d19e3e7a94511 100644
  }
  
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 8805ab344895a..0065c2ead56b1 100644
+index 8805ab344895..0065c2ead56b 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
 @@ -938,19 +938,12 @@ u8 iwl_mvm_mac_ctxt_get_lowest_rate(struct iwl_mvm *mvm,
@@ -73,7 +73,7 @@ index 8805ab344895a..0065c2ead56b1 100644
  	return flags;
  }
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 62da0132f3838..a62f5288dfd06 100644
+index 62da0132f383..a62f5288dfd0 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
 @@ -169,9 +169,15 @@ int iwl_mvm_legacy_rate_to_mac80211_idx(u32 rate_n_flags,
@@ -96,7 +96,7 @@ index 62da0132f3838..a62f5288dfd06 100644
  
  u8 iwl_mvm_mac80211_ac_to_ucode_ac(enum ieee80211_ac_numbers ac)
 diff --git a/scripts/package/PKGBUILD b/scripts/package/PKGBUILD
-index 452374d63c244..08f80d7c5df05 100644
+index 452374d63c24..08f80d7c5df0 100644
 --- a/scripts/package/PKGBUILD
 +++ b/scripts/package/PKGBUILD
 @@ -90,6 +90,11 @@ _package-headers() {
@@ -112,7 +112,7 @@ index 452374d63c244..08f80d7c5df05 100644
  	mkdir -p "${builddir}"
  	cp System.map "${builddir}/System.map"
 -- 
-2.51.0
+2.51.1
 
 From df1b7cc45e820a9ecd4ba945e4c4c4a628276cab Mon Sep 17 00:00:00 2001
 From: Inochi Amaoto <inochiama@gmail.com>
@@ -146,7 +146,7 @@ Link: https://patch.msgid.link/20251014014607.612586-1-inochiama@gmail.com
  1 file changed, 13 insertions(+)
 
 diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 1bd5bf4a6097..b4b62b9ccc45 100644
+index 1bd5bf4a609793..b4b62b9ccc45a0 100644
 --- a/drivers/pci/controller/vmd.c
 +++ b/drivers/pci/controller/vmd.c
 @@ -192,6 +192,12 @@ static void vmd_pci_msi_enable(struct irq_data *data)
@@ -174,15 +174,3 @@ index 1bd5bf4a6097..b4b62b9ccc45 100644
  static struct irq_chip vmd_msi_controller = {
  	.name			= "VMD-MSI",
  	.irq_compose_msi_msg	= vmd_compose_msi_msg,
-@@ -309,6 +320,8 @@ static bool vmd_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
- 	if (!msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
- 		return false;
- 
-+	info->chip->irq_startup		= vmd_pci_msi_startup;
-+	info->chip->irq_shutdown	= vmd_pci_msi_shutdown;
- 	info->chip->irq_enable		= vmd_pci_msi_enable;
- 	info->chip->irq_disable		= vmd_pci_msi_disable;
- 	return true;
--- 
-2.51.1.dirty
-

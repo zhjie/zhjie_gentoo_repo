@@ -4,11 +4,11 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="5"
+K_GENPATCHES_VER="7"
 K_EXP_GENPATCHES_NOUSE="1"
 
-RT_VERSION="rt5"
-MINOR_VERSION="1"
+RT_VERSION="rt7"
+MINOR_VERSION="5"
 
 inherit kernel-2
 detect_version
