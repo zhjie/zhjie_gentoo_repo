@@ -1,25 +1,24 @@
-From 9e1ba99ba55457abd78c90121b3b77b84ba728e6 Mon Sep 17 00:00:00 2001
+From cf210d98c5bb314a7621f510d881576ddd7c43c8 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 25 Jul 2025 20:24:21 +0200
+Date: Fri, 31 Oct 2025 12:28:46 +0100
 Subject: [PATCH 4/6] cachy
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
- .gitignore                                    |    3 +
- .../ABI/testing/sysfs-driver-intel-xe-hwmon   |   24 +
+ .gitignore                                    |    2 +
  .../admin-guide/kernel-parameters.txt         |   12 +
  Documentation/admin-guide/sysctl/vm.rst       |   72 +
- MAINTAINERS                                   |    5 +
- Makefile                                      |   48 +-
+ Makefile                                      |   33 +-
  arch/Kconfig                                  |   19 +
- arch/x86/Kconfig.cpu                          |   70 +
- arch/x86/Makefile                             |   17 +
+ arch/x86/Kconfig.cpu                          |   46 +
+ arch/x86/Makefile                             |   16 +-
  arch/x86/include/asm/pci.h                    |    6 +
+ arch/x86/kernel/cpu/bus_lock.c                |    4 +
  arch/x86/pci/common.c                         |    7 +-
  block/Kconfig.iosched                         |   14 +
  block/Makefile                                |    8 +
- block/adios.c                                 | 1450 ++++++++
- block/elevator.c                              |   12 +
+ block/adios.c                                 | 2006 ++++++++++
+ block/elevator.c                              |   26 +-
  drivers/Makefile                              |   13 +-
  drivers/ata/ahci.c                            |   23 +-
  drivers/cpufreq/Kconfig.x86                   |    2 -
@@ -33,16 +32,10 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  .../amd/display/amdgpu_dm/amdgpu_dm_plane.c   |    6 +-
  drivers/gpu/drm/amd/pm/amdgpu_pm.c            |    3 +
  drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     |   14 +-
- drivers/gpu/drm/xe/regs/xe_pcode_regs.h       |    3 +
- drivers/gpu/drm/xe/xe_device_types.h          |    2 +
- drivers/gpu/drm/xe/xe_hwmon.c                 |  125 +-
- drivers/gpu/drm/xe/xe_pci.c                   |    4 +
- drivers/gpu/drm/xe/xe_pcode_api.h             |    3 +
  drivers/input/evdev.c                         |   19 +-
- drivers/md/dm-crypt.c                         |    5 +
  drivers/media/v4l2-core/Kconfig               |    5 +
  drivers/media/v4l2-core/Makefile              |    2 +
- drivers/media/v4l2-core/v4l2loopback.c        | 3313 +++++++++++++++++
+ drivers/media/v4l2-core/v4l2loopback.c        | 3316 +++++++++++++++++
  drivers/media/v4l2-core/v4l2loopback.h        |  108 +
  .../media/v4l2-core/v4l2loopback_formats.h    |  445 +++
  drivers/pci/controller/Makefile               |    6 +
@@ -53,11 +46,9 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  drivers/scsi/vhba/Kconfig                     |    9 +
  drivers/scsi/vhba/Makefile                    |    4 +
  drivers/scsi/vhba/vhba.c                      | 1132 ++++++
- fs/select.c                                   |    2 +-
  include/linux/mm.h                            |    8 +
  include/linux/pagemap.h                       |    2 +-
  include/linux/user_namespace.h                |    4 +
- include/linux/wait.h                          |    2 +
  init/Kconfig                                  |   26 +
  kernel/Kconfig.hz                             |   24 +
  kernel/Kconfig.preempt                        |    2 +-
@@ -65,8 +56,7 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  kernel/locking/rwsem.c                        |    4 +-
  kernel/sched/fair.c                           |   13 +
  kernel/sched/sched.h                          |    2 +-
- kernel/sched/wait.c                           |   24 +
- kernel/sysctl.c                               |   12 +
+ kernel/sysctl.c                               |   13 +
  kernel/user_namespace.c                       |    7 +
  mm/Kconfig                                    |   65 +-
  mm/compaction.c                               |    4 +
@@ -78,13 +68,11 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  mm/util.c                                     |   34 +
  mm/vmpressure.c                               |    4 +
  mm/vmscan.c                                   |  157 +-
- net/ipv4/inet_connection_sock.c               |    2 +-
- scripts/Makefile.build                        |   52 +-
- scripts/Makefile.lib                          |    7 +-
- scripts/Makefile.vmlinux_o                    |   16 +-
- scripts/Makefile.vmlinux_thinlink             |   53 +
- scripts/head-object-list.txt                  |    1 +
- 79 files changed, 8103 insertions(+), 68 deletions(-)
+ scripts/Makefile.lib                          |    7 +
+ scripts/Makefile.thinlto                      |   40 +
+ scripts/Makefile.vmlinux_a                    |   83 +
+ scripts/mod/modpost.c                         |   15 +-
+ 67 files changed, 8447 insertions(+), 76 deletions(-)
  create mode 100644 block/adios.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.c
  create mode 100644 drivers/media/v4l2-core/v4l2loopback.h
@@ -93,73 +81,34 @@ Signed-off-by: Peter Jung <admin@ptr1337.dev>
  create mode 100644 drivers/scsi/vhba/Kconfig
  create mode 100644 drivers/scsi/vhba/Makefile
  create mode 100644 drivers/scsi/vhba/vhba.c
- create mode 100644 scripts/Makefile.vmlinux_thinlink
+ create mode 100644 scripts/Makefile.thinlto
+ create mode 100644 scripts/Makefile.vmlinux_a
 
 diff --git a/.gitignore b/.gitignore
-index f2f63e47fb88..b83a68185ef4 100644
+index 929054df5212..e4b492cc3993 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -12,6 +12,7 @@
+@@ -55,6 +55,7 @@
+ *.zst
+ Module.symvers
+ dtbs-list
++builtin.order
+ modules.order
+ 
  #
- .*
- *.a
-+*.a_thinlto_native
- *.asn1.[ch]
- *.bin
- *.bz2
-@@ -39,6 +40,7 @@
- *.mod.c
- *.o
- *.o.*
-+*.o_thinlto_native
- *.patch
- *.rmeta
- *.rpm
-@@ -64,6 +66,7 @@ modules.order
- /vmlinux
+@@ -66,6 +67,7 @@ modules.order
  /vmlinux.32
  /vmlinux.map
-+/vmlinux.thinlink
  /vmlinux.symvers
++/vmlinux.thinlto-index
  /vmlinux.unstripped
  /vmlinux-gdb.py
-diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
-index cb207c79680d..6fbab98fb639 100644
---- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
-+++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
-@@ -124,3 +124,27 @@ Contact:	intel-xe@lists.freedesktop.org
- Description:	RO. VRAM temperature in millidegree Celsius.
- 
- 		Only supported for particular Intel Xe graphics platforms.
-+
-+What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan1_input
-+Date:		March 2025
-+KernelVersion:	6.14
-+Contact:	intel-xe@lists.freedesktop.org
-+Description:	RO. Fan 1 speed in RPM.
-+
-+		Only supported for particular Intel Xe graphics platforms.
-+
-+What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan2_input
-+Date:		March 2025
-+KernelVersion:	6.14
-+Contact:	intel-xe@lists.freedesktop.org
-+Description:	RO. Fan 2 speed in RPM.
-+
-+		Only supported for particular Intel Xe graphics platforms.
-+
-+What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan3_input
-+Date:		March 2025
-+KernelVersion:	6.14
-+Contact:	intel-xe@lists.freedesktop.org
-+Description:	RO. Fan 3 speed in RPM.
-+
-+		Only supported for particular Intel Xe graphics platforms.
+ /vmlinuz
 diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 76a34e0aef76..186454e1c55b 100644
+index e92c0056e4e0..2e6b508babd8 100644
 --- a/Documentation/admin-guide/kernel-parameters.txt
 +++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2318,6 +2318,9 @@
+@@ -2384,6 +2384,9 @@
  			disable
  			  Do not enable intel_pstate as the default
  			  scaling driver for the supported processors
@@ -169,7 +118,7 @@ index 76a34e0aef76..186454e1c55b 100644
                          active
                            Use intel_pstate driver to bypass the scaling
                            governors layer of cpufreq and provides it own
-@@ -4689,6 +4692,15 @@
+@@ -4800,6 +4803,15 @@
  		nomsi		[MSI] If the PCI_MSI kernel config parameter is
  				enabled, this kernel boot option can be used to
  				disable the use of MSI interrupts system-wide.
@@ -186,7 +135,7 @@ index 76a34e0aef76..186454e1c55b 100644
  				Safety option to keep boot IRQs enabled. This
  				should never be necessary.
 diff --git a/Documentation/admin-guide/sysctl/vm.rst b/Documentation/admin-guide/sysctl/vm.rst
-index 8290177b4f75..2a94faa5a4ca 100644
+index 4d71211fdad8..57af938f1969 100644
 --- a/Documentation/admin-guide/sysctl/vm.rst
 +++ b/Documentation/admin-guide/sysctl/vm.rst
 @@ -25,6 +25,9 @@ files can be found in mm/swap.c.
@@ -199,7 +148,7 @@ index 8290177b4f75..2a94faa5a4ca 100644
  - compact_memory
  - compaction_proactiveness
  - compact_unevictable_allowed
-@@ -109,6 +112,67 @@ On x86_64 this is about 128MB.
+@@ -110,6 +113,67 @@ On x86_64 this is about 128MB.
  Changing this takes effect whenever an application requests memory.
  
  
@@ -267,7 +216,7 @@ index 8290177b4f75..2a94faa5a4ca 100644
  compact_memory
  ==============
  
-@@ -973,6 +1037,14 @@ be 133 (x + 2x = 200, 2x = 133.33).
+@@ -980,6 +1044,14 @@ be 133 (x + 2x = 200, 2x = 133.33).
  At 0, the kernel will not initiate swap until the amount of free and
  file-backed pages is less than the high watermark in a zone.
  
@@ -282,37 +231,11 @@ index 8290177b4f75..2a94faa5a4ca 100644
  
  unprivileged_userfaultfd
  ========================
-diff --git a/MAINTAINERS b/MAINTAINERS
-index dd844ac8d910..4feb3b9f8f73 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5790,6 +5790,11 @@ F:	scripts/Makefile.clang
- F:	scripts/clang-tools/
- K:	\b(?i:clang|llvm)\b
- 
-+CLANG/LLVM THINLTO DISTRIBUTED BUILD
-+M:	Rong Xu <xur@google.com>
-+S:	Supported
-+F:	scripts/Makefile.vmlinux_thinlink
-+
- CLK API
- M:	Russell King <linux@armlinux.org.uk>
- L:	linux-clk@vger.kernel.org
 diff --git a/Makefile b/Makefile
-index 8e2d03723368..9db3d9c480d3 100644
+index d090c7c253e8..0eaf752dbb6d 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -298,7 +298,8 @@ no-dot-config-targets := $(clean-targets) \
- 			 outputmakefile rustavailable rustfmt rustfmtcheck
- no-sync-config-targets := $(no-dot-config-targets) %install modules_sign kernelrelease \
- 			  image_name
--single-targets := %.a %.i %.ko %.lds %.ll %.lst %.mod %.o %.rsi %.s %/
-+single-targets := %.a %.i %.ko %.lds %.ll %.lst %.mod %.o %.rsi %.s %.o_thinlto_native \
-+	          %.a_thinlto_native %.o.thinlto.bc %/
- 
- config-build	:=
- mixed-build	:=
-@@ -857,11 +858,19 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
+@@ -869,11 +869,19 @@ KBUILD_CFLAGS	+= -fno-delete-null-pointer-checks
  ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
  KBUILD_CFLAGS += -O2
  KBUILD_RUSTFLAGS += -Copt-level=2
@@ -332,7 +255,7 @@ index 8e2d03723368..9db3d9c480d3 100644
  # Always set `debug-assertions` and `overflow-checks` because their default
  # depends on `opt-level` and `debug-assertions`, respectively.
  KBUILD_RUSTFLAGS += -Cdebug-assertions=$(if $(CONFIG_RUST_DEBUG_ASSERTIONS),y,n)
-@@ -991,10 +1000,10 @@ export CC_FLAGS_SCS
+@@ -1003,10 +1011,10 @@ export CC_FLAGS_SCS
  endif
  
  ifdef CONFIG_LTO_CLANG
@@ -341,70 +264,64 @@ index 8e2d03723368..9db3d9c480d3 100644
 -else
 +ifdef CONFIG_LTO_CLANG_FULL
  CC_FLAGS_LTO	:= -flto
-+else # for CONFIG_LTO_CLANG_THIN or CONFIG_LTO_CLANG_THIN_DIST
++else
 +CC_FLAGS_LTO	:= -flto=thin -fsplit-lto-unit
  endif
  CC_FLAGS_LTO	+= -fvisibility=hidden
  
-@@ -1213,8 +1222,34 @@ vmlinux.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
- 	$(call if_changed,ar_vmlinux.a)
+@@ -1200,7 +1208,7 @@ export ARCH_DRIVERS	:= $(drivers-y) $(drivers-m)
+ KBUILD_VMLINUX_OBJS := built-in.a $(patsubst %/, %/lib.a, $(filter %/, $(libs-y)))
+ KBUILD_VMLINUX_LIBS := $(filter-out %/, $(libs-y))
+ 
+-export KBUILD_VMLINUX_LIBS
++export KBUILD_VMLINUX_OBJS KBUILD_VMLINUX_LIBS
+ export KBUILD_LDS          := arch/$(SRCARCH)/kernel/vmlinux.lds
+ 
+ ifdef CONFIG_TRIM_UNUSED_KSYMS
+@@ -1209,16 +1217,12 @@ ifdef CONFIG_TRIM_UNUSED_KSYMS
+ KBUILD_MODULES := y
+ endif
+ 
+-# '$(AR) mPi' needs 'T' to workaround the bug of llvm-ar <= 14
+-quiet_cmd_ar_vmlinux.a = AR      $@
+-      cmd_ar_vmlinux.a = \
+-	rm -f $@; \
+-	$(AR) cDPrST $@ $(KBUILD_VMLINUX_OBJS); \
+-	$(AR) mPiT $$($(AR) t $@ | sed -n 1p) $@ $$($(AR) t $@ | grep -F -f $(srctree)/scripts/head-object-list.txt)
++PHONY += vmlinux_a
++vmlinux_a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
++	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_a
+ 
+-targets += vmlinux.a
+-vmlinux.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
+-	$(call if_changed,ar_vmlinux.a)
++vmlinux.a: vmlinux_a
++	@:
  
  PHONY += vmlinux_o
-+ifdef CONFIG_LTO_CLANG_THIN_DIST
-+vmlinux.thinlink: vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
-+	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_thinlink
-+targets += vmlinux.thinlink
-+
-+vmlinux.a_thinlto_native := $(patsubst %.a,%.a_thinlto_native,$(KBUILD_VMLINUX_OBJS))
-+quiet_cmd_ar_vmlinux.a_thinlto_native = AR      $@
-+      cmd_ar_vmlinux.a_thinlto_native = \
-+	rm -f $@; \
-+	$(AR) cDPrST $@ $(vmlinux.a_thinlto_native); \
-+	$(AR) mPiT $$($(AR) t $@ | sed -n 1p) $@ $$($(AR) t $@ | grep -F -f $(srctree)/scripts/head-object-list.txt)
-+
-+define rule_gen_vmlinux.a_thinlto_native
-+	+$(Q)$(MAKE) $(build)=. need-builtin=1 thinlto_final_pass=1 need-modorder=1 built-in.a_thinlto_native
-+	$(call cmd_and_savecmd,ar_vmlinux.a_thinlto_native)
-+endef
-+
-+vmlinux.a_thinlto_native: vmlinux.thinlink scripts/head-object-list.txt FORCE
-+	$(call if_changed_rule,gen_vmlinux.a_thinlto_native)
-+
-+targets += vmlinux.a_thinlto_native
-+
-+vmlinux_o: vmlinux.a_thinlto_native
-+	$(Q)$(MAKE) thinlto_final_pass=1 -f $(srctree)/scripts/Makefile.vmlinux_o
-+else
  vmlinux_o: vmlinux.a $(KBUILD_VMLINUX_LIBS)
- 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_o
-+endif
- 
- vmlinux.o modules.builtin.modinfo modules.builtin: vmlinux_o
- 	@:
-@@ -1572,7 +1607,8 @@ CLEAN_FILES += vmlinux.symvers modules-only.symvers \
+@@ -1578,6 +1582,7 @@ endif # CONFIG_MODULES
+ CLEAN_FILES += vmlinux.symvers modules-only.symvers \
+ 	       modules.builtin modules.builtin.modinfo modules.nsdeps \
  	       modules.builtin.ranges vmlinux.o.map vmlinux.unstripped \
++	       vmlinux.thinlto-index builtin.order \
  	       compile_commands.json rust/test \
  	       rust-project.json .vmlinux.objs .vmlinux.export.c \
--               .builtin-dtbs-list .builtin-dtb.S
-+	       .builtin-dtbs-list .builtin-dtb.S \
-+	       .vmlinux_thinlto_bc_files vmlinux.thinlink
- 
- # Directories & files removed with 'make mrproper'
- MRPROPER_FILES += include/config include/generated          \
-@@ -2023,6 +2059,8 @@ clean: $(clean-dirs)
- 		-o -name '*.symtypes' -o -name 'modules.order' \
- 		-o -name '*.c.[012]*.*' \
- 		-o -name '*.ll' \
-+		-o -name '*.a_thinlto_native' -o -name '*.o_thinlto_native' \
-+		-o -name '*.o.thinlto.bc' \
- 		-o -name '*.gcno' \
- 		\) -type f -print \
- 		-o -name '.tmp_*' -print \
+                .builtin-dtbs-list .builtin-dtb.S
+@@ -2019,7 +2024,7 @@ clean: $(clean-dirs)
+ 	$(call cmd,rmfiles)
+ 	@find . $(RCS_FIND_IGNORE) \
+ 		\( -name '*.[aios]' -o -name '*.rsi' -o -name '*.ko' -o -name '.*.cmd' \
+-		-o -name '*.ko.*' \
++		-o -name '*.ko.*' -o -name '*.o.thinlto.bc' \
+ 		-o -name '*.dtb' -o -name '*.dtbo' \
+ 		-o -name '*.dtb.S' -o -name '*.dtbo.S' \
+ 		-o -name '*.dt.yaml' -o -name 'dtbs-list' \
 diff --git a/arch/Kconfig b/arch/Kconfig
-index b0adb665041f..30dccda07c67 100644
+index 880cddff5eda..8864b9c13af7 100644
 --- a/arch/Kconfig
 +++ b/arch/Kconfig
-@@ -810,6 +810,25 @@ config LTO_CLANG_THIN
+@@ -826,6 +826,25 @@ config LTO_CLANG_THIN
  	    https://clang.llvm.org/docs/ThinLTO.html
  
  	  If unsure, say Y.
@@ -419,7 +336,7 @@ index b0adb665041f..30dccda07c67 100644
 +	  ThinLTO index files. Subsequently, the build system explicitly
 +	  invokes ThinLTO backend compilation using these index files
 +	  and pre-linked IR objects. The resulting native object files
-+	  are with the .o_thinlto_native suffix.
++	  are with the .thinlto-native.o suffix.
 +
 +	  This build mode offers improved visibility into the ThinLTO
 +	  process through explicit subcommand exposure. It also makes
@@ -431,42 +348,25 @@ index b0adb665041f..30dccda07c67 100644
  
  config ARCH_SUPPORTS_AUTOFDO_CLANG
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
-index 753b8763abae..d4ce964d9713 100644
+index f928cf6e3252..d4ce964d9713 100644
 --- a/arch/x86/Kconfig.cpu
 +++ b/arch/x86/Kconfig.cpu
-@@ -245,6 +245,76 @@ config MATOM
+@@ -255,6 +255,11 @@ config CC_HAS_MARCH_NATIVE
+ 	# usage warnings that only appear wth '-march=native'.
+ 	depends on CC_IS_GCC || CLANG_VERSION >= 190100
  
- endchoice
- 
-+config CC_HAS_MARCH_NATIVE
-+	# This flag might not be available in cross-compilers:
-+	def_bool $(cc-option, -march=native)
-+	# LLVM 18 has an easily triggered internal compiler error in core
-+	# networking code with '-march=native' on certain systems:
-+	# https://github.com/llvm/llvm-project/issues/72026
-+	# LLVM 19 introduces an optimization that resolves some high stack
-+	# usage warnings that only appear wth '-march=native'.
-+	depends on CC_IS_GCC || CLANG_VERSION >= 190100
-+
 +
 +choice
 +	prompt "x86_64 Compiler Build Optimization"
 +	default GENERIC_CPU
 +
-+config X86_NATIVE_CPU
-+	bool "Build and optimize for local/native CPU"
-+	depends on X86_64
-+	depends on CC_HAS_MARCH_NATIVE
-+	help
-+	  Optimize for the current CPU used to compile the kernel.
-+	  Use this option if you intend to build the kernel for your
-+	  local machine.
-+
-+	  Note that such a kernel might not work optimally on a
-+	  different x86 machine.
-+
-+	  If unsure, say N.
-+
+ config X86_NATIVE_CPU
+ 	bool "Build and optimize for local/native CPU"
+ 	depends on X86_64
+@@ -269,6 +274,47 @@ config X86_NATIVE_CPU
+ 
+ 	  If unsure, say N.
+ 
 +config GENERIC_CPU
 +	bool "Generic-x86-64"
 +	depends on X86_64
@@ -512,16 +412,14 @@ index 753b8763abae..d4ce964d9713 100644
  	bool "Generic x86 support"
  	depends on X86_32
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 594723005d95..cbd234e9e743 100644
+index 1913d342969b..82358ed864bb 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
-@@ -173,8 +173,25 @@ else
- 	# Use -mskip-rax-setup if supported.
- 	KBUILD_CFLAGS += $(call cc-option,-mskip-rax-setup)
- 
-+ifdef CONFIG_X86_NATIVE_CPU
-+        KBUILD_CFLAGS += -march=native
-+        KBUILD_RUSTFLAGS += -Ctarget-cpu=native
+@@ -176,10 +176,22 @@ else
+ ifdef CONFIG_X86_NATIVE_CPU
+         KBUILD_CFLAGS += -march=native
+         KBUILD_RUSTFLAGS += -Ctarget-cpu=native
+-else
 +endif
 +
 +ifdef CONFIG_MZEN4
@@ -533,6 +431,7 @@ index 594723005d95..cbd234e9e743 100644
 +ifeq ($(CONFIG_X86_64_VERSION),1)
          KBUILD_CFLAGS += -march=x86-64 -mtune=generic
          KBUILD_RUSTFLAGS += -Ctarget-cpu=x86-64 -Ztune-cpu=generic
+-endif
 +else
 +        KBUILD_CFLAGS +=-march=x86-64-v$(CONFIG_X86_64_VERSION)
 +        KBUILD_RUSTFLAGS += -Ctarget-cpu=x86-64-v$(CONFIG_X86_64_VERSION)
@@ -565,6 +464,22 @@ index b3ab80a03365..5e883b397ff3 100644
  /* Can be used to override the logic in pci_scan_bus for skipping
     already-configured bus numbers - to be used for buggy BIOSes
     or architectures with incomplete PCI setup by the loader */
+diff --git a/arch/x86/kernel/cpu/bus_lock.c b/arch/x86/kernel/cpu/bus_lock.c
+index 981f8b1f0792..5ac928b86ab7 100644
+--- a/arch/x86/kernel/cpu/bus_lock.c
++++ b/arch/x86/kernel/cpu/bus_lock.c
+@@ -46,7 +46,11 @@ static const struct {
+ 
+ static struct ratelimit_state bld_ratelimit;
+ 
++#ifdef CONFIG_CACHY
++static unsigned int sysctl_sld_mitigate = 0;
++#else
+ static unsigned int sysctl_sld_mitigate = 1;
++#endif /* CONFIG_CACHY */
+ static DEFINE_SEMAPHORE(buslock_sem, 1);
+ 
+ #ifdef CONFIG_PROC_SYSCTL
 diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
 index ddb798603201..7c20387d8202 100644
 --- a/arch/x86/pci/common.c
@@ -613,10 +528,10 @@ index 27f11320b8d1..e98585dd83e0 100644
  	tristate "BFQ I/O scheduler"
  	select BLK_ICQ
 diff --git a/block/Makefile b/block/Makefile
-index 3a941dc0d27f..94e3bf608bd2 100644
+index c65f4da93702..105b12fd86b8 100644
 --- a/block/Makefile
 +++ b/block/Makefile
-@@ -23,6 +23,7 @@ obj-$(CONFIG_BLK_CGROUP_IOLATENCY)	+= blk-iolatency.o
+@@ -22,6 +22,7 @@ obj-$(CONFIG_BLK_CGROUP_IOLATENCY)	+= blk-iolatency.o
  obj-$(CONFIG_BLK_CGROUP_IOCOST)	+= blk-iocost.o
  obj-$(CONFIG_MQ_IOSCHED_DEADLINE)	+= mq-deadline.o
  obj-$(CONFIG_MQ_IOSCHED_KYBER)	+= kyber-iosched.o
@@ -624,7 +539,7 @@ index 3a941dc0d27f..94e3bf608bd2 100644
  bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
  obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
  
-@@ -37,3 +38,10 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+@@ -36,3 +37,10 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
  					   blk-crypto-sysfs.o
  obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
  obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
@@ -637,10 +552,10 @@ index 3a941dc0d27f..94e3bf608bd2 100644
 +
 diff --git a/block/adios.c b/block/adios.c
 new file mode 100644
-index 000000000000..b1201ac165ed
+index 000000000000..41de52785cd1
 --- /dev/null
 +++ b/block/adios.c
-@@ -0,0 +1,1450 @@
+@@ -0,0 +1,2006 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Adaptive Deadline I/O Scheduler (ADIOS)
@@ -660,16 +575,94 @@ index 000000000000..b1201ac165ed
 +#include <linux/timekeeping.h>
 +#include <linux/percpu.h>
 +#include <linux/string.h>
++#include <linux/list_sort.h>
++#include <linux/rcupdate.h>
 +
 +#include "elevator.h"
 +#include "blk.h"
 +#include "blk-mq.h"
 +#include "blk-mq-sched.h"
 +
-+#define ADIOS_VERSION "2.3.0"
++#define ADIOS_VERSION "3.1.7"
 +
-+// Define operation types supported by ADIOS
-+enum adios_op_type {
++/* Request Types:
++ *
++ * Tier 0 (Highest Priority): Emergency & System Integrity Requests
++ * -----------------------------------------------------------------
++ * - Target: Requests with the BLK_MQ_INSERT_AT_HEAD flag.
++ * - Purpose: For critical, non-negotiable operations such as device error
++ *   recovery or flush sequences that must bypass all other scheduling logic.
++ * - Implementation: Placed in a dedicated, high-priority FIFO queue
++ *   (`prio_queue[0]`) for immediate dispatch.
++ *
++ * Tier 1 (High Priority): I/O Barrier Guarantees
++ * ---------------------------------------------------------------
++ * - Target: Requests with the REQ_OP_FLUSH flag.
++ * - Purpose: To enforce a strict I/O barrier. When a flush request is
++ *   received, the scheduler stops processing new requests from its main
++ *   queues until all preceding requests have been completed. This guarantees
++ *   the order of operations required by filesystems for data integrity.
++ * - Implementation: A state flag (ADIOS_STATE_BARRIER) halts
++ *   insertion into the main deadline tree. The barrier request and all
++ *   subsequent requests are held in a temporary `barrier_queue`. Once the
++ *   main queues are drained, the barrier request and the subsequent requests
++ *   are released from the pending queue back into the scheduler.
++ *
++ * Tier 2 (Medium Priority): Application Responsiveness
++ * ----------------------------------------------------
++ * - Target: Normal synchronous requests (e.g., from standard file reads).
++ * - Purpose: To ensure correct application behavior for operations that
++ *   depend on sequential I/O completion (e.g., file system mounts) and to
++ *   provide low latency for interactive applications.
++ * - Implementation: The deadline for these requests is set to their start
++ *   time (`rq->start_time_ns`). This effectively enforces FIFO-like behavior
++ *   within the deadline-sorted red-black tree, preventing out-of-order
++ *   execution of dependent synchronous operations.
++ *
++ * Tier 3 (Normal Priority): Background Throughput
++ * -----------------------------------------------
++ * - Target: Asynchronous requests.
++ * - Purpose: To maximize disk throughput for background tasks where latency
++ *   is not critical.
++ * - Implementation: These are the only requests where ADIOS's adaptive
++ *   latency prediction model is used. A dynamic deadline is calculated based
++ *   on the predicted I/O latency, allowing for aggressive reordering to
++ *   optimize I/O efficiency.
++ *
++ * Dispatch Logic:
++ * The scheduler always dispatches requests in strict priority order:
++ * 1. prio_queue[0] (Tier 0)
++ * 2. The deadline-sorted batch queue (which naturally prioritizes Tier 2
++ *    over Tier 3 due to their calculated deadlines).
++ * 3. Barrier-pending requests are handled only after the main queues are empty.
++ */
++
++// Global variable to control the latency
++static u64 default_global_latency_window            = 16000000ULL;
++static u64 default_global_latency_window_rotational = 22000000ULL;
++// Ratio below which batch queues should be refilled
++static u8  default_bq_refill_below_ratio = 20;
++// Maximum latency sample to input
++static u64 default_lat_model_latency_limit = 500000000ULL;
++// Batch ordering strategy
++static u64 default_batch_order = 0;
++
++/* Compliance Flags:
++ * 0x1: Async requests will not be reordered based on the predicted latency
++ */
++enum adios_compliance_flags {
++	ADIOS_CF_FIXORDER  = 1U << 0,
++};
++
++// Flags to control compliance with block layer constraints
++static u64 default_compliance_flags = 0x0;
++
++// Dynamic thresholds for shrinkage
++static u32 default_lm_shrink_at_kreqs  =  5000;
++static u32 default_lm_shrink_at_gbytes =    50;
++static u32 default_lm_shrink_resist    =     2;
++
++enum adios_optype {
 +	ADIOS_READ    = 0,
 +	ADIOS_WRITE   = 1,
 +	ADIOS_DISCARD = 2,
@@ -677,19 +670,9 @@ index 000000000000..b1201ac165ed
 +	ADIOS_OPTYPES = 4,
 +};
 +
-+// Global variable to control the latency
-+static u64 default_global_latency_window = 32000000ULL;
-+// Ratio below which batch queues should be refilled
-+static u8  default_bq_refill_below_ratio = 25;
-+
-+// Dynamic thresholds for shrinkage
-+static u32 default_lm_shrink_at_kreqs  =  5000;
-+static u32 default_lm_shrink_at_gbytes =    50;
-+static u32 default_lm_shrink_resist    =     2;
-+
 +// Latency targets for each operation type
 +static u64 default_latency_target[ADIOS_OPTYPES] = {
-+	[ADIOS_READ]    =     1ULL * NSEC_PER_MSEC,
++	[ADIOS_READ]    =     2ULL * NSEC_PER_MSEC,
 +	[ADIOS_WRITE]   =  2000ULL * NSEC_PER_MSEC,
 +	[ADIOS_DISCARD] =  8000ULL * NSEC_PER_MSEC,
 +	[ADIOS_OTHER]   =     0ULL * NSEC_PER_MSEC,
@@ -697,13 +680,16 @@ index 000000000000..b1201ac165ed
 +
 +// Maximum batch size limits for each operation type
 +static u32 default_batch_limit[ADIOS_OPTYPES] = {
-+	[ADIOS_READ]    = 24,
-+	[ADIOS_WRITE]   = 48,
++	[ADIOS_READ]    = 36,
++	[ADIOS_WRITE]   = 72,
 +	[ADIOS_DISCARD] =  1,
 +	[ADIOS_OTHER]   =  1,
 +};
 +
-+static u32 default_dl_prio[2] = {7, 0};
++enum adios_batch_order {
++	ADIOS_BO_OPTYPE   = 0,
++	ADIOS_BO_ELEVATOR = 1,
++};
 +
 +// Thresholds for latency model control
 +#define LM_BLOCK_SIZE_THRESHOLD 4096
@@ -712,28 +698,54 @@ index 000000000000..b1201ac165ed
 +#define LM_OUTLIER_PERCENTILE     99
 +#define LM_LAT_BUCKET_COUNT       64
 +
++#define ADIOS_PQ_LEVELS 2
++#define ADIOS_DL_TYPES  2
++#define ADIOS_BQ_PAGES  2
++
++static u32 default_dl_prio[ADIOS_DL_TYPES] = {8, 0};
++
++// Bit flags for the atomic state variable, indicating which queues have requests.
++enum adios_state_flags {
++	ADIOS_STATE_PQ_0      = 1U << 0,
++	ADIOS_STATE_PQ_1      = 1U << 1,
++	ADIOS_STATE_DL_0      = 1U << 2,
++	ADIOS_STATE_DL_1      = 1U << 3,
++	ADIOS_STATE_BQ_PAGE_0 = 1U << 4,
++	ADIOS_STATE_BQ_PAGE_1 = 1U << 5,
++	ADIOS_STATE_BARRIER   = 1U << 6,
++};
++#define ADIOS_STATE_PQ 0
++#define ADIOS_STATE_DL 2
++#define ADIOS_STATE_BQ 4
++#define ADIOS_STATE_BP 6
++
++// Temporal granularity of the deadline tree node (dl_group)
++#define ADIOS_QUANTUM_SHIFT 20
++
++#define ADIOS_MAX_INSERTS_PER_LOCK 72
++#define ADIOS_MAX_DELETES_PER_LOCK 24
++
 +// Structure to hold latency bucket data for small requests
 +struct latency_bucket_small {
-+	u64 sum_latency;
-+	u32 count;
++	u64 weighted_sum_latency;
++	u64 sum_of_weights;
 +};
 +
 +// Structure to hold latency bucket data for large requests
 +struct latency_bucket_large {
-+	u64 sum_latency;
-+	u64 sum_block_size;
-+	u32 count;
++	u64 weighted_sum_latency;
++	u64 weighted_sum_block_size;
++	u64 sum_of_weights;
 +};
 +
-+// New structure to hold per-cpu buckets, improving data locality and code clarity.
++// Structure to hold per-cpu buckets, improving data locality and code clarity.
 +struct lm_buckets {
 +	struct latency_bucket_small small_bucket[LM_LAT_BUCKET_COUNT];
 +	struct latency_bucket_large large_bucket[LM_LAT_BUCKET_COUNT];
 +};
 +
-+// Structure to hold the latency model context data
-+struct latency_model {
-+	seqlock_t lock;
++// Structure to hold RCU-protected latency model parameters
++struct latency_model_params {
 +	u64 base;
 +	u64 slope;
 +	u64 small_sum_delay;
@@ -741,6 +753,13 @@ index 000000000000..b1201ac165ed
 +	u64 large_sum_delay;
 +	u64 large_sum_bsize;
 +	u64 last_update_jiffies;
++	struct rcu_head rcu;
++};
++
++// Structure to hold the latency model context data
++struct latency_model {
++	spinlock_t update_lock;
++	struct latency_model_params __rcu *params;
 +
 +	// Per-CPU buckets to avoid lock contention on the completion path
 +	struct lm_buckets __percpu *pcpu_buckets;
@@ -750,40 +769,62 @@ index 000000000000..b1201ac165ed
 +	u8  lm_shrink_resist;
 +};
 +
-+#define ADIOS_BQ_PAGES 2
-+#define ADIOS_MAX_INSERTS_PER_LOCK 16
++union adios_in_flight_rqs {
++	atomic64_t	atomic;
++	u64			scalar;
++	struct {
++		u64 	count:          16;
++		u64 	total_pred_lat: 48;
++	};
++};
 +
 +// Adios scheduler data
 +struct adios_data {
 +	spinlock_t pq_lock;
-+	struct list_head prio_queue;
++	struct list_head prio_queue[2];
 +
 +	struct rb_root_cached dl_tree[2];
 +	spinlock_t lock;
-+	u8  dl_queued;
 +	s64 dl_bias;
 +	s32 dl_prio[2];
 +
++	atomic_t state;
++	u8  bq_state[ADIOS_BQ_PAGES];
++
++	void (*insert_request_fn)(struct blk_mq_hw_ctx *, struct request *,
++								blk_insert_t, struct list_head *);
++
 +	u64 global_latency_window;
++	u64 compliance_flags;
 +	u64 latency_target[ADIOS_OPTYPES];
 +	u32 batch_limit[ADIOS_OPTYPES];
 +	u32 batch_actual_max_size[ADIOS_OPTYPES];
 +	u32 batch_actual_max_total;
 +	u32 async_depth;
++	u32 lat_model_latency_limit;
 +	u8  bq_refill_below_ratio;
++	u8  is_rotational;
++	u8  batch_order;
++	u8  elv_direction;
++	sector_t head_pos;
++	sector_t last_completed_pos;
 +
 +	bool bq_page;
-+	bool more_bq_ready;
 +	struct list_head batch_queue[ADIOS_BQ_PAGES][ADIOS_OPTYPES];
 +	u32 batch_count[ADIOS_BQ_PAGES][ADIOS_OPTYPES];
++	u8  bq_batch_order[ADIOS_BQ_PAGES];
 +	spinlock_t bq_lock;
++	spinlock_t barrier_lock;
++	struct list_head barrier_queue;
 +
 +	struct lm_buckets *aggr_buckets;
 +
 +	struct latency_model latency_model[ADIOS_OPTYPES];
 +	struct timer_list update_timer;
 +
++	union adios_in_flight_rqs in_flight_rqs;
 +	atomic64_t total_pred_lat;
++	u64 last_completed_time;
 +
 +	struct kmem_cache *rq_data_pool;
 +	struct kmem_cache *dl_group_pool;
@@ -807,9 +848,10 @@ index 000000000000..b1201ac165ed
 +	u64 deadline;
 +	u64 pred_lat;
 +	u32 block_size;
++	bool managed;
 +} __attribute__((aligned(64)));
 +
-+static const int adios_prio_to_weight[40] = {
++static const int adios_prio_to_wmult[40] = {
 + /* -20 */     88761,     71755,     56483,     46273,     36291,
 + /* -15 */     29154,     23254,     18705,     14949,     11916,
 + /* -10 */      9548,      7620,      6100,      4904,      3906,
@@ -820,21 +862,26 @@ index 000000000000..b1201ac165ed
 + /*  15 */        36,        29,        23,        18,        15,
 +};
 +
++static inline bool compliant(struct adios_data *ad, u32 flag) {
++	return ad->compliance_flags & flag;
++}
++
 +// Count the number of entries in aggregated small buckets
-+static u32 lm_count_small_entries(struct latency_bucket_small *buckets) {
-+	u32 total_count = 0;
++static u64 lm_count_small_entries(struct latency_bucket_small *buckets) {
++	u64 total_weight = 0;
 +	for (u8 i = 0; i < LM_LAT_BUCKET_COUNT; i++)
-+		total_count += buckets[i].count;
-+	return total_count;
++		total_weight += buckets[i].sum_of_weights;
++	return total_weight;
 +}
 +
 +// Update the small buckets in the latency model from aggregated data
 +static bool lm_update_small_buckets(struct latency_model *model,
++		struct latency_model_params *params,
 +		struct latency_bucket_small *buckets,
-+		u32 total_count, bool count_all) {
++		u64 total_weight, bool count_all) {
 +	u64 sum_latency = 0;
-+	u32 sum_count = 0;
-+	u32 cumulative_count = 0, threshold_count = 0;
++	u64 sum_weight = 0;
++	u64 cumulative_weight = 0, threshold_weight = 0;
 +	u8  outlier_threshold_bucket = 0;
 +	u8  outlier_percentile = LM_OUTLIER_PERCENTILE;
 +	u8  reduction;
@@ -842,13 +889,13 @@ index 000000000000..b1201ac165ed
 +	if (count_all)
 +		outlier_percentile = 100;
 +
-+	// Calculate the threshold count for outlier detection
-+	threshold_count = (total_count * outlier_percentile) / 100;
++	// Calculate the threshold weight for outlier detection
++	threshold_weight = (total_weight * outlier_percentile) / 100;
 +
 +	// Identify the bucket that corresponds to the outlier threshold
 +	for (u8 i = 0; i < LM_LAT_BUCKET_COUNT; i++) {
-+		cumulative_count += buckets[i].count;
-+		if (cumulative_count >= threshold_count) {
++		cumulative_weight += buckets[i].sum_of_weights;
++		if (cumulative_weight >= threshold_weight) {
 +			outlier_threshold_bucket = i;
 +			break;
 +		}
@@ -858,51 +905,56 @@ index 000000000000..b1201ac165ed
 +	for (u8 i = 0; i <= outlier_threshold_bucket; i++) {
 +		struct latency_bucket_small *bucket = &buckets[i];
 +		if (i < outlier_threshold_bucket) {
-+			sum_latency += bucket->sum_latency;
-+			sum_count += bucket->count;
++			sum_latency += bucket->weighted_sum_latency;
++			sum_weight += bucket->sum_of_weights;
 +		} else {
 +			// The threshold bucket's contribution is proportional
-+			u64 remaining_count =
-+				threshold_count - (cumulative_count - bucket->count);
-+			if (bucket->count > 0) {
-+				sum_latency +=
-+					div_u64((bucket->sum_latency * remaining_count), bucket->count);
-+				sum_count += remaining_count;
++			u64 remaining_weight =
++				threshold_weight - (cumulative_weight - bucket->sum_of_weights);
++			if (bucket->sum_of_weights > 0) {
++				sum_latency += div_u64(bucket->weighted_sum_latency *
++					remaining_weight, bucket->sum_of_weights);
++				sum_weight += remaining_weight;
 +			}
 +		}
 +	}
 +
 +	// Shrink the model if it reaches at the readjustment threshold
-+	if (model->small_count >= 1000ULL * model->lm_shrink_at_kreqs) {
++	if (params->small_count >= 1000ULL * model->lm_shrink_at_kreqs) {
 +		reduction = model->lm_shrink_resist;
-+		if (model->small_count >> reduction) {
-+			model->small_sum_delay -= model->small_sum_delay >> reduction;
-+			model->small_count     -= model->small_count     >> reduction;
++		if (params->small_count >> reduction) {
++			params->small_sum_delay -= params->small_sum_delay >> reduction;
++			params->small_count     -= params->small_count     >> reduction;
 +		}
 +	}
 +
++	if (!sum_weight)
++		return false;
++
 +	// Accumulate the average latency into the statistics
-+	model->small_sum_delay += sum_latency;
-+	model->small_count += sum_count;
++	params->small_sum_delay += sum_latency;
++	params->small_count     += sum_weight;
 +
 +	return true;
 +}
 +
 +// Count the number of entries in aggregated large buckets
-+static u32 lm_count_large_entries(struct latency_bucket_large *buckets) {
-+	u32 total_count = 0;
++static u64 lm_count_large_entries(struct latency_bucket_large *buckets) {
++	u64 total_weight = 0;
 +	for (u8 i = 0; i < LM_LAT_BUCKET_COUNT; i++)
-+		total_count += buckets[i].count;
-+	return total_count;
++		total_weight += buckets[i].sum_of_weights;
++	return total_weight;
 +}
 +
 +// Update the large buckets in the latency model from aggregated data
 +static bool lm_update_large_buckets(struct latency_model *model,
++		struct latency_model_params *params,
 +		struct latency_bucket_large *buckets,
-+		u32 total_count, bool count_all) {
++		u64 total_weight, bool count_all) {
 +	s64 sum_latency = 0;
 +	u64 sum_block_size = 0, intercept;
-+	u32 cumulative_count = 0, threshold_count = 0;
++	u64 cumulative_weight = 0, threshold_weight = 0;
++	u64 sum_weight = 0;
 +	u8  outlier_threshold_bucket = 0;
 +	u8  outlier_percentile = LM_OUTLIER_PERCENTILE;
 +	u8  reduction;
@@ -910,13 +962,13 @@ index 000000000000..b1201ac165ed
 +	if (count_all)
 +		outlier_percentile = 100;
 +
-+	// Calculate the threshold count for outlier detection
-+	threshold_count = (total_count * outlier_percentile) / 100;
++	// Calculate the threshold weight for outlier detection
++	threshold_weight = (total_weight * outlier_percentile) / 100;
 +
 +	// Identify the bucket that corresponds to the outlier threshold
 +	for (u8 i = 0; i < LM_LAT_BUCKET_COUNT; i++) {
-+		cumulative_count += buckets[i].count;
-+		if (cumulative_count >= threshold_count) {
++		cumulative_weight += buckets[i].sum_of_weights;
++		if (cumulative_weight >= threshold_weight) {
 +			outlier_threshold_bucket = i;
 +			break;
 +		}
@@ -926,37 +978,42 @@ index 000000000000..b1201ac165ed
 +	for (u8 i = 0; i <= outlier_threshold_bucket; i++) {
 +		struct latency_bucket_large *bucket = &buckets[i];
 +		if (i < outlier_threshold_bucket) {
-+			sum_latency += bucket->sum_latency;
-+			sum_block_size += bucket->sum_block_size;
++			sum_latency += bucket->weighted_sum_latency;
++			sum_block_size += bucket->weighted_sum_block_size;
++			sum_weight += bucket->sum_of_weights;
 +		} else {
 +			// The threshold bucket's contribution is proportional
-+			u64 remaining_count =
-+				threshold_count - (cumulative_count - bucket->count);
-+			if (bucket->count > 0) {
-+				sum_latency +=
-+					div_u64((bucket->sum_latency * remaining_count), bucket->count);
-+				sum_block_size +=
-+					div_u64((bucket->sum_block_size * remaining_count), bucket->count);
++			u64 remaining_weight =
++				threshold_weight - (cumulative_weight - bucket->sum_of_weights);
++			if (bucket->sum_of_weights > 0) {
++				sum_latency += div_u64(bucket->weighted_sum_latency *
++					remaining_weight, bucket->sum_of_weights);
++				sum_block_size += div_u64(bucket->weighted_sum_block_size *
++					remaining_weight, bucket->sum_of_weights);
++				sum_weight += remaining_weight;
 +			}
 +		}
 +	}
 +
++	if (!sum_weight)
++		return false;
++
 +	// Shrink the model if it reaches at the readjustment threshold
-+	if (model->large_sum_bsize >= 0x40000000ULL * model->lm_shrink_at_gbytes) {
++	if (params->large_sum_bsize >= 0x40000000ULL * model->lm_shrink_at_gbytes) {
 +		reduction = model->lm_shrink_resist;
-+		if (model->large_sum_bsize >> reduction) {
-+			model->large_sum_delay -= model->large_sum_delay >> reduction;
-+			model->large_sum_bsize -= model->large_sum_bsize >> reduction;
++		if (params->large_sum_bsize >> reduction) {
++			params->large_sum_delay -= params->large_sum_delay >> reduction;
++			params->large_sum_bsize -= params->large_sum_bsize >> reduction;
 +		}
 +	}
 +
 +	// Accumulate the average delay into the statistics
-+	intercept = model->base * threshold_count;
++	intercept = params->base;
 +	if (sum_latency > intercept)
 +		sum_latency -= intercept;
 +
-+	model->large_sum_delay += sum_latency;
-+	model->large_sum_bsize += sum_block_size;
++	params->large_sum_delay += sum_latency;
++	params->large_sum_bsize += sum_block_size;
 +
 +	return true;
 +}
@@ -974,7 +1031,7 @@ index 000000000000..b1201ac165ed
 +static void latency_model_update(
 +		struct adios_data *ad, struct latency_model *model) {
 +	u64 now;
-+	u32 small_count, large_count;
++	u64 small_weight, large_weight;
 +	bool time_elapsed;
 +	bool small_processed = false, large_processed = false;
 +	struct lm_buckets *aggr = ad->aggr_buckets;
@@ -983,24 +1040,38 @@ index 000000000000..b1201ac165ed
 +	struct lm_buckets *pcpu_b;
 +	unsigned long flags;
 +	int cpu;
++	struct latency_model_params *old_params, *new_params;
 +
-+	write_seqlock_irqsave(&model->lock, flags);
++	spin_lock_irqsave(&model->update_lock, flags);
++
++	old_params = rcu_dereference_protected(model->params,
++				lockdep_is_held(&model->update_lock));
++	new_params = kmemdup(old_params, sizeof(*new_params), GFP_ATOMIC);
++	if (!new_params) {
++		spin_unlock_irqrestore(&model->update_lock, flags);
++		return;
++	}
 +
 +	// Aggregate data from all CPUs and reset per-cpu buckets.
 +	for_each_possible_cpu(cpu) {
 +		pcpu_b = per_cpu_ptr(model->pcpu_buckets, cpu);
 +
 +		for (u8 i = 0; i < LM_LAT_BUCKET_COUNT; i++) {
-+			if (pcpu_b->small_bucket[i].count) {
++			if (pcpu_b->small_bucket[i].sum_of_weights) {
 +				asb = &aggr->small_bucket[i];
-+				asb->count          += pcpu_b->small_bucket[i].count;
-+				asb->sum_latency    += pcpu_b->small_bucket[i].sum_latency;
++				asb->sum_of_weights +=
++					pcpu_b->small_bucket[i].sum_of_weights;
++				asb->weighted_sum_latency +=
++					pcpu_b->small_bucket[i].weighted_sum_latency;
 +			}
-+			if (pcpu_b->large_bucket[i].count) {
++			if (pcpu_b->large_bucket[i].sum_of_weights) {
 +				alb = &aggr->large_bucket[i];
-+				alb->count          += pcpu_b->large_bucket[i].count;
-+				alb->sum_latency    += pcpu_b->large_bucket[i].sum_latency;
-+				alb->sum_block_size += pcpu_b->large_bucket[i].sum_block_size;
++				alb->sum_of_weights +=
++					pcpu_b->large_bucket[i].sum_of_weights;
++				alb->weighted_sum_latency +=
++					pcpu_b->large_bucket[i].weighted_sum_latency;
++				alb->weighted_sum_block_size +=
++					pcpu_b->large_bucket[i].weighted_sum_block_size;
 +			}
 +		}
 +		// Reset per-cpu buckets after aggregating
@@ -1008,43 +1079,48 @@ index 000000000000..b1201ac165ed
 +	}
 +
 +	// Count the number of entries in aggregated buckets
-+	small_count = lm_count_small_entries(aggr->small_bucket);
-+	large_count = lm_count_large_entries(aggr->large_bucket);
++	small_weight = lm_count_small_entries(aggr->small_bucket);
++	large_weight = lm_count_large_entries(aggr->large_bucket);
 +
 +	// Whether enough time has elapsed since the last update
 +	now = jiffies;
-+	time_elapsed = unlikely(!model->base) || model->last_update_jiffies +
++	time_elapsed = unlikely(!new_params->base) ||
++		new_params->last_update_jiffies +
 +		msecs_to_jiffies(LM_INTERVAL_THRESHOLD) <= now;
 +
 +	// Update small buckets
-+	if (small_count && (time_elapsed ||
-+			LM_SAMPLES_THRESHOLD <= small_count || !model->base)) {
-+		small_processed = lm_update_small_buckets(
-+			model, aggr->small_bucket, small_count, !model->base);
++	if (small_weight && (time_elapsed ||
++			LM_SAMPLES_THRESHOLD <= small_weight || !new_params->base)) {
++		small_processed = lm_update_small_buckets(model, new_params,
++			aggr->small_bucket, small_weight, !new_params->base);
 +		memset(&aggr->small_bucket[0], 0, sizeof(aggr->small_bucket));
 +	}
 +	// Update large buckets
-+	if (large_count && (time_elapsed ||
-+			LM_SAMPLES_THRESHOLD <= large_count || !model->slope)) {
-+		large_processed = lm_update_large_buckets(
-+			model, aggr->large_bucket, large_count, !model->slope);
++	if (large_weight && (time_elapsed ||
++			LM_SAMPLES_THRESHOLD <= large_weight || !new_params->slope)) {
++		large_processed = lm_update_large_buckets(model, new_params,
++			aggr->large_bucket, large_weight, !new_params->slope);
 +		memset(&aggr->large_bucket[0], 0, sizeof(aggr->large_bucket));
 +	}
 +
 +	// Update the base parameter if small bucket was processed
-+	if (small_processed && likely(model->small_count))
-+		model->base = div_u64(model->small_sum_delay, model->small_count);
++	if (small_processed && likely(new_params->small_count))
++		new_params->base = div_u64(new_params->small_sum_delay,
++			new_params->small_count);
 +
 +	// Update the slope parameter if large bucket was processed
-+	if (large_processed && likely(model->large_sum_bsize))
-+		model->slope = div_u64(model->large_sum_delay,
-+			DIV_ROUND_UP_ULL(model->large_sum_bsize, 1024));
++	if (large_processed && likely(new_params->large_sum_bsize))
++		new_params->slope = div_u64(new_params->large_sum_delay,
++			DIV_ROUND_UP_ULL(new_params->large_sum_bsize, 1024));
 +
 +	// Update last updated jiffies if update happened or time has elapsed
 +	if (small_processed || large_processed || time_elapsed)
-+		model->last_update_jiffies = now;
++		new_params->last_update_jiffies = now;
 +
-+	write_sequnlock_irqrestore(&model->lock, flags);
++	rcu_assign_pointer(model->params, new_params);
++	spin_unlock_irqrestore(&model->update_lock, flags);
++
++	kfree_rcu(old_params, rcu);
 +}
 +
 +// Determine the bucket index for a given measured and predicted latency
@@ -1063,33 +1139,43 @@ index 000000000000..b1201ac165ed
 +
 +// Input latency data into the latency model
 +static void latency_model_input(struct adios_data *ad,
-+		struct latency_model *model, u32 block_size, u64 latency, u64 pred_lat) {
++		struct latency_model *model,
++		u32 block_size, u64 latency, u64 pred_lat, u32 weight) {
++	unsigned long flags;
 +	u8 bucket_index;
 +	struct lm_buckets *buckets;
-+	int cpu = get_cpu();
++	u64 current_base;
++	struct latency_model_params *params;
 +
-+	buckets = per_cpu_ptr(model->pcpu_buckets, cpu);
++	local_irq_save(flags);
++	buckets = per_cpu_ptr(model->pcpu_buckets, __smp_processor_id());
++
++	rcu_read_lock();
++	params = rcu_dereference(model->params);
++	current_base = params->base;
++	rcu_read_unlock();
 +
 +	if (block_size <= LM_BLOCK_SIZE_THRESHOLD) {
 +		// Handle small requests
-+		bucket_index = lm_input_bucket_index(latency, model->base ?: 1);
++		bucket_index = lm_input_bucket_index(latency, current_base ?: 1);
 +
 +		if (bucket_index >= LM_LAT_BUCKET_COUNT)
 +			bucket_index = LM_LAT_BUCKET_COUNT - 1;
 +
-+		buckets->small_bucket[bucket_index].count++;
-+		buckets->small_bucket[bucket_index].sum_latency += latency;
++		buckets->small_bucket[bucket_index].sum_of_weights += weight;
++		buckets->small_bucket[bucket_index].weighted_sum_latency +=
++			latency * weight;
 +
-+		put_cpu();
++		local_irq_restore(flags);
 +
-+		if (unlikely(!model->base)) {
++		if (unlikely(!current_base)) {
 +			latency_model_update(ad, model);
 +			return;
 +		}
 +	} else {
 +		// Handle large requests
-+		if (!model->base || !pred_lat) {
-+			put_cpu();
++		if (!current_base || !pred_lat) {
++			local_irq_restore(flags);
 +			return;
 +		}
 +
@@ -1098,29 +1184,30 @@ index 000000000000..b1201ac165ed
 +		if (bucket_index >= LM_LAT_BUCKET_COUNT)
 +			bucket_index = LM_LAT_BUCKET_COUNT - 1;
 +
-+		buckets->large_bucket[bucket_index].count++;
-+		buckets->large_bucket[bucket_index].sum_latency += latency;
-+		buckets->large_bucket[bucket_index].sum_block_size += block_size;
++		buckets->large_bucket[bucket_index].sum_of_weights += weight;
++		buckets->large_bucket[bucket_index].weighted_sum_latency +=
++			latency * weight;
++		buckets->large_bucket[bucket_index].weighted_sum_block_size +=
++			block_size * weight;
 +
-+		put_cpu();
++		local_irq_restore(flags);
 +	}
 +}
 +
 +// Predict the latency for a given block size using the latency model
 +static u64 latency_model_predict(struct latency_model *model, u32 block_size) {
-+	u64 result, base, slope;
-+	unsigned int seq;
++	u64 result;
++	struct latency_model_params *params;
 +
-+	do {
-+		seq = read_seqbegin(&model->lock);
-+		base = model->base;
-+		slope = model->slope;
-+	} while (read_seqretry(&model->lock, seq));
++	rcu_read_lock();
++	params = rcu_dereference(model->params);
 +
-+	result = base;
++	result = params->base;
 +	if (block_size > LM_BLOCK_SIZE_THRESHOLD)
-+		result += slope *
++		result += params->slope *
 +			DIV_ROUND_UP_ULL(block_size - LM_BLOCK_SIZE_THRESHOLD, 1024);
++
++	rcu_read_unlock();
 +
 +	return result;
 +}
@@ -1148,6 +1235,23 @@ index 000000000000..b1201ac165ed
 +	return rq->elv.priv[0];
 +}
 +
++static inline
++void set_adios_state(struct adios_data *ad, u32 shift, u32 idx, bool flag) {
++	if (flag)
++		atomic_or(1U << (idx + shift), &ad->state);
++	else
++		atomic_andnot(1U << (idx + shift), &ad->state);
++}
++
++static inline u32 get_adios_state(struct adios_data *ad)
++{ return atomic_read(&ad->state); }
++
++static inline u32 eval_this_adios_state(u32 state, u32 shift)
++{ return (state >> shift) & 0x3; }
++
++static inline u32 eval_adios_state(struct adios_data *ad, u32 shift)
++{ return eval_this_adios_state(get_adios_state(ad), shift); }
++
 +// Add a request to the deadline-sorted red-black tree
 +static void add_to_dl_tree(
 +		struct adios_data *ad, bool dl_idx, struct request *rq) {
@@ -1156,17 +1260,29 @@ index 000000000000..b1201ac165ed
 +	bool leftmost = true;
 +	struct adios_rq_data *rd = get_rq_data(rq);
 +	struct dl_group *dlg;
++	u64 deadline;
++	bool was_empty = RB_EMPTY_ROOT(&root->rb_root);
 +
-+	rd->block_size = blk_rq_bytes(rq);
-+	u8 optype = adios_optype(rq);
-+	rd->pred_lat =
-+		latency_model_predict(&ad->latency_model[optype], rd->block_size);
-+	rd->deadline =
-+		rq->start_time_ns + ad->latency_target[optype] + rd->pred_lat;
++	/* Tier-2: Synchronous Requests
++	 * - Needs to be FIFO within a same optype
++	 * - Relaxed order between different optypes
++	 * - basically needs to be processed in early time */
++	rd->deadline = rq->start_time_ns;
++
++	/* Tier-3: Aynchronous Requests
++	 * - Can be reordered and delayed freely */
++	if (!(rq->cmd_flags & REQ_SYNC)) {
++		rd->deadline += ad->latency_target[adios_optype(rq)];
++		if (!compliant(ad, ADIOS_CF_FIXORDER))
++			rd->deadline += rd->pred_lat;
++	}
++
++	// Now quantize the deadline (-> dlg->deadline == RB-Tree key)
++	deadline = rd->deadline & ~((1ULL << ADIOS_QUANTUM_SHIFT) - 1);
 +
 +	while (*link) {
 +		dlg = rb_entry(*link, struct dl_group, node);
-+		s64 diff = rd->deadline - dlg->deadline;
++		s64 diff = deadline - dlg->deadline;
 +
 +		parent = *link;
 +		if (diff < 0) {
@@ -1180,11 +1296,11 @@ index 000000000000..b1201ac165ed
 +	}
 +
 +	dlg = rb_entry_safe(parent, struct dl_group, node);
-+	if (!dlg || dlg->deadline != rd->deadline) {
++	if (!dlg || dlg->deadline != deadline) {
 +		dlg = kmem_cache_zalloc(ad->dl_group_pool, GFP_ATOMIC);
 +		if (!dlg)
 +			return;
-+		dlg->deadline = rd->deadline;
++		dlg->deadline = deadline;
 +		INIT_LIST_HEAD(&dlg->rqs);
 +		rb_link_node(&dlg->node, parent, link);
 +		rb_insert_color_cached(&dlg->node, root, leftmost);
@@ -1192,7 +1308,9 @@ index 000000000000..b1201ac165ed
 +found:
 +	list_add_tail(&rd->dl_node, &dlg->rqs);
 +	rd->dl_group = &dlg->rqs;
-+	ad->dl_queued |= 1 << dl_idx;
++
++	if (was_empty)
++		set_adios_state(ad, ADIOS_STATE_DL, dl_idx, true);
 +}
 +
 +// Remove a request from the deadline-sorted red-black tree
@@ -1210,7 +1328,7 @@ index 000000000000..b1201ac165ed
 +	rd->dl_group = NULL;
 +
 +	if (RB_EMPTY_ROOT(&ad->dl_tree[dl_idx].rb_root))
-+		ad->dl_queued &= ~(1 << dl_idx);
++		set_adios_state(ad, ADIOS_STATE_DL, dl_idx, false);
 +}
 +
 +// Remove a request from the scheduler
@@ -1238,7 +1356,7 @@ index 000000000000..b1201ac165ed
 +	return ((qdepth << bt->sb.shift) + nrr - 1) / nrr;
 +}
 +
-+// Limit the depth of request allocation for asynchronous and write requests
++// We limit the depth of request allocation for asynchronous and write requests
 +static void adios_limit_depth(blk_opf_t opf, struct blk_mq_alloc_data *data) {
 +	struct adios_data *ad = data->q->elevator->elevator_data;
 +
@@ -1249,15 +1367,12 @@ index 000000000000..b1201ac165ed
 +	data->shallow_depth = to_word_depth(data->hctx, ad->async_depth);
 +}
 +
-+// Update async_depth when the number of requests in the queue changes
-+static void adios_depth_updated(struct blk_mq_hw_ctx *hctx) {
-+	struct request_queue *q = hctx->queue;
++// The number of requests in the queue was notified from the block layer
++static void adios_depth_updated(struct request_queue *q) {
 +	struct adios_data *ad = q->elevator->elevator_data;
-+	struct blk_mq_tags *tags = hctx->sched_tags;
 +
 +	ad->async_depth = q->nr_requests;
-+
-+	sbitmap_queue_min_shallow_depth(&tags->bitmap_tags, 1);
++	blk_mq_set_min_shallow_depth(q, 1);
 +}
 +
 +// Handle request merging after a merge operation
@@ -1285,12 +1400,19 @@ index 000000000000..b1201ac165ed
 +// Try to merge a bio into an existing rq before associating it with an rq
 +static bool adios_bio_merge(struct request_queue *q, struct bio *bio,
 +		unsigned int nr_segs) {
++	unsigned long flags;
 +	struct adios_data *ad = q->elevator->elevator_data;
 +	struct request *free = NULL;
 +	bool ret;
 +
-+	scoped_guard(spinlock_irqsave, &ad->lock)
-+		ret = blk_mq_sched_try_merge(q, bio, nr_segs, &free);
++	if (eval_adios_state(ad, ADIOS_STATE_BP))
++		return false;
++
++	if (!spin_trylock_irqsave(&ad->lock, flags))
++		return false;
++
++	ret = blk_mq_sched_try_merge(q, bio, nr_segs, &free);
++	spin_unlock_irqrestore(&ad->lock, flags);
 +
 +	if (free)
 +		blk_mq_free_request(free);
@@ -1298,22 +1420,12 @@ index 000000000000..b1201ac165ed
 +	return ret;
 +}
 +
-+// Insert a request into the scheduler
-+static void insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
-+				  blk_insert_t insert_flags, struct list_head *free) {
-+	bool dl_idx = adios_optype_not_read(rq);
-+	struct request_queue *q = hctx->queue;
-+	struct adios_data *ad = q->elevator->elevator_data;
-+
-+	if (insert_flags & BLK_MQ_INSERT_AT_HEAD) {
-+		scoped_guard(spinlock_irqsave, &ad->pq_lock)
-+			list_add_tail(&rq->queuelist, &ad->prio_queue);
-+		return;
-+	}
-+
++static bool merge_or_insert_to_dl_tree(struct adios_data *ad,
++		struct request *rq, struct request_queue *q, struct list_head *free) {
 +	if (blk_mq_sched_try_insert_merge(q, rq, free))
-+		return;
++		return true;
 +
++	bool dl_idx = adios_optype_not_read(rq);
 +	add_to_dl_tree(ad, dl_idx, rq);
 +
 +	if (rq_mergeable(rq)) {
@@ -1321,6 +1433,94 @@ index 000000000000..b1201ac165ed
 +		if (!q->last_merge)
 +			q->last_merge = rq;
 +	}
++
++	return false;
++}
++
++static void insert_to_prio_queue(struct adios_data *ad,
++		struct request *rq, bool pq_idx) {
++	struct adios_rq_data *rd = get_rq_data(rq);
++
++	/* We're sure that rd->managed == true */
++	union adios_in_flight_rqs ifr = {
++		.count          = 1,
++		.total_pred_lat = rd->pred_lat,
++	};
++	atomic64_add(ifr.scalar, &ad->in_flight_rqs.atomic);
++
++	scoped_guard(spinlock_irqsave, &ad->pq_lock) {
++		bool was_empty = list_empty(&ad->prio_queue[pq_idx]);
++		list_add_tail(&rq->queuelist, &ad->prio_queue[pq_idx]);
++		if (was_empty)
++			set_adios_state(ad, ADIOS_STATE_PQ, pq_idx, true);
++	}
++}
++
++// Insert a request into the scheduler (after Read & Write models stabilized)
++static void insert_request_post_stability(struct blk_mq_hw_ctx *hctx,
++		struct request *rq, blk_insert_t insert_flags, struct list_head *free) {
++	struct request_queue *q = hctx->queue;
++	struct adios_data *ad = q->elevator->elevator_data;
++	struct adios_rq_data *rd = get_rq_data(rq);
++	u8 optype = adios_optype(rq);
++	bool rq_is_flush;
++
++	rd->managed = true;
++	rd->block_size = blk_rq_bytes(rq);
++	rd->pred_lat =
++		latency_model_predict(&ad->latency_model[optype], rd->block_size);
++
++	/* Tier-0: BLK_MQ_INSERT_AT_HEAD Requests */
++	if (insert_flags & BLK_MQ_INSERT_AT_HEAD) {
++		insert_to_prio_queue(ad, rq, 0);
++		return;
++	}
++
++	/*
++	 * Strict Barrier Handling for REQ_OP_FLUSH:
++	 * If a flush request arrives, or if the scheduler is already in a
++	 * barrier-pending state, all subsequent requests are diverted to a
++	 * separate barrier_queue. This ensures that no new requests are processed
++	 * until all work preceding the barrier is complete.
++	 */
++	rq_is_flush = rq->cmd_flags & REQ_OP_FLUSH;
++	if (eval_adios_state(ad, ADIOS_STATE_BP) || rq_is_flush) {
++		scoped_guard(spinlock_irqsave, &ad->barrier_lock) {
++			if (rq_is_flush)
++				set_adios_state(ad, ADIOS_STATE_BP, 0, true);
++			list_add_tail(&rq->queuelist, &ad->barrier_queue);
++		}
++		return;
++	}
++
++	if (merge_or_insert_to_dl_tree(ad, rq, q, free))
++		return;
++}
++
++// Insert a request into the scheduler (before Read & Write models stabilizes)
++static void insert_request_pre_stability(struct blk_mq_hw_ctx *hctx,
++		struct request *rq, blk_insert_t insert_flags, struct list_head *free) {
++	struct adios_data *ad = hctx->queue->elevator->elevator_data;
++	struct adios_rq_data *rd = get_rq_data(rq);
++	u8 optype = adios_optype(rq);
++	u8 pq_idx = !(insert_flags & BLK_MQ_INSERT_AT_HEAD);
++	bool models_stable = false;
++
++	rd->managed = true;
++	rd->block_size = blk_rq_bytes(rq);
++	rd->pred_lat =
++		latency_model_predict(&ad->latency_model[optype], rd->block_size);
++
++	insert_to_prio_queue(ad, rq, pq_idx);
++
++	rcu_read_lock();
++	if (rcu_dereference(ad->latency_model[ADIOS_READ].params)->base > 0 &&
++		rcu_dereference(ad->latency_model[ADIOS_WRITE].params)->base > 0)
++			models_stable = true;
++	rcu_read_unlock();
++
++	if (models_stable)
++		ad->insert_request_fn = insert_request_post_stability;
 +}
 +
 +// Insert multiple requests into the scheduler
@@ -1335,16 +1535,15 @@ index 000000000000..b1201ac165ed
 +
 +	do {
 +	scoped_guard(spinlock_irqsave, &ad->lock)
-+		for (int i = 0; i < ADIOS_MAX_INSERTS_PER_LOCK; i++) {
-+			if (list_empty(list)) {
-+				stop = true;
-+				break;
-+			}
-+			rq = list_first_entry(list, struct request, queuelist);
-+			list_del_init(&rq->queuelist);
-+			insert_request(hctx, rq, insert_flags, &free);
++	for (int i = 0; i < ADIOS_MAX_INSERTS_PER_LOCK; i++) {
++		if (list_empty(list)) {
++			stop = true;
++			break;
 +		}
-+	} while (!stop);
++		rq = list_first_entry(list, struct request, queuelist);
++		list_del_init(&rq->queuelist);
++		ad->insert_request_fn(hctx, rq, insert_flags, &free);
++	}} while (!stop);
 +
 +	blk_mq_free_requests(&free);
 +}
@@ -1352,7 +1551,7 @@ index 000000000000..b1201ac165ed
 +// Prepare a request before it is inserted into the scheduler
 +static void adios_prepare_request(struct request *rq) {
 +	struct adios_data *ad = rq->q->elevator->elevator_data;
-+	struct adios_rq_data *rd;
++	struct adios_rq_data *rd = get_rq_data(rq);
 +
 +	rq->elv.priv[0] = NULL;
 +
@@ -1374,72 +1573,147 @@ index 000000000000..b1201ac165ed
 +	return list_first_entry(&dl_group->rqs, struct adios_rq_data, dl_node);
 +}
 +
++// Comparison function for sorting requests by block address
++static int cmp_rq_pos(void *priv,
++		const struct list_head *a, const struct list_head *b) {
++	struct request *rq_a = list_entry(a, struct request, queuelist);
++	struct request *rq_b = list_entry(b, struct request, queuelist);
++	u64 pos_a = blk_rq_pos(rq_a);
++	u64 pos_b = blk_rq_pos(rq_b);
++
++	return (int)(pos_a > pos_b) - (int)(pos_a < pos_b);
++}
++
++#ifndef list_last_entry_or_null
++#define list_last_entry_or_null(ptr, type, member) \
++	(!list_empty(ptr) ? list_last_entry(ptr, type, member) : NULL)
++#endif
++
++// Update the elevator direction
++static void update_elv_direction(struct adios_data *ad) {
++	if (!ad->is_rotational)
++		return;
++
++	bool page = ad->bq_page;
++	struct list_head *q = &ad->batch_queue[page][1];
++	if (ad->bq_batch_order[page] < ADIOS_BO_ELEVATOR || list_empty(q)) {
++		ad->elv_direction = 0;
++		return;
++	}
++
++	// Get first and last request positions in the queue
++	struct request *rq_a = list_first_entry(q, struct request, queuelist);
++	struct request *rq_b = list_last_entry (q, struct request, queuelist);
++	u64 pos_a = blk_rq_pos(rq_a);
++	u64 pos_b = blk_rq_pos(rq_b);
++	u64 avg_rq_pos = (pos_a + pos_b) >> 1;
++
++	ad->elv_direction = !!(ad->head_pos > avg_rq_pos);
++}
++
 +// Fill the batch queues with requests from the deadline-sorted red-black tree
-+static bool fill_batch_queues(struct adios_data *ad, u64 current_lat) {
++static bool fill_batch_queues(struct adios_data *ad, u64 tpl) {
 +	struct adios_rq_data *rd;
 +	struct request *rq;
++	struct list_head *dest_q;
++	u8  dest_idx;
++	u64 added_lat = 0;
 +	u32 optype_count[ADIOS_OPTYPES] = {0};
 +	u32 count = 0;
 +	u8 optype;
-+	bool page = !ad->bq_page, dl_idx, bias_idx, reduce_bias;
++	bool page = !ad->bq_page, dl_idx, bias_idx, update_bias;
++	u32 dl_queued;
++	u8 bq_batch_order;
++	bool stop = false;
 +
 +	// Reset batch queue counts for the back page
 +	memset(&ad->batch_count[page], 0, sizeof(ad->batch_count[page]));
 +
++	ad->bq_batch_order[page] =
++		bq_batch_order = ad->batch_order;
++
++	do {
 +	scoped_guard(spinlock_irqsave, &ad->lock)
-+		while (true) {
++	for (int i = 0; i < ADIOS_MAX_DELETES_PER_LOCK; i++) {
++		bool has_base = false;
 +
-+			// Check if there are any requests queued in the deadline tree
-+			if (!ad->dl_queued)
-+				break;
-+
-+			dl_idx = ad->dl_queued >> 1;
-+			// Get the first request from the deadline-sorted tree
-+			rd = get_dl_first_rd(ad, dl_idx);
-+			bias_idx = ad->dl_bias < 0;
-+
-+			// If read and write requests are queued, choose one based on bias
-+			if (ad->dl_queued == 0x3) {
-+				struct adios_rq_data *trd[2] = {get_dl_first_rd(ad, 0), rd};
-+				rd = trd[bias_idx];
-+
-+				reduce_bias = (trd[bias_idx]->deadline > trd[!bias_idx]->deadline);
-+			} else
-+				reduce_bias = (bias_idx == dl_idx);
-+			
-+			rq = rd->rq;
-+			optype = adios_optype(rq);
-+
-+			// Check batch size and total predicted latency
-+			if (count && (!ad->latency_model[optype].base ||
-+					ad->batch_count[page][optype] >= ad->batch_limit[optype] ||
-+					(current_lat + rd->pred_lat) > ad->global_latency_window))
-+				break;
-+
-+			if (reduce_bias) {
-+				s64 sign = ((int)bias_idx << 1) - 1;
-+				if (unlikely(!rd->pred_lat))
-+					ad->dl_bias = sign;
-+				else
-+					// Adjust the bias based on the predicted latency
-+					ad->dl_bias += sign * (s64)((rd->pred_lat *
-+						adios_prio_to_weight[ad->dl_prio[bias_idx] + 20]) >> 10);
-+			}
-+
-+			remove_request(ad, rq);
-+
-+			// Add request to the corresponding batch queue
-+			list_add_tail(&rq->queuelist, &ad->batch_queue[page][optype]);
-+			atomic64_add(rd->pred_lat, &ad->total_pred_lat);
-+			current_lat += rd->pred_lat;
-+			ad->batch_count[page][optype]++;
-+			optype_count[optype]++;
-+			count++;
++		dl_queued = eval_adios_state(ad, ADIOS_STATE_DL);
++		// Check if there are any requests queued in the deadline tree
++		if (!dl_queued) {
++			stop = true;
++			break;
 +		}
 +
++		// Reads if both queues have requests, otherwise pick the non-empty.
++		dl_idx = dl_queued >> 1;
++
++		// Get the first request from the deadline-sorted tree
++		rd = get_dl_first_rd(ad, dl_idx);
++
++		bias_idx = ad->dl_bias < 0;
++		// If read and write requests are queued, choose one based on bias
++		if (dl_queued == 0x3) {
++			struct adios_rq_data *trd[2] = {get_dl_first_rd(ad, 0), rd};
++			rd = trd[bias_idx];
++
++			update_bias = (trd[bias_idx]->deadline > trd[!bias_idx]->deadline);
++		} else
++			update_bias = (bias_idx == dl_idx);
++
++		rq = rd->rq;
++		optype = adios_optype(rq);
++
++		rcu_read_lock();
++		has_base =
++			!!rcu_dereference(ad->latency_model[optype].params)->base;
++		rcu_read_unlock();
++
++		// Check batch size and total predicted latency
++		if (count && (!has_base ||
++				ad->batch_count[page][optype] >= ad->batch_limit[optype] ||
++				(tpl + added_lat + rd->pred_lat) > ad->global_latency_window)) {
++			stop = true;
++			break;
++		}
++
++		if (update_bias) {
++			s64 sign = ((s64)bias_idx << 1) - 1;
++			if (unlikely(!rd->pred_lat))
++				ad->dl_bias = sign;
++			else
++				// Adjust the bias based on the predicted latency
++				ad->dl_bias += sign * (s64)((rd->pred_lat *
++					adios_prio_to_wmult[ad->dl_prio[bias_idx] + 20]) >> 10);
++		}
++
++		remove_request(ad, rq);
++
++		// Add request to the corresponding batch queue
++		dest_idx = (bq_batch_order == ADIOS_BO_OPTYPE || optype == ADIOS_OTHER)?
++			optype : !!(rd->deadline != rq->start_time_ns);
++		dest_q = &ad->batch_queue[page][dest_idx];
++		list_add_tail(&rq->queuelist, dest_q);
++		ad->bq_state[page] |= 1U << dest_idx;
++		ad->batch_count[page][optype]++;
++		optype_count[optype]++;
++		added_lat += rd->pred_lat;
++		count++;
++	}} while (!stop);
++
++	if (bq_batch_order == ADIOS_BO_ELEVATOR && ad->batch_count[page][1] > 1)
++			list_sort(NULL, &ad->batch_queue[page][1], cmp_rq_pos);
++
 +	if (count) {
-+		ad->more_bq_ready = true;
-+		for (u8 optype = 0; optype < ADIOS_OPTYPES; optype++)
++		/* We're sure that every request's rd->managed == true */
++		union adios_in_flight_rqs ifr = {
++			.count          = count,
++			.total_pred_lat = added_lat,
++		};
++		atomic64_add(ifr.scalar, &ad->in_flight_rqs.atomic);
++
++		set_adios_state(ad, ADIOS_STATE_BQ, page, true);
++
++		for (optype = 0; optype < ADIOS_OPTYPES; optype++)
 +			if (ad->batch_actual_max_size[optype] < optype_count[optype])
 +				ad->batch_actual_max_size[optype] = optype_count[optype];
 +		if (ad->batch_actual_max_total < count)
@@ -1450,38 +1724,99 @@ index 000000000000..b1201ac165ed
 +
 +// Flip to the next batch queue page
 +static void flip_bq_page(struct adios_data *ad) {
-+	ad->more_bq_ready = false;
 +	ad->bq_page = !ad->bq_page;
++	update_elv_direction(ad);
++}
++
++// Pop a request from the specified index (optype or elevator tier)
++static inline struct request *pop_bq_request(
++		struct adios_data *ad, u8 idx, bool direction) {
++	bool page = ad->bq_page;
++	struct list_head *q = &ad->batch_queue[page][idx];
++	struct request *rq = direction ?
++		list_last_entry_or_null (q, struct request, queuelist):
++		list_first_entry_or_null(q, struct request, queuelist);
++	if (rq) {
++		list_del_init(&rq->queuelist);
++		if (list_empty(q))
++			ad->bq_state[page] &= ~(1U << idx);
++	}
++	return rq;
++}
++
++static struct request *pop_next_bq_request_optype(struct adios_data *ad) {
++	u32 bq_state = ad->bq_state[ad->bq_page];
++	if (!bq_state) return NULL;
++
++	struct request *rq;
++	u32 bq_idx = __builtin_ctz(bq_state);
++
++	// Dispatch based on optype (FIFO within each) or single-queue elevator
++	rq = pop_bq_request(ad, bq_idx, false);
++	return rq;
++}
++
++static struct request *pop_next_bq_request_elevator(struct adios_data *ad) {
++	u32 bq_state = ad->bq_state[ad->bq_page];
++	if (!bq_state) return NULL;
++
++	struct request *rq;
++	u32 bq_idx = __builtin_ctz(bq_state);
++	bool direction = (bq_idx == 1) & ad->elv_direction;
++
++	// Tier-2 (sync) is always high priority
++	// Tier-3 (async) uses the pre-calculated elevator direction
++	rq = pop_bq_request(ad, bq_idx, direction);
++
++	/* If batch queue for the sync requests just became empty */
++	if (bq_idx == 0 && rq && !(bq_state & 0x1))
++		update_elv_direction(ad);
++
++	return rq;
++}
++
++// Returns the state of the batch queue page
++static inline bool bq_page_has_rq(u32 bq_state, bool page) {
++	return bq_state & (1U << page);
 +}
 +
 +// Dispatch a request from the batch queues
 +static struct request *dispatch_from_bq(struct adios_data *ad) {
-+	struct request *rq = NULL;
-+	u64 tpl;
++	struct request *rq;
 +
 +	guard(spinlock_irqsave)(&ad->bq_lock);
 +
-+	tpl = atomic64_read(&ad->total_pred_lat);
++	u32 state = get_adios_state(ad);
++	u32 bq_state = eval_this_adios_state(state, ADIOS_STATE_BQ);
++	u32 bq_curr_page_has_rq = bq_page_has_rq(bq_state, ad->bq_page);
++	union adios_in_flight_rqs ifr;
++	ifr.scalar = atomic64_read(&ad->in_flight_rqs.atomic);
++	u64 tpl = ifr.total_pred_lat;
 +
-+	if (!ad->more_bq_ready && (!tpl || tpl < div_u64(
-+			ad->global_latency_window * ad->bq_refill_below_ratio, 100)))
++	// Refill the batch queues if the back page is empty, dl_tree has work, and
++	// current page is empty or the total ongoing latency is below the threshold
++	if (!bq_page_has_rq(bq_state, !ad->bq_page) &&
++			(!bq_curr_page_has_rq || (!tpl || tpl < div_u64(
++			ad->global_latency_window * ad->bq_refill_below_ratio, 100))) &&
++			eval_this_adios_state(state, ADIOS_STATE_DL))
 +		fill_batch_queues(ad, tpl);
 +
-+again:
-+	// Check if there are any requests in the batch queues
-+	for (u8 i = 0; i < ADIOS_OPTYPES; i++) {
-+		if (!list_empty(&ad->batch_queue[ad->bq_page][i])) {
-+			rq = list_first_entry(
-+				&ad->batch_queue[ad->bq_page][i], struct request, queuelist);
-+			list_del_init(&rq->queuelist);
-+			return rq;
-+		}
-+	}
-+
-+	// If there's more batch queue page available, flip to it and retry
-+	if (ad->more_bq_ready) {
++	// If current batch queue page is empty, and the other page has work, flip
++	if (!bq_curr_page_has_rq &&
++			bq_page_has_rq(eval_adios_state(ad, ADIOS_STATE_BQ), !ad->bq_page))
 +		flip_bq_page(ad);
-+		goto again;
++
++	// Use the per-page state to decide the dispatch logic, ensuring correctness
++	rq = (ad->bq_batch_order[ad->bq_page] == ADIOS_BO_ELEVATOR) ?
++		pop_next_bq_request_elevator(ad):
++		pop_next_bq_request_optype(ad);
++
++	if (rq) {
++		bool page = ad->bq_page;
++		bool is_empty = !ad->bq_state[page];
++		if (is_empty)
++			set_adios_state(ad, ADIOS_STATE_BQ, page, false);
++		return rq;
 +	}
 +
 +	return NULL;
@@ -1492,12 +1827,70 @@ index 000000000000..b1201ac165ed
 +	struct request *rq = NULL;
 +
 +	guard(spinlock_irqsave)(&ad->pq_lock);
++	u32 pq_state = eval_adios_state(ad, ADIOS_STATE_PQ);
++	u8  pq_idx = pq_state >> 1;
++	struct list_head *q = &ad->prio_queue[pq_idx];
 +
-+	if (!list_empty(&ad->prio_queue)) {
-+		rq = list_first_entry(&ad->prio_queue, struct request, queuelist);
-+		list_del_init(&rq->queuelist);
++	if (unlikely(list_empty(q))) return NULL;
++
++	rq = list_first_entry(q, struct request, queuelist);
++	list_del_init(&rq->queuelist);
++	if (list_empty(q)) {
++		set_adios_state(ad, ADIOS_STATE_PQ, pq_idx, false);
++		update_elv_direction(ad);
 +	}
 +	return rq;
++}
++
++static bool release_barrier_requests(struct adios_data *ad) {
++	u32 moved_count = 0;
++	LIST_HEAD(local_list);
++
++	scoped_guard(spinlock_irqsave, &ad->barrier_lock) {
++		if (!list_empty(&ad->barrier_queue)) {
++			struct request *trq, *next;
++			bool first_barrier_moved = false;
++
++			list_for_each_entry_safe(trq, next, &ad->barrier_queue, queuelist) {
++				if (!first_barrier_moved) {
++					list_del_init(&trq->queuelist);
++					insert_to_prio_queue(ad, trq, 1);
++					moved_count++;
++					first_barrier_moved = true;
++					continue;
++				}
++
++				if (trq->cmd_flags & REQ_OP_FLUSH)
++					break;
++
++				list_move_tail(&trq->queuelist, &local_list);
++				moved_count++;
++			}
++
++			if (list_empty(&ad->barrier_queue))
++				set_adios_state(ad, ADIOS_STATE_BP, 0, false);
++		}
++	}
++
++	if (!moved_count)
++		return false;
++
++	if (!list_empty(&local_list)) {
++		struct request *trq, *next;
++		LIST_HEAD(free_list);
++
++		/* ad->lock is already held */
++		list_for_each_entry_safe(trq, next, &local_list, queuelist) {
++			list_del_init(&trq->queuelist);
++			if (merge_or_insert_to_dl_tree(ad, trq, ad->queue, &free_list))
++				continue;
++		}
++
++		if (!list_empty(&free_list))
++			blk_mq_free_requests(&free_list);
++	}
++
++	return true;
 +}
 +
 +// Dispatch a request to the hardware queue
@@ -1505,18 +1898,44 @@ index 000000000000..b1201ac165ed
 +	struct adios_data *ad = hctx->queue->elevator->elevator_data;
 +	struct request *rq;
 +
++retry:
 +	rq = dispatch_from_pq(ad);
-+	if (rq) goto found;
++	if (rq)
++		goto found;
++
 +	rq = dispatch_from_bq(ad);
-+	if (!rq) return NULL;
++	if (rq)
++		goto found;
++
++	/*
++	 * If all active queues are empty, check if we need to process a barrier.
++	 * This is the trigger to release requests that were held in barrier_queue
++	 * due to a REQ_OP_FLUSH barrier.
++	 */
++	if (eval_adios_state(ad, ADIOS_STATE_BP)) {
++		union adios_in_flight_rqs ifr;
++		ifr.scalar = atomic64_read(&ad->in_flight_rqs.atomic);
++		if (!ifr.count) {
++			bool barrier_released = false;
++			scoped_guard(spinlock_irqsave, &ad->lock)
++				barrier_released = release_barrier_requests(ad);
++			if (barrier_released)
++				goto retry;
++		}
++	}
++
++	return NULL;
 +found:
++	if (ad->is_rotational)
++		ad->head_pos = blk_rq_pos(rq) + blk_rq_sectors(rq);
++
 +	rq->rq_flags |= RQF_STARTED;
 +	return rq;
 +}
 +
 +// Timer callback function to periodically update latency models
 +static void update_timer_callback(struct timer_list *t) {
-+	struct adios_data *ad = from_timer(ad, t, update_timer);
++	struct adios_data *ad = timer_container_of(ad, t, update_timer);
 +
 +	for (u8 optype = 0; optype < ADIOS_OPTYPES; optype++)
 +		latency_model_update(ad, &ad->latency_model[optype]);
@@ -1526,15 +1945,51 @@ index 000000000000..b1201ac165ed
 +static void adios_completed_request(struct request *rq, u64 now) {
 +	struct adios_data *ad = rq->q->elevator->elevator_data;
 +	struct adios_rq_data *rd = get_rq_data(rq);
++	union adios_in_flight_rqs ifr = { .scalar = 0 };
 +
-+	atomic64_sub(rd->pred_lat, &ad->total_pred_lat);
-+
-+	if (!rq->io_start_time_ns || !rd->block_size)
-+		return;
-+	u64 latency = now - rq->io_start_time_ns;
++	if (rd->managed) {
++		union adios_in_flight_rqs ifr_to_sub = {
++			.count          = 1,
++			.total_pred_lat = rd->pred_lat,
++		};
++		ifr.scalar = atomic64_sub_return(
++			ifr_to_sub.scalar, &ad->in_flight_rqs.atomic);
++	}
 +	u8 optype = adios_optype(rq);
++
++	if (optype == ADIOS_OTHER) {
++		// Non-positional commands make the head position unpredictable.
++		// Invalidate our knowledge of the last completed position.
++		if (ad->is_rotational)
++			ad->last_completed_pos = 0;
++		return;
++	}
++
++	u64 lct = ad->last_completed_time ?: rq->io_start_time_ns;
++	ad->last_completed_time = (ifr.count) ? now : 0;
++
++	if (!rq->io_start_time_ns || !rd->block_size || unlikely(now < lct))
++		return;
++
++	u64 latency = now - lct;
++	if (latency > ad->lat_model_latency_limit)
++		return;
++
++	u32 weight = 1;
++	if (ad->is_rotational) {
++		sector_t current_pos = blk_rq_pos(rq);
++		// Only calculate seek distance if we have a valid last position.
++		if (ad->last_completed_pos > 0) {
++			u64 seek_distance = abs(
++				(s64)current_pos - (s64)ad->last_completed_pos);
++			weight = 65 - __builtin_clzll(seek_distance);
++		}
++		// Update (or re-synchronize) our knowledge of the head position.
++		ad->last_completed_pos = current_pos + blk_rq_sectors(rq);
++	}
++
 +	latency_model_input(ad, &ad->latency_model[optype],
-+		rd->block_size, latency, rd->pred_lat);
++		rd->block_size, latency, rd->pred_lat, weight);
 +	timer_reduce(&ad->update_timer, jiffies + msecs_to_jiffies(100));
 +}
 +
@@ -1549,53 +2004,26 @@ index 000000000000..b1201ac165ed
 +	}
 +}
 +
-+static inline bool pq_has_work(struct adios_data *ad) {
-+	guard(spinlock_irqsave)(&ad->pq_lock);
-+	return !list_empty(&ad->prio_queue);
-+}
-+
-+static inline bool bq_has_work(struct adios_data *ad) {
-+	guard(spinlock_irqsave)(&ad->bq_lock);
-+
-+	for (u8 i = 0; i < ADIOS_OPTYPES; i++)
-+		if (!list_empty(&ad->batch_queue[ad->bq_page][i]))
-+			return true;
-+
-+	return ad->more_bq_ready;
-+}
-+
-+static inline bool dl_tree_has_work(struct adios_data *ad) {
-+	guard(spinlock_irqsave)(&ad->lock);
-+	return ad->dl_queued;
-+}
-+
 +// Check if there are any requests available for dispatch
 +static bool adios_has_work(struct blk_mq_hw_ctx *hctx) {
 +	struct adios_data *ad = hctx->queue->elevator->elevator_data;
 +
-+	return pq_has_work(ad) || bq_has_work(ad) || dl_tree_has_work(ad);
-+}
-+
-+// Initialize the scheduler-specific data for a hardware queue
-+static int adios_init_hctx(struct blk_mq_hw_ctx *hctx, unsigned int hctx_idx) {
-+	adios_depth_updated(hctx);
-+	return 0;
++	return atomic_read(&ad->state) != 0;
 +}
 +
 +// Initialize the scheduler-specific data when initializing the request queue
-+static int adios_init_sched(struct request_queue *q, struct elevator_type *e) {
++static int adios_init_sched(struct request_queue *q, struct elevator_queue *eq) {
 +	struct adios_data *ad;
-+	struct elevator_queue *eq;
 +	int ret = -ENOMEM;
 +	u8 optype = 0;
 +
-+	eq = elevator_alloc(q, e);
-+	if (!eq)
-+		return ret;
-+
 +	ad = kzalloc_node(sizeof(*ad), GFP_KERNEL, q->node);
-+	if (!ad)
++	if (!ad) {
++		pr_err("adios: Failed to create adios_data\n");
 +		goto put_eq;
++	}
++
++	eq->elevator_data = ad;
 +
 +	// Create a memory pool for adios_rq_data
 +	ad->rq_data_pool = kmem_cache_create("rq_data_pool",
@@ -1615,18 +2043,18 @@ index 000000000000..b1201ac165ed
 +		goto destroy_rq_data_pool;
 +	}
 +
-+	eq->elevator_data = ad;
++	for (int i = 0; i < ADIOS_PQ_LEVELS; i++)
++		INIT_LIST_HEAD(&ad->prio_queue[i]);
 +
-+	ad->global_latency_window = default_global_latency_window;
-+	ad->bq_refill_below_ratio = default_bq_refill_below_ratio;
-+
-+	INIT_LIST_HEAD(&ad->prio_queue);
-+	for (u8 i = 0; i < 2; i++)
++	for (u8 i = 0; i < ADIOS_DL_TYPES; i++) {
 +		ad->dl_tree[i] = RB_ROOT_CACHED;
-+	ad->dl_bias = 0;
-+	ad->dl_queued = 0x0;
-+	for (u8 i = 0; i < 2; i++)
 +		ad->dl_prio[i] = default_dl_prio[i];
++	}
++	ad->dl_bias = 0;
++
++	for (u8 page = 0; page < ADIOS_BQ_PAGES; page++)
++		for (optype = 0; optype < ADIOS_OPTYPES; optype++)
++			INIT_LIST_HEAD(&ad->batch_queue[page][optype]);
 +
 +	ad->aggr_buckets = kzalloc(sizeof(*ad->aggr_buckets), GFP_KERNEL);
 +	if (!ad->aggr_buckets) {
@@ -1636,29 +2064,56 @@ index 000000000000..b1201ac165ed
 +
 +	for (optype = 0; optype < ADIOS_OPTYPES; optype++) {
 +		struct latency_model *model = &ad->latency_model[optype];
-+		seqlock_init(&model->lock);
++		struct latency_model_params *params;
++
++		spin_lock_init(&model->update_lock);
++		params = kzalloc(sizeof(*params), GFP_KERNEL);
++		if (!params) {
++			pr_err("adios: Failed to allocate latency_model_params\n");
++			goto free_buckets;
++		}
++		params->last_update_jiffies = jiffies;
++		RCU_INIT_POINTER(model->params, params);
 +
 +		model->pcpu_buckets = alloc_percpu(struct lm_buckets);
-+		if (!model->pcpu_buckets)
++		if (!model->pcpu_buckets) {
++			pr_err("adios: Failed to allocate per-CPU buckets\n");
++			kfree(params);
 +			goto free_buckets;
++		}
 +
-+		model->last_update_jiffies = jiffies;
 +		model->lm_shrink_at_kreqs  = default_lm_shrink_at_kreqs;
 +		model->lm_shrink_at_gbytes = default_lm_shrink_at_gbytes;
 +		model->lm_shrink_resist    = default_lm_shrink_resist;
++	}
 +
++	for (optype = 0; optype < ADIOS_OPTYPES; optype++) {
 +		ad->latency_target[optype] = default_latency_target[optype];
 +		ad->batch_limit[optype] = default_batch_limit[optype];
 +	}
-+	timer_setup(&ad->update_timer, update_timer_callback, 0);
-+	
-+	for (u8 page = 0; page < ADIOS_BQ_PAGES; page++)
-+		for (u8 optype = 0; optype < ADIOS_OPTYPES; optype++)
-+			INIT_LIST_HEAD(&ad->batch_queue[page][optype]);
++
++	eq->elevator_data = ad;
++
++	ad->is_rotational = !!(q->limits.features & BLK_FEAT_ROTATIONAL);
++	ad->global_latency_window = (ad->is_rotational)?
++		default_global_latency_window_rotational:
++		default_global_latency_window;
++	ad->bq_refill_below_ratio = default_bq_refill_below_ratio;
++	ad->lat_model_latency_limit = default_lat_model_latency_limit;
++	ad->batch_order = default_batch_order;
++	ad->compliance_flags = default_compliance_flags;
++
++	ad->insert_request_fn = insert_request_pre_stability;
++
++	atomic_set(&ad->state, 0);
 +
 +	spin_lock_init(&ad->lock);
 +	spin_lock_init(&ad->pq_lock);
 +	spin_lock_init(&ad->bq_lock);
++	spin_lock_init(&ad->barrier_lock);
++	INIT_LIST_HEAD(&ad->barrier_queue);
++
++	timer_setup(&ad->update_timer, update_timer_callback, 0);
 +
 +	/* We dispatch from request queue wide instead of hw queue */
 +	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
@@ -1667,12 +2122,14 @@ index 000000000000..b1201ac165ed
 +	blk_stat_enable_accounting(q);
 +
 +	q->elevator = eq;
++	adios_depth_updated(q);
 +	return 0;
 +
 +free_buckets:
 +	pr_err("adios: Failed to allocate per-cpu buckets\n");
-+	while (--optype >= 0) {
++	while (optype-- > 0) {
 +		struct latency_model *prev_model = &ad->latency_model[optype];
++		kfree(rcu_access_pointer(prev_model->params));
 +		free_percpu(prev_model->pcpu_buckets);
 +	}
 +	kfree(ad->aggr_buckets);
@@ -1693,12 +2150,22 @@ index 000000000000..b1201ac165ed
 +
 +	timer_shutdown_sync(&ad->update_timer);
 +
-+	WARN_ON_ONCE(!list_empty(&ad->prio_queue));
++	WARN_ON_ONCE(!list_empty(&ad->barrier_queue));
++	for (int i = 0; i < 2; i++)
++		WARN_ON_ONCE(!list_empty(&ad->prio_queue[i]));
 +
 +	for (u8 i = 0; i < ADIOS_OPTYPES; i++) {
 +		struct latency_model *model = &ad->latency_model[i];
++		struct latency_model_params *params = rcu_access_pointer(model->params);
++
++		RCU_INIT_POINTER(model->params, NULL);
++		kfree_rcu(params, rcu);
++
 +		free_percpu(model->pcpu_buckets);
 +	}
++
++	synchronize_rcu();
++
 +	kfree(ad->aggr_buckets);
 +
 +	if (ad->rq_data_pool)
@@ -1712,24 +2179,38 @@ index 000000000000..b1201ac165ed
 +	kfree(ad);
 +}
 +
-+static void load_latency_model(struct latency_model *model, u64 base, u64 slope)
-+{
-+	write_seqlock_bh(&model->lock);
-+	model->last_update_jiffies = jiffies;
++static void sideload_latency_model(
++		struct latency_model *model, u64 base, u64 slope) {
++	struct latency_model_params *old_params, *new_params;
++	unsigned long flags;
++
++	new_params = kzalloc(sizeof(*new_params), GFP_KERNEL);
++	if (!new_params)
++		return;
++
++	spin_lock_irqsave(&model->update_lock, flags);
++
++	old_params = rcu_dereference_protected(model->params,
++			lockdep_is_held(&model->update_lock));
++
++	new_params->last_update_jiffies = jiffies;
 +
 +	// Initialize base and its statistics as a single sample.
-+	model->base = base;
-+	model->small_sum_delay = base;
-+	model->small_count = 1;
++	new_params->base = base;
++	new_params->small_sum_delay = base;
++	new_params->small_count = 1;
 +
 +	// Initialize slope and its statistics as a single sample.
-+	model->slope = slope;
-+	model->large_sum_delay = slope;
-+	model->large_sum_bsize = 1024; /* Corresponds to 1 KiB */
++	new_params->slope = slope;
++	new_params->large_sum_delay = slope;
++	new_params->large_sum_bsize = 1024; /* Corresponds to 1 KiB */
 +
 +	lm_reset_pcpu_buckets(model);
 +
-+	write_sequnlock_bh(&model->lock);
++	rcu_assign_pointer(model->params, new_params);
++	spin_unlock_irqrestore(&model->update_lock, flags);
++
++	kfree_rcu(old_params, rcu);
 +}
 +
 +// Define sysfs attributes for operation types
@@ -1738,14 +2219,14 @@ index 000000000000..b1201ac165ed
 +		struct elevator_queue *e, char *page) { \
 +	struct adios_data *ad = e->elevator_data; \
 +	struct latency_model *model = &ad->latency_model[optype]; \
++	struct latency_model_params *params; \
 +	ssize_t len = 0; \
 +	u64 base, slope; \
-+	unsigned int seq; \
-+	do { \
-+		seq = read_seqbegin(&model->lock); \
-+		base = model->base; \
-+		slope = model->slope; \
-+	} while (read_seqretry(&model->lock, seq)); \
++	rcu_read_lock(); \
++	params = rcu_dereference(model->params); \
++	base = params->base; \
++	slope = params->slope; \
++	rcu_read_unlock(); \
 +	len += sprintf(page,       "base : %llu ns\n", base); \
 +	len += sprintf(page + len, "slope: %llu ns/KiB\n", slope); \
 +	return len; \
@@ -1759,9 +2240,14 @@ index 000000000000..b1201ac165ed
 +	ret = sscanf(page, "%llu %llu", &base, &slope); \
 +	if (ret != 2) \
 +		return -EINVAL; \
-+	load_latency_model(model, base, slope); \
++	sideload_latency_model(model, base, slope); \
 +	reset_buckets(ad->aggr_buckets); \
 +	return count; \
++} \
++static ssize_t adios_lat_target_##name##_show( \
++		struct elevator_queue *e, char *page) { \
++	struct adios_data *ad = e->elevator_data; \
++	return sprintf(page, "%llu\n", ad->latency_target[optype]); \
 +} \
 +static ssize_t adios_lat_target_##name##_store( \
 +		struct elevator_queue *e, const char *page, size_t count) { \
@@ -1771,14 +2257,14 @@ index 000000000000..b1201ac165ed
 +	ret = kstrtoul(page, 10, &nsec); \
 +	if (ret) \
 +		return ret; \
-+	ad->latency_model[optype].base = 0ULL; \
++	sideload_latency_model(&ad->latency_model[optype], 0, 0); \
 +	ad->latency_target[optype] = nsec; \
 +	return count; \
 +} \
-+static ssize_t adios_lat_target_##name##_show( \
++static ssize_t adios_batch_limit_##name##_show( \
 +		struct elevator_queue *e, char *page) { \
 +	struct adios_data *ad = e->elevator_data; \
-+	return sprintf(page, "%llu\n", ad->latency_target[optype]); \
++	return sprintf(page, "%u\n", ad->batch_limit[optype]); \
 +} \
 +static ssize_t adios_batch_limit_##name##_store( \
 +		struct elevator_queue *e, const char *page, size_t count) { \
@@ -1790,11 +2276,6 @@ index 000000000000..b1201ac165ed
 +	struct adios_data *ad = e->elevator_data; \
 +	ad->batch_limit[optype] = max_batch; \
 +	return count; \
-+} \
-+static ssize_t adios_batch_limit_##name##_show( \
-+		struct elevator_queue *e, char *page) { \
-+	struct adios_data *ad = e->elevator_data; \
-+	return sprintf(page, "%u\n", ad->batch_limit[optype]); \
 +}
 +
 +SYSFS_OPTYPE_DECL(read, ADIOS_READ);
@@ -1817,51 +2298,48 @@ index 000000000000..b1201ac165ed
 +		total_count, discard_count, read_count, write_count);
 +}
 +
-+// Set the global latency window
-+static ssize_t adios_global_latency_window_store(
-+		struct elevator_queue *e, const char *page, size_t count) {
-+	struct adios_data *ad = e->elevator_data;
-+	unsigned long nsec;
-+	int ret;
-+
-+	ret = kstrtoul(page, 10, &nsec);
-+	if (ret)
-+		return ret;
-+
-+	ad->global_latency_window = nsec;
-+
-+	return count;
++#define SYSFS_ULL_DECL(field, min_val, max_val) \
++static ssize_t adios_##field##_show( \
++		struct elevator_queue *e, char *page) { \
++	struct adios_data *ad = e->elevator_data; \
++	return sprintf(page, "%llu\n", ad->field); \
++} \
++static ssize_t adios_##field##_store( \
++		struct elevator_queue *e, const char *page, size_t count) { \
++	struct adios_data *ad = e->elevator_data; \
++	unsigned long val; \
++	int ret; \
++	ret = kstrtoul(page, 10, &val); \
++	if (ret || val < (min_val) || val > (max_val)) \
++		return -EINVAL; \
++	ad->field = val; \
++	return count; \
 +}
 +
-+// Show the global latency window
-+static ssize_t adios_global_latency_window_show(
-+		struct elevator_queue *e, char *page) {
-+	struct adios_data *ad = e->elevator_data;
-+	return sprintf(page, "%llu\n", ad->global_latency_window);
++SYSFS_ULL_DECL(global_latency_window, 0, ULLONG_MAX)
++SYSFS_ULL_DECL(compliance_flags, 0, ULLONG_MAX)
++
++#define SYSFS_INT_DECL(field, min_val, max_val) \
++static ssize_t adios_##field##_show( \
++		struct elevator_queue *e, char *page) { \
++	struct adios_data *ad = e->elevator_data; \
++	return sprintf(page, "%d\n", ad->field); \
++} \
++static ssize_t adios_##field##_store( \
++		struct elevator_queue *e, const char *page, size_t count) { \
++	struct adios_data *ad = e->elevator_data; \
++	int val; \
++	int ret; \
++	ret = kstrtoint(page, 10, &val); \
++	if (ret || val < (min_val) || val > (max_val)) \
++		return -EINVAL; \
++	ad->field = val; \
++	return count; \
 +}
 +
-+// Show the bq_refill_below_ratio
-+static ssize_t adios_bq_refill_below_ratio_show(
-+		struct elevator_queue *e, char *page) {
-+	struct adios_data *ad = e->elevator_data;
-+	return sprintf(page, "%d\n", ad->bq_refill_below_ratio);
-+}
-+
-+// Set the bq_refill_below_ratio
-+static ssize_t adios_bq_refill_below_ratio_store(
-+		struct elevator_queue *e, const char *page, size_t count) {
-+	struct adios_data *ad = e->elevator_data;
-+	int ratio;
-+	int ret;
-+
-+	ret = kstrtoint(page, 10, &ratio);
-+	if (ret || ratio < 0 || ratio > 100)
-+		return -EINVAL;
-+
-+	ad->bq_refill_below_ratio = ratio;
-+
-+	return count;
-+}
++SYSFS_INT_DECL(bq_refill_below_ratio, 0, 100)
++SYSFS_INT_DECL(lat_model_latency_limit, 0, 2*NSEC_PER_SEC)
++SYSFS_INT_DECL(batch_order, ADIOS_BO_OPTYPE, !!ad->is_rotational)
 +
 +// Show the read priority
 +static ssize_t adios_read_priority_show(
@@ -1930,16 +2408,7 @@ index 000000000000..b1201ac165ed
 +
 +		for (u8 i = 0; i < ADIOS_OPTYPES; i++) {
 +			model = &ad->latency_model[i];
-+			write_seqlock_bh(&model->lock);
-+			model->last_update_jiffies = jiffies;
-+			model->base = 0ULL;
-+			model->slope = 0ULL;
-+			model->small_sum_delay = 0ULL;
-+			model->small_count = 0ULL;
-+			model->large_sum_delay = 0ULL;
-+			model->large_sum_bsize = 0ULL;
-+			lm_reset_pcpu_buckets(model);
-+			write_sequnlock_bh(&model->lock);
++			sideload_latency_model(model, 0, 0);
 +		}
 +	} else {
 +		// Mode 2: Load initial values for all latency models.
@@ -1955,7 +2424,7 @@ index 000000000000..b1201ac165ed
 +
 +		for (u8 i = ADIOS_READ; i <= ADIOS_DISCARD; i++) {
 +			model = &ad->latency_model[i];
-+			load_latency_model(model, params[i][0], params[i][1]);
++			sideload_latency_model(model, params[i][0], params[i][1]);
 +		}
 +	}
 +	reset_buckets(ad->aggr_buckets);
@@ -1980,9 +2449,10 @@ index 000000000000..b1201ac165ed
 +		return -EINVAL; \
 +	for (u8 i = 0; i < ADIOS_OPTYPES; i++) { \
 +		struct latency_model *model = &ad->latency_model[i]; \
-+		write_seqlock_bh(&model->lock); \
++		unsigned long flags; \
++		spin_lock_irqsave(&model->update_lock, flags); \
 +		model->model_field = val; \
-+		write_sequnlock_bh(&model->lock); \
++		spin_unlock_irqrestore(&model->update_lock, flags); \
 +	} \
 +	return count; \
 +} \
@@ -1990,12 +2460,11 @@ index 000000000000..b1201ac165ed
 +		struct elevator_queue *e, char *page) { \
 +	struct adios_data *ad = e->elevator_data; \
 +	u32 val = 0; \
-+	unsigned int seq;						\
++	unsigned long flags; \
 +	struct latency_model *model = &ad->latency_model[0]; \
-+	do { \
-+		seq = read_seqbegin(&model->lock); \
-+		val = model->model_field; \
-+	} while (read_seqretry(&model->lock, seq)); \
++	spin_lock_irqsave(&model->update_lock, flags); \
++	val = model->model_field; \
++	spin_unlock_irqrestore(&model->update_lock, flags); \
 +	return sprintf(page, "%u\n", val); \
 +}
 +
@@ -2018,6 +2487,9 @@ index 000000000000..b1201ac165ed
 +	AD_ATTR_RO(batch_actual_max),
 +	AD_ATTR_RW(bq_refill_below_ratio),
 +	AD_ATTR_RW(global_latency_window),
++	AD_ATTR_RW(lat_model_latency_limit),
++	AD_ATTR_RW(batch_order),
++	AD_ATTR_RW(compliance_flags),
 +
 +	AD_ATTR_RW(batch_limit_read),
 +	AD_ATTR_RW(batch_limit_write),
@@ -2060,7 +2532,6 @@ index 000000000000..b1201ac165ed
 +		.completed_request	= adios_completed_request,
 +		.finish_request		= adios_finish_request,
 +		.has_work			= adios_has_work,
-+		.init_hctx			= adios_init_hctx,
 +		.init_sched			= adios_init_sched,
 +		.exit_sched			= adios_exit_sched,
 +	},
@@ -2093,33 +2564,49 @@ index 000000000000..b1201ac165ed
 +MODULE_DESCRIPTION(ADIOS_PROGNAME);
 \ No newline at end of file
 diff --git a/block/elevator.c b/block/elevator.c
-index dc4cadef728e..6757ed11bf60 100644
+index e2ebfbf107b3..8ad3711dbb90 100644
 --- a/block/elevator.c
 +++ b/block/elevator.c
-@@ -556,11 +556,23 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
+@@ -753,6 +753,21 @@ void elevator_set_default(struct request_queue *q)
  	if (q->tag_set->flags & BLK_MQ_F_NO_SCHED_BY_DEFAULT)
- 		return NULL;
+ 		return;
  
 +#ifdef CONFIG_MQ_IOSCHED_DEFAULT_ADIOS
-+	return elevator_find_get("adios");
-+#endif // CONFIG_MQ_IOSCHED_DEFAULT_ADIOS
++	ctx.name = "adios";
++#else // !CONFIG_MQ_IOSCHED_DEFAULT_ADIOS
++	bool is_sq = q->nr_hw_queues == 1 || blk_mq_is_shared_tags(q->tag_set->flags);
++#ifdef CONFIG_CACHY
++#ifdef CONFIG_IOSCHED_BFQ
++	if (is_sq)
++		ctx.name = "bfq";
++#endif /* CONFIG_IOSCHED_BFQ */
++#else
++	if (!is_sq)
++		return;
++#endif /* CONFIG_CACHY */
++#endif /* CONFIG_MQ_IOSCHED_DEFAULT_ADIOS */
 +
- 	if (q->nr_hw_queues != 1 &&
- 	    !blk_mq_is_shared_tags(q->tag_set->flags))
-+#if defined(CONFIG_CACHY)
-+		return elevator_find_get("mq-deadline");
-+#else
- 		return NULL;
-+#endif
+ 	/*
+ 	 * For single queue devices, default to using mq-deadline. If we
+ 	 * have multiple queues or mq-deadline is not available, default
+@@ -762,13 +777,10 @@ void elevator_set_default(struct request_queue *q)
+ 	if (!e)
+ 		return;
  
-+#if defined(CONFIG_CACHY) && defined(CONFIG_IOSCHED_BFQ)
-+	return elevator_find_get("bfq");
-+#else
- 	return elevator_find_get("mq-deadline");
-+#endif
+-	if ((q->nr_hw_queues == 1 ||
+-			blk_mq_is_shared_tags(q->tag_set->flags))) {
+-		err = elevator_change(q, &ctx);
+-		if (err < 0)
+-			pr_warn("\"%s\" elevator initialization, failed %d, falling back to \"none\"\n",
+-					ctx.name, err);
+-	}
++	err = elevator_change(q, &ctx);
++	if (err < 0)
++		pr_warn("\"%s\" elevator initialization, failed %d, falling back to \"none\"\n",
++				ctx.name, err);
+ 	elevator_put(e);
  }
  
- /*
 diff --git a/drivers/Makefile b/drivers/Makefile
 index b5749cf67044..5beba9f57254 100644
 --- a/drivers/Makefile
@@ -2154,10 +2641,10 @@ index b5749cf67044..5beba9f57254 100644
  obj-$(CONFIG_MTD)		+= mtd/
  obj-$(CONFIG_SPI)		+= spi/
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 931da4749e80..9764029754dc 100644
+index 7a7f88b3fa2b..cb26ab099da2 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1662,7 +1662,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+@@ -1672,7 +1672,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
  }
  #endif
  
@@ -2166,7 +2653,7 @@ index 931da4749e80..9764029754dc 100644
  		struct ahci_host_priv *hpriv)
  {
  	int i;
-@@ -1675,7 +1675,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
+@@ -1685,7 +1685,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
  	    pci_resource_len(pdev, bar) < SZ_512K ||
  	    bar != AHCI_PCI_BAR_STANDARD ||
  	    !(readl(hpriv->mmio + AHCI_VSCAP) & 1))
@@ -2175,7 +2662,7 @@ index 931da4749e80..9764029754dc 100644
  
  	cap = readq(hpriv->mmio + AHCI_REMAP_CAP);
  	for (i = 0; i < AHCI_MAX_REMAP; i++) {
-@@ -1690,18 +1690,11 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
+@@ -1700,18 +1700,11 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
  	}
  
  	if (!hpriv->remapped_nvme)
@@ -2198,7 +2685,7 @@ index 931da4749e80..9764029754dc 100644
  }
  
  static int ahci_get_irq_vector(struct ata_host *host, int port)
-@@ -1945,7 +1938,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1975,7 +1968,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  		return -ENOMEM;
  
  	/* detect remapped nvme devices */
@@ -2230,10 +2717,10 @@ index 2c5c228408bf..918e2bebfe78 100644
  	  This driver adds a CPUFreq driver which utilizes a fine grain
  	  processor performance frequency control range instead of legacy
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index ba9bf06f1c77..b8ceac594acd 100644
+index fc02a3542f65..3d0a8db2f425 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -3828,6 +3828,8 @@ static int __init intel_pstate_setup(char *str)
+@@ -3952,6 +3952,8 @@ static int __init intel_pstate_setup(char *str)
  
  	if (!strcmp(str, "disable"))
  		no_load = 1;
@@ -2243,10 +2730,10 @@ index ba9bf06f1c77..b8ceac594acd 100644
  		default_driver = &intel_pstate;
  	else if (!strcmp(str, "passive"))
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index c3641331d4de..ce1072fe4921 100644
+index ef3af170dda4..cf918b18db53 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -161,6 +161,7 @@ struct amdgpu_watchdog_timer {
+@@ -163,6 +163,7 @@ struct amdgpu_watchdog_timer {
   */
  extern int amdgpu_modeset;
  extern unsigned int amdgpu_vram_limit;
@@ -2255,10 +2742,10 @@ index c3641331d4de..ce1072fe4921 100644
  extern int amdgpu_gart_size;
  extern int amdgpu_gtt_size;
 diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index 72c807f5822e..6ef3fedc1233 100644
+index 65f4a76490ea..72ca35acd44a 100644
 --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
 +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -143,6 +143,7 @@ enum AMDGPU_DEBUG_MASK {
+@@ -148,6 +148,7 @@ enum AMDGPU_DEBUG_MASK {
  };
  
  unsigned int amdgpu_vram_limit = UINT_MAX;
@@ -2266,7 +2753,7 @@ index 72c807f5822e..6ef3fedc1233 100644
  int amdgpu_vis_vram_limit;
  int amdgpu_gart_size = -1; /* auto */
  int amdgpu_gtt_size = -1; /* auto */
-@@ -262,6 +263,15 @@ struct amdgpu_watchdog_timer amdgpu_watchdog_timer = {
+@@ -269,6 +270,15 @@ struct amdgpu_watchdog_timer amdgpu_watchdog_timer = {
  	.period = 0x0, /* default to 0x0 (timeout disable) */
  };
  
@@ -2298,10 +2785,10 @@ index abd3b6564373..46937e6fa78d 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index 87c2bc5f64a6..927fb4992a6a 100644
+index 163780030eb1..b33c5bc79fa1 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -4574,7 +4574,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
+@@ -4669,7 +4669,7 @@ static int amdgpu_dm_mode_config_init(struct amdgpu_device *adev)
  		return r;
  	}
  
@@ -2311,7 +2798,7 @@ index 87c2bc5f64a6..927fb4992a6a 100644
  		dc_state_release(state->context);
  		kfree(state);
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
-index ebabfe3a512f..4d3ebcaacca1 100644
+index c0dfe2d8b3be..f057a8d335ec 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c
 @@ -97,7 +97,7 @@ static inline struct fixed31_32 amdgpu_dm_fixpt_from_s3132(__u64 x)
@@ -2324,10 +2811,10 @@ index ebabfe3a512f..4d3ebcaacca1 100644
   *
   * AMD driver supports pre-defined mathematical functions for transferring
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-index db157b38f862..5d5210f99dcf 100644
+index 45feb404b097..ee8672919a05 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_crtc.c
-@@ -481,7 +481,7 @@ static int amdgpu_dm_crtc_late_register(struct drm_crtc *crtc)
+@@ -491,7 +491,7 @@ static int amdgpu_dm_crtc_late_register(struct drm_crtc *crtc)
  }
  #endif
  
@@ -2336,7 +2823,7 @@ index db157b38f862..5d5210f99dcf 100644
  /**
   * dm_crtc_additional_color_mgmt - enable additional color properties
   * @crtc: DRM CRTC
-@@ -563,7 +563,7 @@ static const struct drm_crtc_funcs amdgpu_dm_crtc_funcs = {
+@@ -573,7 +573,7 @@ static const struct drm_crtc_funcs amdgpu_dm_crtc_funcs = {
  #if defined(CONFIG_DEBUG_FS)
  	.late_register = amdgpu_dm_crtc_late_register,
  #endif
@@ -2345,7 +2832,7 @@ index db157b38f862..5d5210f99dcf 100644
  	.atomic_set_property = amdgpu_dm_atomic_crtc_set_property,
  	.atomic_get_property = amdgpu_dm_atomic_crtc_get_property,
  #endif
-@@ -751,7 +751,7 @@ int amdgpu_dm_crtc_init(struct amdgpu_display_manager *dm,
+@@ -770,7 +770,7 @@ int amdgpu_dm_crtc_init(struct amdgpu_display_manager *dm,
  
  	drm_mode_crtc_set_gamma_size(&acrtc->base, MAX_COLOR_LEGACY_LUT_ENTRIES);
  
@@ -2355,7 +2842,7 @@ index db157b38f862..5d5210f99dcf 100644
  #endif
  	return 0;
 diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
-index 3e0f45f1711c..f645cb7831a0 100644
+index 3d2f8eedeef2..6664c569a7eb 100644
 --- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
 +++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_plane.c
 @@ -1601,7 +1601,7 @@ static void amdgpu_dm_plane_drm_plane_destroy_state(struct drm_plane *plane,
@@ -2386,10 +2873,10 @@ index 3e0f45f1711c..f645cb7831a0 100644
  #endif
  	/* Create (reset) the plane state */
 diff --git a/drivers/gpu/drm/amd/pm/amdgpu_pm.c b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-index 922def51685b..da76611edb10 100644
+index 5fbfe7333b54..9e81953043be 100644
 --- a/drivers/gpu/drm/amd/pm/amdgpu_pm.c
 +++ b/drivers/gpu/drm/amd/pm/amdgpu_pm.c
-@@ -3055,6 +3055,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
+@@ -3073,6 +3073,9 @@ static ssize_t amdgpu_hwmon_show_power_cap_min(struct device *dev,
  					 struct device_attribute *attr,
  					 char *buf)
  {
@@ -2400,10 +2887,10 @@ index 922def51685b..da76611edb10 100644
  }
  
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 46cce1d2aaf3..e3adb7aea969 100644
+index 408f05dfab90..4eb99b74a04f 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
 +++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -2854,7 +2854,10 @@ int smu_get_power_limit(void *handle,
+@@ -2921,7 +2921,10 @@ int smu_get_power_limit(void *handle,
  			*limit = smu->max_power_limit;
  			break;
  		case SMU_PPT_LIMIT_MIN:
@@ -2415,7 +2902,7 @@ index 46cce1d2aaf3..e3adb7aea969 100644
  			break;
  		default:
  			return -EINVAL;
-@@ -2878,7 +2881,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
+@@ -2945,7 +2948,14 @@ static int smu_set_power_limit(void *handle, uint32_t limit)
  		if (smu->ppt_funcs->set_power_limit)
  			return smu->ppt_funcs->set_power_limit(smu, limit_type, limit);
  
@@ -2431,305 +2918,8 @@ index 46cce1d2aaf3..e3adb7aea969 100644
  		dev_err(smu->adev->dev,
  			"New power limit (%d) is out of range [%d,%d]\n",
  			limit, smu->min_power_limit, smu->max_power_limit);
-diff --git a/drivers/gpu/drm/xe/regs/xe_pcode_regs.h b/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
-index 8846eb9ce2a4..c7d5d782e3f9 100644
---- a/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
-+++ b/drivers/gpu/drm/xe/regs/xe_pcode_regs.h
-@@ -21,6 +21,9 @@
- #define BMG_PACKAGE_POWER_SKU			XE_REG(0x138098)
- #define BMG_PACKAGE_POWER_SKU_UNIT		XE_REG(0x1380dc)
- #define BMG_PACKAGE_ENERGY_STATUS		XE_REG(0x138120)
-+#define BMG_FAN_1_SPEED				XE_REG(0x138140)
-+#define BMG_FAN_2_SPEED				XE_REG(0x138170)
-+#define BMG_FAN_3_SPEED				XE_REG(0x1381a0)
- #define BMG_VRAM_TEMPERATURE			XE_REG(0x1382c0)
- #define BMG_PACKAGE_TEMPERATURE			XE_REG(0x138434)
- #define BMG_PACKAGE_RAPL_LIMIT			XE_REG(0x138440)
-diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
-index 0482f26aa480..0564164935c6 100644
---- a/drivers/gpu/drm/xe/xe_device_types.h
-+++ b/drivers/gpu/drm/xe/xe_device_types.h
-@@ -314,6 +314,8 @@ struct xe_device {
- 		u8 has_atomic_enable_pte_bit:1;
- 		/** @info.has_device_atomics_on_smem: Supports device atomics on SMEM */
- 		u8 has_device_atomics_on_smem:1;
-+		/** @info.has_fan_control: Device supports fan control */
-+		u8 has_fan_control:1;
- 		/** @info.has_flat_ccs: Whether flat CCS metadata is used */
- 		u8 has_flat_ccs:1;
- 		/** @info.has_heci_cscfi: device has heci cscfi */
-diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
-index 48d80ffdf7bb..eb293aec36a0 100644
---- a/drivers/gpu/drm/xe/xe_hwmon.c
-+++ b/drivers/gpu/drm/xe/xe_hwmon.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/hwmon-sysfs.h>
- #include <linux/hwmon.h>
-+#include <linux/jiffies.h>
- #include <linux/types.h>
- #include <linux/units.h>
- 
-@@ -27,6 +28,7 @@ enum xe_hwmon_reg {
- 	REG_PKG_POWER_SKU_UNIT,
- 	REG_GT_PERF_STATUS,
- 	REG_PKG_ENERGY_STATUS,
-+	REG_FAN_SPEED,
- };
- 
- enum xe_hwmon_reg_operation {
-@@ -42,6 +44,13 @@ enum xe_hwmon_channel {
- 	CHANNEL_MAX,
- };
- 
-+enum xe_fan_channel {
-+	FAN_1,
-+	FAN_2,
-+	FAN_3,
-+	FAN_MAX,
-+};
-+
- /*
-  * SF_* - scale factors for particular quantities according to hwmon spec.
-  */
-@@ -61,6 +70,16 @@ struct xe_hwmon_energy_info {
- 	long accum_energy;
- };
- 
-+/**
-+ * struct xe_hwmon_fan_info - to cache previous fan reading
-+ */
-+struct xe_hwmon_fan_info {
-+	/** @reg_val_prev: previous fan reg val */
-+	u32 reg_val_prev;
-+	/** @time_prev: previous timestamp */
-+	u64 time_prev;
-+};
-+
- /**
-  * struct xe_hwmon - xe hwmon data structure
-  */
-@@ -79,6 +98,8 @@ struct xe_hwmon {
- 	int scl_shift_time;
- 	/** @ei: Energy info for energyN_input */
- 	struct xe_hwmon_energy_info ei[CHANNEL_MAX];
-+	/** @fi: Fan info for fanN_input */
-+	struct xe_hwmon_fan_info fi[FAN_MAX];
- };
- 
- static struct xe_reg xe_hwmon_get_reg(struct xe_hwmon *hwmon, enum xe_hwmon_reg hwmon_reg,
-@@ -144,6 +165,14 @@ static struct xe_reg xe_hwmon_get_reg(struct xe_hwmon *hwmon, enum xe_hwmon_reg
- 			return PCU_CR_PACKAGE_ENERGY_STATUS;
- 		}
- 		break;
-+	case REG_FAN_SPEED:
-+		if (channel == FAN_1)
-+			return BMG_FAN_1_SPEED;
-+		else if (channel == FAN_2)
-+			return BMG_FAN_2_SPEED;
-+		else if (channel == FAN_3)
-+			return BMG_FAN_3_SPEED;
-+		break;
- 	default:
- 		drm_warn(&xe->drm, "Unknown xe hwmon reg id: %d\n", hwmon_reg);
- 		break;
-@@ -454,6 +483,7 @@ static const struct hwmon_channel_info * const hwmon_info[] = {
- 	HWMON_CHANNEL_INFO(curr, HWMON_C_LABEL, HWMON_C_CRIT | HWMON_C_LABEL),
- 	HWMON_CHANNEL_INFO(in, HWMON_I_INPUT | HWMON_I_LABEL, HWMON_I_INPUT | HWMON_I_LABEL),
- 	HWMON_CHANNEL_INFO(energy, HWMON_E_INPUT | HWMON_E_LABEL, HWMON_E_INPUT | HWMON_E_LABEL),
-+	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT, HWMON_F_INPUT, HWMON_F_INPUT),
- 	NULL
- };
- 
-@@ -480,6 +510,19 @@ static int xe_hwmon_pcode_write_i1(const struct xe_hwmon *hwmon, u32 uval)
- 			      (uval & POWER_SETUP_I1_DATA_MASK));
- }
- 
-+static int xe_hwmon_pcode_read_fan_control(const struct xe_hwmon *hwmon, u32 subcmd, u32 *uval)
-+{
-+	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
-+
-+	/* Platforms that don't return correct value */
-+	if (hwmon->xe->info.platform == XE_DG2 && subcmd == FSC_READ_NUM_FANS) {
-+		*uval = 2;
-+		return 0;
-+	}
-+
-+	return xe_pcode_read(root_tile, PCODE_MBOX(FAN_SPEED_CONTROL, subcmd, 0), uval, NULL);
-+}
-+
- static int xe_hwmon_power_curr_crit_read(struct xe_hwmon *hwmon, int channel,
- 					 long *value, u32 scale_factor)
- {
-@@ -705,6 +748,75 @@ xe_hwmon_energy_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
- 	}
- }
- 
-+static umode_t
-+xe_hwmon_fan_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
-+{
-+	u32 uval;
-+
-+	if (!hwmon->xe->info.has_fan_control)
-+		return 0;
-+
-+	switch (attr) {
-+	case hwmon_fan_input:
-+		if (xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_NUM_FANS, &uval))
-+			return 0;
-+
-+		return channel < uval ? 0444 : 0;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+static int
-+xe_hwmon_fan_input_read(struct xe_hwmon *hwmon, int channel, long *val)
-+{
-+	struct xe_mmio *mmio = xe_root_tile_mmio(hwmon->xe);
-+	struct xe_hwmon_fan_info *fi = &hwmon->fi[channel];
-+	u64 rotations, time_now, time;
-+	u32 reg_val;
-+	int ret = 0;
-+
-+	mutex_lock(&hwmon->hwmon_lock);
-+
-+	reg_val = xe_mmio_read32(mmio, xe_hwmon_get_reg(hwmon, REG_FAN_SPEED, channel));
-+	time_now = get_jiffies_64();
-+
-+	/*
-+	 * HW register value is accumulated count of pulses from PWM fan with the scale
-+	 * of 2 pulses per rotation.
-+	 */
-+	rotations = (reg_val - fi->reg_val_prev) / 2;
-+
-+	time = jiffies_delta_to_msecs(time_now - fi->time_prev);
-+	if (unlikely(!time)) {
-+		ret = -EAGAIN;
-+		goto unlock;
-+	}
-+
-+	/*
-+	 * Calculate fan speed in RPM by time averaging two subsequent readings in minutes.
-+	 * RPM = number of rotations * msecs per minute / time in msecs
-+	 */
-+	*val = DIV_ROUND_UP_ULL(rotations * (MSEC_PER_SEC * 60), time);
-+
-+	fi->reg_val_prev = reg_val;
-+	fi->time_prev = time_now;
-+unlock:
-+	mutex_unlock(&hwmon->hwmon_lock);
-+	return ret;
-+}
-+
-+static int
-+xe_hwmon_fan_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
-+{
-+	switch (attr) {
-+	case hwmon_fan_input:
-+		return xe_hwmon_fan_input_read(hwmon, channel, val);
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
- static umode_t
- xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
- 		    u32 attr, int channel)
-@@ -730,6 +842,9 @@ xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
- 	case hwmon_energy:
- 		ret = xe_hwmon_energy_is_visible(hwmon, attr, channel);
- 		break;
-+	case hwmon_fan:
-+		ret = xe_hwmon_fan_is_visible(hwmon, attr, channel);
-+		break;
- 	default:
- 		ret = 0;
- 		break;
-@@ -765,6 +880,9 @@ xe_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32 attr,
- 	case hwmon_energy:
- 		ret = xe_hwmon_energy_read(hwmon, attr, channel, val);
- 		break;
-+	case hwmon_fan:
-+		ret = xe_hwmon_fan_read(hwmon, attr, channel, val);
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		break;
-@@ -842,7 +960,7 @@ static void
- xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
- {
- 	struct xe_mmio *mmio = xe_root_tile_mmio(hwmon->xe);
--	long energy;
-+	long energy, fan_speed;
- 	u64 val_sku_unit = 0;
- 	int channel;
- 	struct xe_reg pkg_power_sku_unit;
-@@ -866,6 +984,11 @@ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
- 	for (channel = 0; channel < CHANNEL_MAX; channel++)
- 		if (xe_hwmon_is_visible(hwmon, hwmon_energy, hwmon_energy_input, channel))
- 			xe_hwmon_energy_get(hwmon, channel, &energy);
-+
-+	/* Initialize 'struct xe_hwmon_fan_info' with initial fan register reading. */
-+	for (channel = 0; channel < FAN_MAX; channel++)
-+		if (xe_hwmon_is_visible(hwmon, hwmon_fan, hwmon_fan_input, channel))
-+			xe_hwmon_fan_input_read(hwmon, channel, &fan_speed);
- }
- 
- static void xe_hwmon_mutex_destroy(void *arg)
-diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
-index 57547d02daa7..ecb0cf7c66fa 100644
---- a/drivers/gpu/drm/xe/xe_pci.c
-+++ b/drivers/gpu/drm/xe/xe_pci.c
-@@ -62,6 +62,7 @@ struct xe_device_desc {
- 	u8 is_dgfx:1;
- 
- 	u8 has_display:1;
-+	u8 has_fan_control:1;
- 	u8 has_heci_gscfi:1;
- 	u8 has_heci_cscfi:1;
- 	u8 has_llc:1;
-@@ -302,6 +303,7 @@ static const struct xe_device_desc dg2_desc = {
- 
- 	DG2_FEATURES,
- 	.has_display = true,
-+	.has_fan_control = true,
- };
- 
- static const __maybe_unused struct xe_device_desc pvc_desc = {
-@@ -336,6 +338,7 @@ static const struct xe_device_desc bmg_desc = {
- 	PLATFORM(BATTLEMAGE),
- 	.dma_mask_size = 46,
- 	.has_display = true,
-+	.has_fan_control = true,
- 	.has_heci_cscfi = 1,
- };
- 
-@@ -575,6 +578,7 @@ static int xe_info_init_early(struct xe_device *xe,
- 
- 	xe->info.dma_mask_size = desc->dma_mask_size;
- 	xe->info.is_dgfx = desc->is_dgfx;
-+	xe->info.has_fan_control = desc->has_fan_control;
- 	xe->info.has_heci_gscfi = desc->has_heci_gscfi;
- 	xe->info.has_heci_cscfi = desc->has_heci_cscfi;
- 	xe->info.has_llc = desc->has_llc;
-diff --git a/drivers/gpu/drm/xe/xe_pcode_api.h b/drivers/gpu/drm/xe/xe_pcode_api.h
-index 2bae9afdbd35..e622ae17f08d 100644
---- a/drivers/gpu/drm/xe/xe_pcode_api.h
-+++ b/drivers/gpu/drm/xe/xe_pcode_api.h
-@@ -49,6 +49,9 @@
- /* Domain IDs (param2) */
- #define     PCODE_MBOX_DOMAIN_HBM		0x2
- 
-+#define   FAN_SPEED_CONTROL			0x7D
-+#define     FSC_READ_NUM_FANS			0x4
-+
- #define PCODE_SCRATCH(x)		XE_REG(0x138320 + ((x) * 4))
- /* PCODE_SCRATCH0 */
- #define   AUXINFO_REG_OFFSET		REG_GENMASK(17, 15)
 diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
-index b5cbb57ee5f6..a0f7fa1518c6 100644
+index 90ff6be85cf4..15159c1cf6e1 100644
 --- a/drivers/input/evdev.c
 +++ b/drivers/input/evdev.c
 @@ -46,6 +46,7 @@ struct evdev_client {
@@ -2792,22 +2982,6 @@ index b5cbb57ee5f6..a0f7fa1518c6 100644
  	return error;
  }
  
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 9dfdb63220d7..91aeee72a15e 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -3284,6 +3284,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 			goto bad;
- 	}
- 
-+#ifdef CONFIG_CACHY
-+	set_bit(DM_CRYPT_NO_READ_WORKQUEUE, &cc->flags);
-+	set_bit(DM_CRYPT_NO_WRITE_WORKQUEUE, &cc->flags);
-+#endif
-+
- 	ret = crypt_ctr_cipher(ti, argv[0], argv[1]);
- 	if (ret < 0)
- 		goto bad;
 diff --git a/drivers/media/v4l2-core/Kconfig b/drivers/media/v4l2-core/Kconfig
 index 331b8e535e5b..80dabeebf580 100644
 --- a/drivers/media/v4l2-core/Kconfig
@@ -2838,10 +3012,10 @@ index 2177b9d63a8f..c179507cedc4 100644
  obj-$(CONFIG_VIDEO_DEV) += v4l2-dv-timings.o videodev.o
 diff --git a/drivers/media/v4l2-core/v4l2loopback.c b/drivers/media/v4l2-core/v4l2loopback.c
 new file mode 100644
-index 000000000000..74bd8125caa3
+index 000000000000..3be7c4abc1e7
 --- /dev/null
 +++ b/drivers/media/v4l2-core/v4l2loopback.c
-@@ -0,0 +1,3313 @@
+@@ -0,0 +1,3316 @@
 +/* -*- c-file-style: "linux" -*- */
 +/*
 + * v4l2loopback.c  --  video4linux2 loopback driver
@@ -2867,6 +3041,7 @@ index 000000000000..74bd8125caa3
 +#include <linux/slab.h>
 +#include <linux/fs.h>
 +#include <linux/capability.h>
++#include <linux/timer.h>
 +#include <linux/eventpoll.h>
 +#include <media/v4l2-ioctl.h>
 +#include <media/v4l2-common.h>
@@ -2889,7 +3064,7 @@ index 000000000000..74bd8125caa3
 +#define strscpy strlcpy
 +#endif
 +
-+#if defined(timer_setup) && defined(from_timer)
++#if defined(timer_setup)
 +#define HAVE_TIMER_SETUP
 +#endif
 +
@@ -5513,7 +5688,8 @@ index 000000000000..74bd8125caa3
 +#ifdef HAVE_TIMER_SETUP
 +static void sustain_timer_clb(struct timer_list *t)
 +{
-+	struct v4l2_loopback_device *dev = from_timer(dev, t, sustain_timer);
++	struct v4l2_loopback_device *dev =
++		container_of(t, struct v4l2_loopback_device, sustain_timer);
 +#else
 +static void sustain_timer_clb(unsigned long nr)
 +{
@@ -5538,7 +5714,8 @@ index 000000000000..74bd8125caa3
 +#ifdef HAVE_TIMER_SETUP
 +static void timeout_timer_clb(struct timer_list *t)
 +{
-+	struct v4l2_loopback_device *dev = from_timer(dev, t, timeout_timer);
++	struct v4l2_loopback_device *dev =
++		container_of(t, struct v4l2_loopback_device, timeout_timer);
 +#else
 +static void timeout_timer_clb(unsigned long nr)
 +{
@@ -7204,10 +7381,10 @@ index 000000000000..e105e6f5cc91
 +MODULE_AUTHOR("Daniel Drake <drake@endlessm.com>");
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d0f7b749b9a6..f5aaa23b254a 100644
+index d97335a40193..acab5556a354 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -3747,6 +3747,106 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
+@@ -3745,6 +3745,106 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
  	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
  }
  
@@ -7314,7 +7491,7 @@ index d0f7b749b9a6..f5aaa23b254a 100644
  /*
   * Some NVIDIA GPU devices do not work with bus reset, SBR needs to be
   * prevented for those affected devices.
-@@ -5194,6 +5294,7 @@ static const struct pci_dev_acs_enabled {
+@@ -5192,6 +5292,7 @@ static const struct pci_dev_acs_enabled {
  	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
  	/* Wangxun nics */
  	{ PCI_VENDOR_ID_WANGXUN, PCI_ANY_ID, pci_quirk_wangxun_nic_acs },
@@ -7323,10 +7500,10 @@ index d0f7b749b9a6..f5aaa23b254a 100644
  };
  
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5a3c670aec27..831ffcf7c730 100644
+index 5522310bab8d..9e1c4634eb7b 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1521,4 +1521,6 @@ endif # SCSI_LOWLEVEL
+@@ -1524,4 +1524,6 @@ endif # SCSI_LOWLEVEL
  
  source "drivers/scsi/device_handler/Kconfig"
  
@@ -8508,24 +8685,11 @@ index 000000000000..878a3be0ba2b
 +module_init(vhba_init);
 +module_exit(vhba_exit);
 +
-diff --git a/fs/select.c b/fs/select.c
-index 7da531b1cf6b..0eaf3522abe9 100644
---- a/fs/select.c
-+++ b/fs/select.c
-@@ -857,7 +857,7 @@ static inline __poll_t do_pollfd(struct pollfd *pollfd, poll_table *pwait,
- 	int fd = pollfd->fd;
- 	__poll_t mask, filter;
- 
--	if (fd < 0)
-+	if (unlikely(fd < 0))
- 		return 0;
- 
- 	CLASS(fd, f)(fd);
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 2e4584e1bfcd..9ff3f9a1f7b4 100644
+index f23dd28f193f..75497c1dcbbf 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -193,6 +193,14 @@ static inline void __mm_zero_struct_page(struct page *page)
+@@ -194,6 +194,14 @@ static inline void __mm_zero_struct_page(struct page *page)
  
  extern int sysctl_max_map_count;
  
@@ -8541,10 +8705,10 @@ index 2e4584e1bfcd..9ff3f9a1f7b4 100644
  extern unsigned long sysctl_admin_reserve_kbytes;
  
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 26baa78f1ca7..8fa2ff2682bc 100644
+index 12a12dae727d..b460a691b357 100644
 --- a/include/linux/pagemap.h
 +++ b/include/linux/pagemap.h
-@@ -1341,7 +1341,7 @@ struct readahead_control {
+@@ -1337,7 +1337,7 @@ struct readahead_control {
  		._index = i,						\
  	}
  
@@ -8575,31 +8739,11 @@ index a0bb6d012137..93129fea552e 100644
  static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
  {
  	return &init_user_ns;
-diff --git a/include/linux/wait.h b/include/linux/wait.h
-index 965a19809c7e..3d442267a256 100644
---- a/include/linux/wait.h
-+++ b/include/linux/wait.h
-@@ -163,6 +163,7 @@ static inline bool wq_has_sleeper(struct wait_queue_head *wq_head)
- 
- extern void add_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
- extern void add_wait_queue_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
-+extern void add_wait_queue_exclusive_lifo(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
- extern void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
- extern void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
- 
-@@ -1195,6 +1196,7 @@ do {										\
-  */
- void prepare_to_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
- bool prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
-+void prepare_to_wait_exclusive_lifo(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
- long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state);
- void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry);
- long wait_woken(struct wait_queue_entry *wq_entry, unsigned mode, long timeout);
 diff --git a/init/Kconfig b/init/Kconfig
-index bf3a920064be..c524858118d2 100644
+index 87c868f86a06..38451dfa51a9 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
-@@ -163,6 +163,10 @@ config THREAD_INFO_IN_TASK
+@@ -177,6 +177,10 @@ config THREAD_INFO_IN_TASK
  
  menu "General setup"
  
@@ -8609,8 +8753,8 @@ index bf3a920064be..c524858118d2 100644
 +
  config BROKEN
  	bool
- 
-@@ -1330,6 +1334,22 @@ config USER_NS
+ 	help
+@@ -1381,6 +1385,22 @@ config USER_NS
  
  	  If unsure, say N.
  
@@ -8633,7 +8777,7 @@ index bf3a920064be..c524858118d2 100644
  config PID_NS
  	bool "PID Namespaces"
  	default y
-@@ -1479,6 +1499,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
+@@ -1531,6 +1551,12 @@ config CC_OPTIMIZE_FOR_PERFORMANCE
  	  with the "-O2" compiler flag for best performance and most
  	  helpful compile-time warnings.
  
@@ -8702,12 +8846,12 @@ index 54ea59ff8fbe..18f87e0dd137 100644
  	help
  	  This option turns the kernel into a real-time kernel by replacing
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 168681fc4b25..39e47bfaea58 100644
+index bb86c57cc0d9..1db319e89543 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -106,6 +106,10 @@
- #include <linux/pidfs.h>
+@@ -107,6 +107,10 @@
  #include <linux/tick.h>
+ #include <linux/unwind_deferred.h>
  
 +#ifdef CONFIG_USER_NS
 +#include <linux/user_namespace.h>
@@ -8716,7 +8860,7 @@ index 168681fc4b25..39e47bfaea58 100644
  #include <asm/pgalloc.h>
  #include <linux/uaccess.h>
  #include <asm/mmu_context.h>
-@@ -2194,6 +2198,10 @@ __latent_entropy struct task_struct *copy_process(
+@@ -1938,6 +1942,10 @@ __latent_entropy struct task_struct *copy_process(
  	if ((clone_flags & (CLONE_NEWUSER|CLONE_FS)) == (CLONE_NEWUSER|CLONE_FS))
  		return ERR_PTR(-EINVAL);
  
@@ -8727,7 +8871,7 @@ index 168681fc4b25..39e47bfaea58 100644
  	/*
  	 * Thread groups must share signals as well, and detached threads
  	 * can only be started up within the thread group.
-@@ -3354,6 +3362,12 @@ int ksys_unshare(unsigned long unshare_flags)
+@@ -3105,6 +3113,12 @@ int ksys_unshare(unsigned long unshare_flags)
  	if (unshare_flags & CLONE_NEWNS)
  		unshare_flags |= CLONE_FS;
  
@@ -8741,10 +8885,10 @@ index 168681fc4b25..39e47bfaea58 100644
  	if (err)
  		goto bad_unshare_out;
 diff --git a/kernel/locking/rwsem.c b/kernel/locking/rwsem.c
-index 2ddb827e3bea..464049c4af3f 100644
+index 24df4d98f7d2..1d5923996fa5 100644
 --- a/kernel/locking/rwsem.c
 +++ b/kernel/locking/rwsem.c
-@@ -747,6 +747,7 @@ rwsem_spin_on_owner(struct rw_semaphore *sem)
+@@ -746,6 +746,7 @@ rwsem_spin_on_owner(struct rw_semaphore *sem)
  	struct task_struct *new, *owner;
  	unsigned long flags, new_flags;
  	enum owner_state state;
@@ -8752,7 +8896,7 @@ index 2ddb827e3bea..464049c4af3f 100644
  
  	lockdep_assert_preemption_disabled();
  
-@@ -783,7 +784,8 @@ rwsem_spin_on_owner(struct rw_semaphore *sem)
+@@ -782,7 +783,8 @@ rwsem_spin_on_owner(struct rw_semaphore *sem)
  			break;
  		}
  
@@ -8763,7 +8907,7 @@ index 2ddb827e3bea..464049c4af3f 100644
  
  	return state;
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 1a1caae2b2f7..ff9070239624 100644
+index 4770d25ae240..9c7729b41c3b 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -76,10 +76,19 @@ unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_LOG;
@@ -8786,7 +8930,7 @@ index 1a1caae2b2f7..ff9070239624 100644
  
  static int __init setup_sched_thermal_decay_shift(char *str)
  {
-@@ -124,8 +133,12 @@ int __weak arch_asym_cpu_priority(int cpu)
+@@ -122,8 +131,12 @@ int __weak arch_asym_cpu_priority(int cpu)
   *
   * (default: 5 msec, units: microseconds)
   */
@@ -8800,10 +8944,10 @@ index 1a1caae2b2f7..ff9070239624 100644
  #ifdef CONFIG_NUMA_BALANCING
  /* Restrict the NUMA promotion throughput (MB/s) for each target node. */
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index d6f82833f652..ad6cbf2d9683 100644
+index 72fb9129afb6..af458a056a83 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2790,7 +2790,7 @@ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
+@@ -2794,7 +2794,7 @@ extern void deactivate_task(struct rq *rq, struct task_struct *p, int flags);
  
  extern void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags);
  
@@ -8812,66 +8956,25 @@ index d6f82833f652..ad6cbf2d9683 100644
  # define SCHED_NR_MIGRATE_BREAK 8
  #else
  # define SCHED_NR_MIGRATE_BREAK 32
-diff --git a/kernel/sched/wait.c b/kernel/sched/wait.c
-index 51e38f5f4701..c5cc616484ba 100644
---- a/kernel/sched/wait.c
-+++ b/kernel/sched/wait.c
-@@ -47,6 +47,17 @@ void add_wait_queue_priority(struct wait_queue_head *wq_head, struct wait_queue_
- }
- EXPORT_SYMBOL_GPL(add_wait_queue_priority);
- 
-+void add_wait_queue_exclusive_lifo(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
-+{
-+	unsigned long flags;
-+
-+	wq_entry->flags |= WQ_FLAG_EXCLUSIVE;
-+	spin_lock_irqsave(&wq_head->lock, flags);
-+	__add_wait_queue(wq_head, wq_entry);
-+	spin_unlock_irqrestore(&wq_head->lock, flags);
-+}
-+EXPORT_SYMBOL(add_wait_queue_exclusive_lifo);
-+
- void remove_wait_queue(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry)
- {
- 	unsigned long flags;
-@@ -258,6 +269,19 @@ prepare_to_wait_exclusive(struct wait_queue_head *wq_head, struct wait_queue_ent
- }
- EXPORT_SYMBOL(prepare_to_wait_exclusive);
- 
-+void prepare_to_wait_exclusive_lifo(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
-+{
-+	unsigned long flags;
-+
-+	wq_entry->flags |= WQ_FLAG_EXCLUSIVE;
-+	spin_lock_irqsave(&wq_head->lock, flags);
-+	if (list_empty(&wq_entry->entry))
-+		__add_wait_queue(wq_head, wq_entry);
-+	set_current_state(state);
-+	spin_unlock_irqrestore(&wq_head->lock, flags);
-+}
-+EXPORT_SYMBOL(prepare_to_wait_exclusive_lifo);
-+
- void init_wait_entry(struct wait_queue_entry *wq_entry, int flags)
- {
- 	wq_entry->flags = flags;
 diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 3b7a7308e35b..fe7bec454345 100644
+index cb6196e3fa99..cc5bf841e3fe 100644
 --- a/kernel/sysctl.c
 +++ b/kernel/sysctl.c
-@@ -70,6 +70,9 @@
- #ifdef CONFIG_RT_MUTEXES
- #include <linux/rtmutex.h>
- #endif
+@@ -23,6 +23,10 @@
+ #include <linux/uaccess.h>
+ #include <asm/processor.h>
+ 
 +#ifdef CONFIG_USER_NS
 +#include <linux/user_namespace.h>
 +#endif
- 
++
  /* shared constants to be used in various sysctls */
  const int sysctl_vals[] = { 0, 1, 2, 3, 4, 100, 200, 1000, 3000, INT_MAX, 65535, -1 };
-@@ -1595,6 +1598,15 @@ static const struct ctl_table kern_table[] = {
- 		.mode		= 0644,
- 		.proc_handler	= proc_dointvec,
- 	},
+ EXPORT_SYMBOL(sysctl_vals);
+@@ -1455,6 +1459,15 @@ int proc_do_static_key(const struct ctl_table *table, int write,
+ }
+ 
+ static const struct ctl_table sysctl_subsys_table[] = {
 +#ifdef CONFIG_USER_NS
 +	{
 +		.procname	= "unprivileged_userns_clone",
@@ -8883,7 +8986,7 @@ index 3b7a7308e35b..fe7bec454345 100644
 +#endif
  #ifdef CONFIG_PROC_SYSCTL
  	{
- 		.procname	= "tainted",
+ 		.procname	= "sysctl_writes_strict",
 diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
 index 682f40d5632d..434a25f7b2ed 100644
 --- a/kernel/user_namespace.c
@@ -8903,7 +9006,7 @@ index 682f40d5632d..434a25f7b2ed 100644
  static DEFINE_MUTEX(userns_state_mutex);
  
 diff --git a/mm/Kconfig b/mm/Kconfig
-index e113f713b493..825b5932debc 100644
+index e443fe8cd6cf..d3148d9d335d 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
 @@ -462,6 +462,69 @@ config ARCH_WANT_OPTIMIZE_HUGETLB_VMEMMAP
@@ -8976,7 +9079,7 @@ index e113f713b493..825b5932debc 100644
  config HAVE_MEMBLOCK_PHYS_MAP
  	bool
  
-@@ -654,7 +717,7 @@ config COMPACTION
+@@ -658,7 +721,7 @@ config COMPACTION
  config COMPACT_UNEVICTABLE_DEFAULT
  	int
  	depends on COMPACTION
@@ -8986,10 +9089,10 @@ index e113f713b493..825b5932debc 100644
  
  #
 diff --git a/mm/compaction.c b/mm/compaction.c
-index ca71fd3c3181..2070b1e5106f 100644
+index bf021b31c7ec..cd1c1ece9888 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
-@@ -1923,7 +1923,11 @@ static int sysctl_compact_unevictable_allowed __read_mostly = CONFIG_COMPACT_UNE
+@@ -1887,7 +1887,11 @@ static int sysctl_compact_unevictable_allowed __read_mostly = CONFIG_COMPACT_UNE
   * aggressively the kernel should compact memory in the
   * background. It takes values in the range [0, 100].
   */
@@ -9002,10 +9105,10 @@ index ca71fd3c3181..2070b1e5106f 100644
  static int __read_mostly sysctl_compact_memory;
  
 diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 47d76d03ce30..48615051a8cf 100644
+index 24cb81c8d838..eb836db3109b 100644
 --- a/mm/huge_memory.c
 +++ b/mm/huge_memory.c
-@@ -64,7 +64,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
+@@ -63,7 +63,11 @@ unsigned long transparent_hugepage_flags __read_mostly =
  #ifdef CONFIG_TRANSPARENT_HUGEPAGE_MADVISE
  	(1<<TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG)|
  #endif
@@ -9018,10 +9121,10 @@ index 47d76d03ce30..48615051a8cf 100644
  	(1<<TRANSPARENT_HUGEPAGE_USE_ZERO_PAGE_FLAG);
  
 diff --git a/mm/mm_init.c b/mm/mm_init.c
-index eedce9321e13..8201039f1c1c 100644
+index 5c21b3af216b..752d2632c508 100644
 --- a/mm/mm_init.c
 +++ b/mm/mm_init.c
-@@ -2732,6 +2732,7 @@ static void __init mem_init_print_info(void)
+@@ -2731,6 +2731,7 @@ static void __init mem_init_print_info(void)
  		, K(totalhigh_pages())
  #endif
  		);
@@ -9030,10 +9133,10 @@ index eedce9321e13..8201039f1c1c 100644
  
  void __init __weak arch_mm_preinit(void)
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 20e1d76f1eba..2d1f99f1ef3d 100644
+index 3e248d1c3969..4fe0b14d8d73 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -71,7 +71,11 @@ static long ratelimit_pages = 32;
+@@ -72,7 +72,11 @@ static long ratelimit_pages = 32;
  /*
   * Start background writeback (via writeback threads) at this percentage
   */
@@ -9045,7 +9148,7 @@ index 20e1d76f1eba..2d1f99f1ef3d 100644
  
  /*
   * dirty_background_bytes starts at 0 (disabled) so that it is a function of
-@@ -99,7 +103,11 @@ static unsigned long vm_dirty_bytes;
+@@ -100,7 +104,11 @@ static unsigned long vm_dirty_bytes;
  /*
   * The interval between `kupdate'-style writebacks
   */
@@ -9058,7 +9161,7 @@ index 20e1d76f1eba..2d1f99f1ef3d 100644
  EXPORT_SYMBOL_GPL(dirty_writeback_interval);
  
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 4f29e393f6af..4632022638a5 100644
+index 09241bb7663e..ad3dbc00e32f 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
 @@ -274,7 +274,11 @@ const char * const migratetype_names[MIGRATE_TYPES] = {
@@ -9074,10 +9177,10 @@ index 4f29e393f6af..4632022638a5 100644
  int defrag_mode;
  
 diff --git a/mm/swap.c b/mm/swap.c
-index 77b2d5997873..443eb4a8b42b 100644
+index b74ebe865dd9..cc881058efe0 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -1091,6 +1091,10 @@ static const struct ctl_table swap_sysctl_table[] = {
+@@ -1098,6 +1098,10 @@ static const struct ctl_table swap_sysctl_table[] = {
   */
  void __init swap_setup(void)
  {
@@ -9088,7 +9191,7 @@ index 77b2d5997873..443eb4a8b42b 100644
  	unsigned long megs = totalram_pages() >> (20 - PAGE_SHIFT);
  
  	/* Use a smaller cluster for small-memory machines */
-@@ -1098,6 +1102,7 @@ void __init swap_setup(void)
+@@ -1105,6 +1109,7 @@ void __init swap_setup(void)
  		page_cluster = 2;
  	else
  		page_cluster = 3;
@@ -9097,10 +9200,10 @@ index 77b2d5997873..443eb4a8b42b 100644
  	 * Right now other parts of the system means that we
  	 * _really_ don't want to cluster much more
 diff --git a/mm/util.c b/mm/util.c
-index 448117da071f..b9334775c51d 100644
+index 98d301875b75..a351aa09df8d 100644
 --- a/mm/util.c
 +++ b/mm/util.c
-@@ -857,6 +857,40 @@ static const struct ctl_table util_sysctl_table[] = {
+@@ -859,6 +859,40 @@ static const struct ctl_table util_sysctl_table[] = {
  		.mode		= 0644,
  		.proc_handler	= proc_doulongvec_minmax,
  	},
@@ -9142,7 +9245,7 @@ index 448117da071f..b9334775c51d 100644
  
  static int __init init_vm_util_sysctls(void)
 diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index bd5183dfd879..3a410f53a07c 100644
+index c197ed47bcc4..1b359dcc88c4 100644
 --- a/mm/vmpressure.c
 +++ b/mm/vmpressure.c
 @@ -43,7 +43,11 @@ static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
@@ -9158,10 +9261,10 @@ index bd5183dfd879..3a410f53a07c 100644
  
  /*
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3783e45bfc92..75f48ea2b336 100644
+index 674999999cd0..3ee1ea33f30c 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -148,6 +148,15 @@ struct scan_control {
+@@ -147,6 +147,15 @@ struct scan_control {
  	/* The file folios on the current node are dangerously low */
  	unsigned int file_is_tiny:1;
  
@@ -9177,7 +9280,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  	/* Always discard instead of demoting to lower tier memory */
  	unsigned int no_demotion:1;
  
-@@ -197,10 +206,23 @@ struct scan_control {
+@@ -196,10 +205,23 @@ struct scan_control {
  #define prefetchw_prev_lru_folio(_folio, _base, _field) do { } while (0)
  #endif
  
@@ -9201,7 +9304,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  
  #ifdef CONFIG_MEMCG
  
-@@ -1147,6 +1169,10 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
+@@ -1157,6 +1179,10 @@ static unsigned int shrink_folio_list(struct list_head *folio_list,
  		if (!sc->may_unmap && folio_mapped(folio))
  			goto keep_locked;
  
@@ -9212,7 +9315,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  		/*
  		 * The number of dirty pages determines if a node is marked
  		 * reclaim_congested. kswapd will stall and start writing
-@@ -2521,6 +2547,15 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+@@ -2606,6 +2632,15 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
  		goto out;
  	}
  
@@ -9227,8 +9330,8 @@ index 3783e45bfc92..75f48ea2b336 100644
 +
  	/*
  	 * If there is enough inactive page cache, we do not reclaim
- 	 * anything from the anonymous working right now.
-@@ -2638,6 +2673,14 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 	 * anything from the anonymous working right now to make sure
+@@ -2664,6 +2699,14 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
  			BUG();
  		}
  
@@ -9243,8 +9346,8 @@ index 3783e45bfc92..75f48ea2b336 100644
  		nr[lru] = scan;
  	}
  }
-@@ -2657,6 +2700,96 @@ static bool can_age_anon_pages(struct pglist_data *pgdat,
- 	return can_demote(pgdat->node_id, sc);
+@@ -2684,6 +2727,96 @@ static bool can_age_anon_pages(struct lruvec *lruvec,
+ 			  lruvec_memcg(lruvec));
  }
  
 +int vm_workingset_protection_update_handler(const struct ctl_table *table, int write,
@@ -9340,7 +9443,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  #ifdef CONFIG_LRU_GEN
  
  #ifdef CONFIG_LRU_GEN_ENABLED
-@@ -4623,11 +4756,21 @@ static int get_tier_idx(struct lruvec *lruvec, int type)
+@@ -4667,11 +4800,21 @@ static int get_tier_idx(struct lruvec *lruvec, int type)
  	return tier - 1;
  }
  
@@ -9364,7 +9467,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  		return LRU_GEN_FILE;
  
  	if (swappiness >= MAX_SWAPPINESS)
-@@ -4646,7 +4789,7 @@ static int isolate_folios(struct lruvec *lruvec, struct scan_control *sc, int sw
+@@ -4691,7 +4834,7 @@ static int isolate_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
  			  int *type_scanned, struct list_head *list)
  {
  	int i;
@@ -9373,7 +9476,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  
  	for_each_evictable_type(i, swappiness) {
  		int scanned;
-@@ -4889,6 +5032,12 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+@@ -4937,6 +5080,12 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
  	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
  	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
  
@@ -9386,7 +9489,7 @@ index 3783e45bfc92..75f48ea2b336 100644
  	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
  	if (mem_cgroup_below_min(NULL, memcg))
  		return MEMCG_LRU_YOUNG;
-@@ -6027,6 +6176,8 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+@@ -6089,6 +6238,8 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
  
  	prepare_scan_control(pgdat, sc);
  
@@ -9395,243 +9498,60 @@ index 3783e45bfc92..75f48ea2b336 100644
  	shrink_node_memcgs(pgdat, sc);
  
  	flush_reclaim_state(sc);
-diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index dd5cf8914a28..b216088a6abd 100644
---- a/net/ipv4/inet_connection_sock.c
-+++ b/net/ipv4/inet_connection_sock.c
-@@ -632,7 +632,7 @@ static int inet_csk_wait_for_connect(struct sock *sk, long timeo)
- 	 * having to remove and re-insert us on the wait queue.
- 	 */
- 	for (;;) {
--		prepare_to_wait_exclusive(sk_sleep(sk), &wait,
-+		prepare_to_wait_exclusive_lifo(sk_sleep(sk), &wait,
- 					  TASK_INTERRUPTIBLE);
- 		release_sock(sk);
- 		if (reqsk_queue_empty(&icsk->icsk_accept_queue))
-diff --git a/scripts/Makefile.build b/scripts/Makefile.build
-index eb0d27812aec..951ee1fdaa3c 100644
---- a/scripts/Makefile.build
-+++ b/scripts/Makefile.build
-@@ -50,18 +50,23 @@ endif
- 
- # ===========================================================================
- 
-+builtin_suffix := $(if $(filter %.a_thinlto_native, $(MAKECMDGOALS)),.a_thinlto_native,.a)
-+ifeq ($(thinlto_final_pass),1)
-+builtin_suffix :=.a_thinlto_native
-+endif
-+
- # subdir-builtin and subdir-modorder may contain duplications. Use $(sort ...)
--subdir-builtin := $(sort $(filter %/built-in.a, $(real-obj-y)))
-+subdir-builtin := $(sort $(filter %/built-in$(builtin_suffix), $(real-obj-y)))
- subdir-modorder := $(sort $(filter %/modules.order, $(obj-m)))
- subdir-dtbslist := $(sort $(filter %/dtbs-list, $(dtb-y)))
-
- targets-for-builtin := $(extra-y)
- 
- ifneq ($(strip $(lib-y) $(lib-m) $(lib-)),)
--targets-for-builtin += $(obj)/lib.a
-+targets-for-builtin += $(obj)/lib$(builtin_suffix)
- endif
- 
- ifdef need-builtin
--targets-for-builtin += $(obj)/built-in.a
-+targets-for-builtin += $(obj)/built-in$(builtin_suffix)
- endif
- 
- targets-for-modules := $(foreach x, o mod, \
-@@ -337,6 +342,10 @@ $(obj)/%.o: $(obj)/%.S FORCE
- targets += $(filter-out $(subdir-builtin), $(real-obj-y))
- targets += $(filter-out $(subdir-modorder), $(real-obj-m))
- targets += $(real-dtb-y) $(lib-y) $(always-y)
-+ifeq ($(builtin_suffix),.a_thinlto_native)
-+native_targets = $(patsubst,%.o,%.o_thinlto_native,$(targets))
-+targets += $(native_targets)
-+endif
- 
- # Linker scripts preprocessor (.lds.S -> .lds)
- # ---------------------------------------------------------------------------
-@@ -347,6 +356,24 @@ quiet_cmd_cpp_lds_S = LDS     $@
- $(obj)/%.lds: $(src)/%.lds.S FORCE
- 	$(call if_changed_dep,cpp_lds_S)
- 
-+ifdef CONFIG_LTO_CLANG_THIN_DIST
-+# Generate .o_thinlto_native (obj) from .o (bitcode) file
-+# ---------------------------------------------------------------------------
-+quiet_cmd_cc_o_bc = CC $(quiet_modtag) $@
-+
-+cmd_cc_o_bc      = $(if $(filter bitcode, $(shell file -b $<)),$(CC) \
-+		   $(filter-out -Wp% $(LINUXINCLUDE) %.h.gch %.h -D% \
-+		   -flto=thin, $(c_flags)) \
-+		   -Wno-unused-command-line-argument \
-+		   -x ir -fthinlto-index=$<.thinlto.bc -c -o $@ \
-+		   $(if $(findstring ../,$<), \
-+		   $$(realpath --relative-to=$(srcroot) $<), $<), \
-+		   cp $< $@)
-+
-+$(obj)/%.o_thinlto_native: $(obj)/%.o FORCE
-+	$(call if_changed,cc_o_bc)
-+endif
-+
- # ASN.1 grammar
- # ---------------------------------------------------------------------------
- quiet_cmd_asn1_compiler = ASN.1   $(basename $@).[ch]
-@@ -360,7 +387,7 @@ $(obj)/%.asn1.c $(obj)/%.asn1.h: $(src)/%.asn1 $(objtree)/scripts/asn1_compiler
- # ---------------------------------------------------------------------------
- 
- # To build objects in subdirs, we need to descend into the directories
--$(subdir-builtin): $(obj)/%/built-in.a: $(obj)/% ;
-+$(subdir-builtin): $(obj)/%/built-in$(builtin_suffix): $(obj)/% ;
- $(subdir-modorder): $(obj)/%/modules.order: $(obj)/% ;
- 
- #
-@@ -377,6 +404,12 @@ quiet_cmd_ar_builtin = AR      $@
- $(obj)/built-in.a: $(real-obj-y) FORCE
- 	$(call if_changed,ar_builtin)
- 
-+ifdef CONFIG_LTO_CLANG_THIN_DIST
-+# Rule to compile a set of .o_thinlto_native files into one .a_thinlto_native file.
-+$(obj)/built-in.a_thinlto_native: $(patsubst %.o,%.o_thinlto_native,$(real-obj-y)) FORCE
-+	$(call if_changed,ar_builtin)
-+endif
-+
- #
- # Rule to create modules.order and dtbs-list
- #
-@@ -394,6 +427,14 @@ $(obj)/modules.order: $(obj-m) FORCE
- $(obj)/lib.a: $(lib-y) FORCE
- 	$(call if_changed,ar)
- 
-+ifdef CONFIG_LTO_CLANG_THIN_DIST
-+quiet_cmd_ar_native = AR      $@
-+      cmd_ar_native = rm -f $@; $(AR) cDPrsT $@ $(patsubst %.o,%.o_thinlto_native,$(real-prereqs))
-+
-+$(obj)/lib.a_thinlto_native: $(patsubst %.o,%.o_thinlto_native,$(lib-y)) FORCE
-+	$(call if_changed,ar_native)
-+endif
-+
- quiet_cmd_ld_multi_m = LD [M]  $@
-       cmd_ld_multi_m = $(LD) $(ld_flags) -r -o $@ @$< $(cmd_objtool)
- 
-@@ -459,7 +500,8 @@ $(single-subdir-goals): $(single-subdirs)
- PHONY += $(subdir-ym)
- $(subdir-ym):
- 	$(Q)$(MAKE) $(build)=$@ \
--	need-builtin=$(if $(filter $@/built-in.a, $(subdir-builtin)),1) \
-+	need-builtin=$(if $(filter $@/built-in$(builtin_suffix), $(subdir-builtin)),1) \
-+	thinlto_final_pass=$(if $(filter .a_thinlto_native, $(builtin_suffix)),1) \
- 	need-modorder=$(if $(filter $@/modules.order, $(subdir-modorder)),1) \
- 	$(filter $@/%, $(single-subdir-goals))
- 
 diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
-index 2fe73cda0bdd..9cfd23590334 100644
+index 1d581ba5df66..65bf1e4d31c0 100644
 --- a/scripts/Makefile.lib
 +++ b/scripts/Makefile.lib
-@@ -34,8 +34,13 @@ else
- obj-m := $(filter-out %/, $(obj-m))
+@@ -239,6 +239,12 @@ ifdef CONFIG_LTO_CLANG
+ cmd_ld_single = $(if $(objtool-enabled)$(is-single-obj-m), ; $(LD) $(ld_flags) -r -o $(tmp-target) $@; mv $(tmp-target) $@)
  endif
  
-+builtin_suffix := $(if $(filter %.a_thinlto_native, $(MAKECMDGOALS)),.a_thinlto_native,.a)
-+ifeq ($(thinlto_final_pass),1)
-+        builtin_suffix :=.a_thinlto_native
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++# Save the _c_flags, sliently.
++quiet_cmd_save_c_flags =
++      cmd_save_c_flags = printf '\n%s\n' 'saved_c_flags_$@ := $(call escsq,$(_c_flags))' >> $(dot-target).cmd
 +endif
 +
- ifdef need-builtin
--obj-y		:= $(patsubst %/, %/built-in.a, $(obj-y))
-+obj-y		:= $(patsubst %/, %/built-in$(builtin_suffix), $(obj-y))
- else
- obj-y		:= $(filter-out %/, $(obj-y))
- endif
-diff --git a/scripts/Makefile.vmlinux_o b/scripts/Makefile.vmlinux_o
-index b024ffb3e201..f9abc45a68b3 100644
---- a/scripts/Makefile.vmlinux_o
-+++ b/scripts/Makefile.vmlinux_o
-@@ -9,6 +9,14 @@ include $(srctree)/scripts/Kbuild.include
- # for objtool
- include $(srctree)/scripts/Makefile.lib
+ quiet_cmd_cc_o_c = CC $(quiet_modtag)  $@
+       cmd_cc_o_c = $(CC) $(c_flags) -c -o $@ $< \
+ 		$(cmd_ld_single) \
+@@ -246,6 +252,7 @@ quiet_cmd_cc_o_c = CC $(quiet_modtag)  $@
  
-+ifeq ($(thinlto_final_pass),1)
-+vmlinux_a := vmlinux.a_thinlto_native
-+vmlinux_libs := $(patsubst %.a,%.a_thinlto_native,$(KBUILD_VMLINUX_LIBS))
-+else
-+vmlinux_a := vmlinux.a
-+vmlinux_libs := $(KBUILD_VMLINUX_LIBS)
-+endif
-+
- # Generate a linker script to ensure correct ordering of initcalls for Clang LTO
- # ---------------------------------------------------------------------------
- 
-@@ -18,7 +26,7 @@ quiet_cmd_gen_initcalls_lds = GEN     $@
- 	$(PERL) $(real-prereqs) > $@
- 
- .tmp_initcalls.lds: $(srctree)/scripts/generate_initcall_order.pl \
--		vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
-+		$(vmlinux_a) $(vmlinux_libs) FORCE
- 	$(call if_changed,gen_initcalls_lds)
- 
- targets := .tmp_initcalls.lds
-@@ -59,8 +67,8 @@ quiet_cmd_ld_vmlinux.o = LD      $@
- 	$(LD) ${KBUILD_LDFLAGS} -r -o $@ \
- 	$(vmlinux-o-ld-args-y) \
- 	$(addprefix -T , $(initcalls-lds)) \
--	--whole-archive vmlinux.a --no-whole-archive \
--	--start-group $(KBUILD_VMLINUX_LIBS) --end-group \
-+	--whole-archive $(vmlinux_a) --no-whole-archive \
-+	--start-group $(vmlinux_libs) --end-group \
- 	$(cmd_objtool)
- 
- define rule_ld_vmlinux.o
-@@ -68,7 +76,7 @@ define rule_ld_vmlinux.o
+ define rule_cc_o_c
+ 	$(call cmd_and_fixdep,cc_o_c)
++	$(call cmd,save_c_flags)
+ 	$(call cmd,checksrc)
+ 	$(call cmd,checkdoc)
  	$(call cmd,gen_objtooldep)
- endef
- 
--vmlinux.o: $(initcalls-lds) vmlinux.a $(KBUILD_VMLINUX_LIBS) FORCE
-+vmlinux.o: $(initcalls-lds) $(vmlinux_a) $(vmlinux_libs) FORCE
- 	$(call if_changed_rule,ld_vmlinux.o)
- 
- targets += vmlinux.o
-diff --git a/scripts/Makefile.vmlinux_thinlink b/scripts/Makefile.vmlinux_thinlink
+diff --git a/scripts/Makefile.thinlto b/scripts/Makefile.thinlto
 new file mode 100644
-index 000000000000..13e4026c7d45
+index 000000000000..03349ac69de5
 --- /dev/null
-+++ b/scripts/Makefile.vmlinux_thinlink
-@@ -0,0 +1,53 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+
++++ b/scripts/Makefile.thinlto
+@@ -0,0 +1,40 @@
 +PHONY := __default
-+__default: vmlinux.thinlink
++__default:
 +
 +include include/config/auto.conf
 +include $(srctree)/scripts/Kbuild.include
++include $(srctree)/scripts/Makefile.lib
 +
++native-objs := $(patsubst %.o,%.thinlto-native.o,$(call read-file, vmlinux.thinlto-index))
 +
-+# Generate a linker script to ensure correct ordering of initcalls for Clang LTO
++__default: $(native-objs)
++
++# Generate .thinlto-native.o (obj) from .o (bitcode) and .thinlto.bc (summary) files
 +# ---------------------------------------------------------------------------
++quiet_cmd_cc_o_bc = CC $(quiet_modtag)  $@
++      be_flags = $(shell sed -n '/saved_c_flags_/s/.*:= //p' \
++		 $(dir $(<)).$(notdir $(<)).cmd)
++      cmd_cc_o_bc = \
++      $(CC) $(be_flags) -x ir -fno-lto -Wno-unused-command-line-argument \
++      -fthinlto-index=$(word 2, $^) -c -o $@ $<
 +
-+quiet_cmd_gen_initcalls_lds = GEN     $@
-+      cmd_gen_initcalls_lds = \
-+	$(PYTHON3) $(srctree)/scripts/jobserver-exec \
-+	$(PERL) $(real-prereqs) > $@
-+
-+.tmp_initcalls_thinlink.lds: $(srctree)/scripts/generate_initcall_order.pl \
-+		vmlinux.a FORCE
-+	$(call if_changed,gen_initcalls_lds)
-+
-+targets := .tmp_initcalls_thinlink.lds
-+
-+initcalls-lds := .tmp_initcalls_thinlink.lds
-+
-+quiet_cmd_ld_vmlinux.thinlink = LD      $@
-+      cmd_ld_vmlinux.thinlink = \
-+	$(AR) t vmlinux.a > .vmlinux_thinlto_bc_files; \
-+	$(LD) ${KBUILD_LDFLAGS} -r $(addprefix -T , $(initcalls-lds)) \
-+	--thinlto-index-only @.vmlinux_thinlto_bc_files; \
-+	touch vmlinux.thinlink
-+
-+vmlinux.thinlink: vmlinux.a $(initcalls-lds) FORCE
-+	$(call if_changed,ld_vmlinux.thinlink)
-+
-+targets += vmlinux.thinlink
++targets += $(native-objs)
++$(native-objs): %.thinlto-native.o: %.o %.o.thinlto.bc   FORCE
++	$(call if_changed,cc_o_bc)
 +
 +# Add FORCE to the prerequisites of a target to force it to be always rebuilt.
 +# ---------------------------------------------------------------------------
@@ -9649,18 +9569,125 @@ index 000000000000..13e4026c7d45
 +-include $(foreach f,$(existing-targets),$(dir $(f)).$(notdir $(f)).cmd)
 +
 +.PHONY: $(PHONY)
-diff --git a/scripts/head-object-list.txt b/scripts/head-object-list.txt
-index 7274dfc65af6..90710b87a387 100644
---- a/scripts/head-object-list.txt
-+++ b/scripts/head-object-list.txt
-@@ -18,6 +18,7 @@ arch/arm/kernel/head.o
- arch/csky/kernel/head.o
- arch/hexagon/kernel/head.o
- arch/loongarch/kernel/head.o
-+arch/loongarch/kernel/head.o_thinlto_native
- arch/m68k/68000/head.o
- arch/m68k/coldfire/head.o
- arch/m68k/kernel/head.o
+diff --git a/scripts/Makefile.vmlinux_a b/scripts/Makefile.vmlinux_a
+new file mode 100644
+index 000000000000..382cebe1ee57
+--- /dev/null
++++ b/scripts/Makefile.vmlinux_a
+@@ -0,0 +1,83 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++PHONY := __default
++__default: vmlinux.a
++
++include include/config/auto.conf
++include $(srctree)/scripts/Kbuild.include
++include $(srctree)/scripts/Makefile.lib
++
++# Link of built-in-fixup.a
++# ---------------------------------------------------------------------------
++
++# '$(AR) mPi' needs --thin to workaround the bug of llvm-ar <= 14
++quiet_cmd_ar_builtin_fixup = AR      $@
++      cmd_ar_builtin_fixup = \
++	rm -f $@; \
++	$(AR) cDPrS --thin $@ $(KBUILD_VMLINUX_OBJS); \
++	$(AR) mPi --thin $$($(AR) t $@ | sed -n 1p) $@ $$($(AR) t $@ | grep -F -f $(srctree)/scripts/head-object-list.txt)
++
++targets += built-in-fixup.a
++built-in-fixup.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
++	$(call if_changed,ar_builtin_fixup)
++
++ifdef CONFIG_LTO_CLANG_THIN_DIST
++
++quiet_cmd_builtin.order = GEN     $@
++      cmd_builtin.order = $(AR) t $< > $@
++
++targets += builtin.order
++builtin.order: built-in-fixup.a FORCE
++	$(call if_changed,builtin.order)
++
++quiet_cmd_ld_thinlto_index = LD      $@
++      cmd_ld_thinlto_index = \
++	$(LD) $(KBUILD_LDFLAGS) -r --thinlto-index-only=$@ @$<
++
++targets += vmlinux.thinlto-index
++vmlinux.thinlto-index: builtin.order FORCE
++	$(call if_changed,ld_thinlto_index)
++
++quiet_cmd_ar_vmlinux.a = GEN     $@
++      cmd_ar_vmlinux.a =					\
++	rm -f $@;						\
++	while read -r obj; do					\
++		if grep -q $${obj} $(word 2, $^); then		\
++			echo $${obj%.o}.thinlto-native.o;	\
++		else						\
++			echo $${obj};				\
++		fi;						\
++	done < $< | xargs $(AR) cDPrS --thin $@
++
++targets += vmlinux.a
++vmlinux.a: builtin.order vmlinux.thinlto-index FORCE
++	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.thinlto
++	$(call if_changed,ar_vmlinux.a)
++
++else
++
++# vmlinux.a
++# ---------------------------------------------------------------------------
++
++targets += vmlinux.a
++vmlinux.a: built-in-fixup.a FORCE
++	$(call if_changed,copy)
++
++endif
++
++# Add FORCE to the prerequisites of a target to force it to be always rebuilt.
++# ---------------------------------------------------------------------------
++
++PHONY += FORCE
++FORCE:
++
++# Read all saved command lines and dependencies for the $(targets) we
++# may be building above, using $(if_changed{,_dep}). As an
++# optimization, we don't need to read them if the target does not
++# exist, we will rebuild anyway in that case.
++
++existing-targets := $(wildcard $(sort $(targets)))
++
++-include $(foreach f,$(existing-targets),$(dir $(f)).$(notdir $(f)).cmd)
++
++.PHONY: $(PHONY)
+diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+index 5ca7c268294e..8b01746c9ce6 100644
+--- a/scripts/mod/modpost.c
++++ b/scripts/mod/modpost.c
+@@ -1473,13 +1473,22 @@ static void extract_crcs_for_object(const char *object, struct module *mod)
+ 	char cmd_file[PATH_MAX];
+ 	char *buf, *p;
+ 	const char *base;
+-	int dirlen, ret;
++	int dirlen, baselen_without_suffix, ret;
+ 
+ 	base = get_basename(object);
+ 	dirlen = base - object;
+ 
+-	ret = snprintf(cmd_file, sizeof(cmd_file), "%.*s.%s.cmd",
+-		       dirlen, object, base);
++	baselen_without_suffix = strlen(object) - dirlen - strlen(".o");
++
++	/*
++	 * When CONFIG_LTO_CLANG_THIN_DIST=y, the ELF is *.thinlto-native.o
++	 * but the symbol CRCs are recorded in *.o.cmd file.
++	 */
++	if (strends(object, ".thinlto-native.o"))
++		baselen_without_suffix -= strlen(".thinlto-native");
++
++	ret = snprintf(cmd_file, sizeof(cmd_file), "%.*s.%.*s.o.cmd",
++		       dirlen, object, baselen_without_suffix, base);
+ 	if (ret >= sizeof(cmd_file)) {
+ 		error("%s: too long path was truncated\n", cmd_file);
+ 		return;
 -- 
-2.50.1
+2.51.2
 

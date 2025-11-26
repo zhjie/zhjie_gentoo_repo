@@ -8,14 +8,10 @@ inherit unpacker
 DESCRIPTION="Linux Diretta Alsa Target"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-X86_VER="2025.04.25-2"
-ARM_VER="2025.04.25-1"
-X86_TARGET="diretta-alsa-target-${X86_VER}-x86_64.pkg.tar.zst"
-ARM_TARGET="diretta-alsa-target-${ARM_VER}-aarch64.pkg.tar.xz"
+ARM_TARGET="diretta-alsa-target-146_7-1-aarch64.pkg.tar.xz"
 
 SRC_URI="
-    amd64? ( https://www.audio-linux.com/repo/${X86_TARGET} )
-    arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_TARGET} )
+	https://www.audio-linux.com/repo_aarch64/${ARM_TARGET}
 "
 
 KEYWORDS="~amd64 ~arm64"
@@ -32,12 +28,7 @@ RDEPEND=">=dev-libs/openssl-3.0
 "
 
 src_unpack() {
-	if use arm64; then
-	        _unpacker "${ARM_TARGET}"
-	fi
-	if use amd64; then
-		_unpacker "${X86_TARGET}"
-	fi
+        _unpacker "${ARM_TARGET}"
 	mkdir -p "${WORKDIR}/${P}"
 	mv -v opt/ "${WORKDIR}/${P}"
 }

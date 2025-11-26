@@ -6,7 +6,7 @@
 description="Ollama Service"
 
 export OLLAMA_HOST=0.0.0.0
-export OLLAMA_MODELS=/var/lib/ollma/models
+export OLLAMA_MODELS=/var/lib/ollama/models
 
 user="root:root"
 logfile="/var/log/ollama.log"
