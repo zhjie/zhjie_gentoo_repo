@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="7"
+K_GENPATCHES_VER="12"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rt7"
@@ -42,7 +42,6 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
         eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
-        eapply "${FILESDIR}/naa/0009-DSD-patches-unstaged.patch"
     fi
 
     eapply "${FILESDIR}/cachy/0002-bbr3.patch"
@@ -60,7 +59,7 @@ src_prepare() {
     # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta_alsa_host.patch"
-        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.04.25.patch"
+        eapply "${FILESDIR}/diretta/diretta_alsa_host_2025.11.26.patch"
     fi
 
     # cloudflare patch
