@@ -1,0 +1,41 @@
+diff '--color=auto' -urpN 1/sound/drivers/Kconfig 2/sound/drivers/Kconfig
+--- 1/sound/drivers/Kconfig	2025-12-03 08:18:41.192692130 -0000
++++ 2/sound/drivers/Kconfig	2025-12-03 08:20:22.136259754 -0000
+@@ -1,4 +1,17 @@
+ # SPDX-License-Identifier: GPL-2.0-only
++
++config ALSA_BRIDGE
++        tristate "Diretta ALSA driver"
++        default y
++        depends on SOUND && SND && CRC16
++        select SND_PCM
++
++config DIRETTA_DIRECT
++        tristate "Diretta Direct driver"
++        default y
++        depends on SOUND && SND && CRC16
++        select SND_PCM
++
+ config SND_MPU401_UART
+ 	tristate
+ 	select SND_RAWMIDI
+diff '--color=auto' -urpN 1/sound/drivers/Makefile 2/sound/drivers/Makefile
+--- 1/sound/drivers/Makefile	2025-12-03 08:18:36.109713902 -0000
++++ 2/sound/drivers/Makefile	2025-12-03 08:21:45.418903025 -0000
+@@ -15,6 +15,9 @@ snd-serial-u16550-y := serial-u16550.o
+ snd-serial-generic-y := serial-generic.o
+ snd-virmidi-y := virmidi.o
+ 
++alsa_bridge := alda_bridge.o
++diretta_direct := diretta_direct.o
++
+ # Toplevel Module Dependency
+ obj-$(CONFIG_SND_DUMMY) += snd-dummy.o
+ obj-$(CONFIG_SND_ALOOP) += snd-aloop.o
+@@ -28,3 +31,6 @@ obj-$(CONFIG_SND_PIMIDI) += snd-pimidi.o
+ obj-$(CONFIG_SND_PORTMAN2X4) += snd-portman2x4.o
+ 
+ obj-$(CONFIG_SND) += opl3/ opl4/ mpu401/ vx/ pcsp/ upisnd/
++
++obj-$(CONFIG_ALSA_BRIDGE) += alsa_bridge.o
++obj-$(CONFIG_DIRETTA_DIRECT) += diretta_direct.o
