@@ -11,7 +11,7 @@ diff '--color=auto' -urpN 1/sound/drivers/Kconfig 2/sound/drivers/Kconfig
 +        select SND_PCM
 +
 +config DIRETTA_DIRECT
-+        tristate "Diretta Direct driver"
++        tristate "Diretta Direct Stream driver"
 +        default y
 +        depends on SOUND && SND && CRC16
 +        select SND_PCM
