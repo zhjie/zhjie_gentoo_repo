@@ -17,7 +17,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
-IUSE="naa diretta rt"
+IUSE="naa diretta rt mtu9k"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
@@ -63,7 +63,9 @@ src_prepare() {
 
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
     eapply "${FILESDIR}/cachy/0005-block.patch"
-    eapply "${FILESDIR}/cachy/0006-fixes.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-crypto.patch"
+    eapply "${FILESDIR}/cachy/0008-fixes.patch"
 
     # diretta alsa host driver
     if use diretta; then
@@ -74,6 +76,9 @@ src_prepare() {
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 
+    if use mtu9k; then
+        eapply "${FILESDIR}/mtu9k/setting-9000-mtu-jumbo-frames-on-raspberry-pi-os.patch"
+    fi
 
     if use rt; then
     # rt patch

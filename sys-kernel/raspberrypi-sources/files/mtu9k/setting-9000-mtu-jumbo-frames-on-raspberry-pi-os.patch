@@ -1,0 +1,40 @@
+diff '--color=auto' -urpN a/drivers/net/ethernet/broadcom/genet/bcmgenet.c b/drivers/net/ethernet/broadcom/genet/bcmgenet.c
+--- a/drivers/net/ethernet/broadcom/genet/bcmgenet.c	2025-12-07 06:11:32.226844382 -0000
++++ b/drivers/net/ethernet/broadcom/genet/bcmgenet.c	2025-12-07 06:12:42.539941538 -0000
+@@ -50,7 +50,7 @@
+ #define GENET_Q0_TX_BD_CNT	\
+ 	(TOTAL_DESC - priv->hw_params->tx_queues * priv->hw_params->tx_bds_per_q)
+ 
+-#define RX_BUF_LENGTH		2048
++#define RX_BUF_LENGTH		10240
+ #define SKB_ALIGNMENT		32
+ 
+ /* Tx/Rx DMA register offset, skip 256 descriptors */
+diff '--color=auto' -urpN a/include/linux/if_vlan.h b/include/linux/if_vlan.h
+--- a/include/linux/if_vlan.h	2025-12-07 06:11:55.073875950 -0000
++++ b/include/linux/if_vlan.h	2025-12-07 06:13:07.093960399 -0000
+@@ -22,8 +22,8 @@
+ /*
+  * According to 802.3ac, the packet can be 4 bytes longer. --Klika Jan
+  */
+-#define VLAN_ETH_DATA_LEN	1500	/* Max. octets in payload	 */
+-#define VLAN_ETH_FRAME_LEN	1518	/* Max. octets in frame sans FCS */
++#define VLAN_ETH_DATA_LEN	9000	/* Max. octets in payload	 */
++#define VLAN_ETH_FRAME_LEN	9018	/* Max. octets in frame sans FCS */
+ 
+ #define VLAN_MAX_DEPTH	8		/* Max. number of nested VLAN tags parsed */
+ 
+diff '--color=auto' -urpN a/include/uapi/linux/if_ether.h b/include/uapi/linux/if_ether.h
+--- a/include/uapi/linux/if_ether.h	2025-12-07 06:12:17.395906794 -0000
++++ b/include/uapi/linux/if_ether.h	2025-12-07 06:13:26.787964074 -0000
+@@ -33,8 +33,8 @@
+ #define ETH_TLEN	2		/* Octets in ethernet type field */
+ #define ETH_HLEN	14		/* Total octets in header.	 */
+ #define ETH_ZLEN	60		/* Min. octets in frame sans FCS */
+-#define ETH_DATA_LEN	1500		/* Max. octets in payload	 */
+-#define ETH_FRAME_LEN	1514		/* Max. octets in frame sans FCS */
++#define ETH_DATA_LEN	9000		/* Max. octets in payload	 */
++#define ETH_FRAME_LEN	9014		/* Max. octets in frame sans FCS */
+ #define ETH_FCS_LEN	4		/* Octets in the FCS		 */
+ 
+ #define ETH_MIN_MTU	68		/* Min IPv4 MTU per RFC791	*/
