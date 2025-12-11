@@ -1,0 +1,18 @@
+[Unit]
+Description=Roon
+After=pipewire.service
+ConditionPathExists=/etc/raat.conf
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/raat_app /etc/raat.conf
+StandardOutput=journal
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=raat
+
+[Install]
+WantedBy=default.target
