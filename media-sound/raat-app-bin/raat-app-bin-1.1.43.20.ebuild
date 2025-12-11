@@ -11,13 +11,12 @@ MY_PN=${PN/-bin/}
 DESCRIPTION="raat app"
 HOMEPAGE="http://www.roon.app"
 SRC_URI="
-    amd64? ( https://debianrepo.hifiberry.com/pool/trixie/main/h/hifiberry-raat/hifiberry-raat_1.1.43.20_arm64.deb )
     arm64? ( https://debianrepo.hifiberry.com/pool/trixie/main/h/hifiberry-raat/hifiberry-raat_1.1.43.20_arm64.deb )
 "
 
 LICENSE="Roon Labs LLC"
 SLOT="0"
-KEYWORDS="amd64 arm64"
+KEYWORDS="arm64"
 RESTRICT="mirror bindist"
 
 IUSE="systemd"
