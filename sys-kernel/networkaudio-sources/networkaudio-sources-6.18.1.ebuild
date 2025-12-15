@@ -4,11 +4,11 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="12"
+K_GENPATCHES_VER="2"
 K_EXP_GENPATCHES_NOUSE="1"
 
-RT_VERSION="rt7"
-MINOR_VERSION="5"
+RT_VERSION="rc4-rt3"
+MINOR_VERSION="0"
 
 inherit kernel-2
 detect_version
@@ -17,10 +17,10 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa diretta highhz rt"
+IUSE="naa diretta highhz rt amd"
 
-RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
-# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
+# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
+RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
@@ -44,10 +44,16 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0002-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0003-block.patch"
-    eapply "${FILESDIR}/cachy/0004-cachy.patch"
-    eapply "${FILESDIR}/cachy/0005-fixes.patch"
+    if use amd; then
+        eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
+    fi
+
+    eapply "${FILESDIR}/cachy/0003-autofdo.patch"
+    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0005-block.patch"
+    eapply "${FILESDIR}/cachy/0006-cachy.patch"
+    eapply "${FILESDIR}/cachy/0007-crypto.patch"
+    eapply "${FILESDIR}/cachy/0008-fixes.patch"
 
     # highhz patch
     if use highhz; then
@@ -73,24 +79,10 @@ src_prepare() {
 ###########################################################################
 # Posted and applied
 ###########################################################################
-# Netfilter backports for pipapo + BH-locking
-0001-netfilter-ctnetlink-remove-refcounting-in-dying-list.patch
-0002-netfilter-nft_set_pipapo_avx2-Drop-the-comment-regar.patch
-0003-netfilter-nft_set_pipapo_avx2-split-lookup-function-.patch
-0004-netfilter-nft_set_pipapo-use-avx2-algorithm-for-inse.patch
-0005-netfilter-nft_set_pipapo-Store-real-pointer-adjust-l.patch
-0006-netfilter-nft_set_pipapo-Use-nested-BH-locking-for-n.patch
-netfilter-nft_set_pipapo-use-0-genmask-for-packetpat.patch
-netfilter-nft_set_pipapo_avx2-fix-skip-of-expired-en.patch
 
 ###########################################################################
 # Posted
 ###########################################################################
-# Final bits for BH-lock removal
-0001-workqueue-Provide-a-handshake-for-canceling-BH-worke.patch
-0002-softirq-Provide-a-handshake-for-canceling-tasklets-v.patch
-0003-softirq-Allow-to-drop-the-softirq-BKL-lock-on-PREEMP.patch
-net-gro_cells-Use-nested-BH-locking-for-gro_cell.patch
 
 ###########################################################################
 # John's printk queue
@@ -113,7 +105,6 @@ Reapply-serial-8250-Revert-drop-lockdep-annotation-f.patch
 # https://lore.kernel.org/all/20240613102818.4056866-1-bigeasy@linutronix.de/
 0001-drm-i915-Use-preempt_disable-enable_rt-where-recomme.patch
 0002-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-duri.patch
-0003-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_R.patch
 0004-drm-i915-Disable-tracing-points-on-PREEMPT_RT.patch
 0005-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_d.patch
 0006-drm-i915-Drop-the-irqs_disabled-check.patch
@@ -124,10 +115,11 @@ drm-i915-Consider-RCU-read-section-as-atomic.patch
 ###########################################################################
 # ARM
 ###########################################################################
-0001-arm-Disable-jump-label-on-PREEMPT_RT.patch
-ARM__enable_irq_in_translation_section_permission_fault_handlers.patch
-arm-Disable-FAST_GUP-on-PREEMPT_RT-if-HIGHPTE-is-als.patch
-ARM__Allow_to_enable_RT.patch
+0001-ARM-mm-fault-Move-harden_branch_predictor-before-int.patch
+0002-ARM-mm-fault-Enable-interrupts-before-invoking-__do_.patch
+0003-ARM-Disable-jump-label-on-PREEMPT_RT.patch
+0004-ARM-Disable-HIGHPTE-on-PREEMPT_RT-kernels.patch
+0005-ARM-Allow-to-enable-RT.patch
 
 ###########################################################################
 # POWERPC
