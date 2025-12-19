@@ -4,17 +4,20 @@
 EAPI=8
 
 inherit unpacker
+MY_PV=$(ver_rs 1 '_')
 
 DESCRIPTION="Linux Diretta Alsa Target"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-ARM_TARGET="diretta-alsa-target-146_7-1-aarch64.pkg.tar.xz"
+ARM_TARGET="diretta-alsa-target-${MY_PV}-1-aarch64.pkg.tar.xz"
+X86_TARGET="diretta-alsa-target-${MY_PV}-1-x86_64.pkg.tar.zst"
 
 SRC_URI="
-	https://www.audio-linux.com/repo_aarch64/${ARM_TARGET}
+	arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_TARGET} )
+	amd64? ( https://www.audio-linux.com/ftp/temp/diretta_v2/${X86_TARGET} )
 "
 
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="amd64 arm64"
 SLOT="0"
 LICENSE="CDDL"
 IUSE=""
@@ -28,13 +31,12 @@ RDEPEND=">=dev-libs/openssl-3.0
 "
 
 src_unpack() {
-        _unpacker "${ARM_TARGET}"
-	mkdir -p "${WORKDIR}/${P}"
-	mv -v opt/ "${WORKDIR}/${P}"
+	unpacker_src_unpack
+	mv opt/ "${WORKDIR}/${P}"
 }
 
 src_install() {
-	find .
+	insinto "/opt/"
 	insopts -m755
 	doins -r *
 	newinitd "${FILESDIR}/diretta-alsa-target.init.d" "diretta-alsa-target"

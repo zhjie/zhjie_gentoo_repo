@@ -16,22 +16,15 @@ SRC_URI="
 	amd64? ( https://www.audio-linux.com/ftp/temp/diretta_v2/${X86_HOST} )
 "
 
-KEYWORDS="~arm64 ~amd64"
+KEYWORDS="arm64 amd64"
 SLOT="0"
 LICENSE="CDDL"
 IUSE=""
 
-# BDEPEND="|| ( sys-kernel/networkaudio-sources[diretta] sys-kernel/raspberrypi-sources[diretta] )"
-
 src_unpack() {
-    if use amd64; then
-        _unpacker "${X86_HOST}"
-    fi
-    if use arm64; then
-        _unpacker "${ARM_HOST}"
-    fi
+    unpacker_src_unpack
 
-    mv ./opt/diretta-alsa/ "${WORKDIR}/${P}"
+    mv opt/diretta-alsa/ "${WORKDIR}/${P}"
 }
 
 src_install() {
