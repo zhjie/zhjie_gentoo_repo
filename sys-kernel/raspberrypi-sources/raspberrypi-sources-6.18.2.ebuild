@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="1"
+K_GENPATCHES_VER="3"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
@@ -61,6 +61,7 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
     fi
 
+    eapply "${FILESDIR}/cachy/0003-autofdo.patch"
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
     eapply "${FILESDIR}/cachy/0005-block.patch"
     eapply "${FILESDIR}/cachy/0006-cachy.patch"
