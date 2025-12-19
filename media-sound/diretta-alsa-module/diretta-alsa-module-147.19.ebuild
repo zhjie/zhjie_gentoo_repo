@@ -30,7 +30,7 @@ src_unpack() {
 }
 
 src_compile() {
-    local modlist=( "alsa_bridge=kernel/sound/drivers/" )
+    local modlist=( "alsa_bridge=/kernel/sound/drivers/" )
 
     local modargs=(
         "KERNELDIR=${KV_OUT_DIR}"

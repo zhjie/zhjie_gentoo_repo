@@ -30,7 +30,7 @@ src_unpack() {
 }
 
 src_compile() {
-    local modlist=( "diretta_direct=kernel/sound/drivers/" )
+    local modlist=( "diretta_direct=/kernel/sound/drivers/" )
 
     local modargs=(
         "KERNELDIR=${KV_OUT_DIR}"
