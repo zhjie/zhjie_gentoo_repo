@@ -17,7 +17,7 @@ DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and d
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64"
-IUSE="naa diretta highhz rt amd"
+IUSE="naa diretta highhz rt amd bore prjc"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
@@ -54,6 +54,14 @@ src_prepare() {
     eapply "${FILESDIR}/cachy/0006-cachy.patch"
     eapply "${FILESDIR}/cachy/0007-crypto.patch"
     eapply "${FILESDIR}/cachy/0008-fixes.patch"
+
+    if use bore; then
+        eapply "${FILESDIR}/sched/0001-bore-cachy.patch"
+    fi
+
+    if use prjc; then
+        eapply "${FILESDIR}/sched/0001-prjc-cachy.patch"
+    fi
 
     # highhz patch
     if use highhz; then
