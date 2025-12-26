@@ -1,0 +1,27 @@
+diff '--color=auto' -urpN a/RoonServer/Appliance/RAATServer b/RoonServer/Appliance/RAATServer
+--- a/RoonServer/Appliance/RAATServer	2025-12-04 21:28:26.625435031 -0000
++++ b/RoonServer/Appliance/RAATServer	2025-12-26 05:57:58.911043759 -0000
+@@ -38,4 +38,4 @@ ln -sf $DOTNET_ROOT/dotnet $HARDLINK
+ 
+ # fire up the app
+ cd "$ROOTPATH/Appliance"
+-exec "$HARDLINK" "$SCRIPT.dll" "$@"
++exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"
+diff '--color=auto' -urpN a/RoonServer/Appliance/RoonAppliance b/RoonServer/Appliance/RoonAppliance
+--- a/RoonServer/Appliance/RoonAppliance	2025-12-04 21:28:26.619434902 -0000
++++ b/RoonServer/Appliance/RoonAppliance	2025-12-26 05:57:29.852781944 -0000
+@@ -38,4 +38,4 @@ ln -sf $DOTNET_ROOT/dotnet $HARDLINK
+ 
+ # fire up the app
+ cd "$ROOTPATH/Appliance"
+-exec "$HARDLINK" "$SCRIPT.dll" "$@"
++exec taskset -c 1,2,3 "$HARDLINK" "$SCRIPT.dll" "$@"
+diff '--color=auto' -urpN a/RoonServer/Server/RoonServer b/RoonServer/Server/RoonServer
+--- a/RoonServer/Server/RoonServer	2025-12-04 21:28:26.617434859 -0000
++++ b/RoonServer/Server/RoonServer	2025-12-26 05:58:12.049709989 -0000
+@@ -68,4 +68,4 @@ ln -sf $DOTNET_ROOT/dotnet $HARDLINK
+ 
+ # fire up the app
+ cd "$ROOTPATH/Server"
+-exec "$HARDLINK" "$SCRIPT.dll" "$@"
++exec taskset -c 0 "$HARDLINK" "$SCRIPT.dll" "$@"

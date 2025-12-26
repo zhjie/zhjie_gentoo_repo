@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+description="RoonServer - Everything about music"
+export SSD_NICELEVEL="-19"
+export ROON_DATAROOT=/var/roon
+export ROON_ID_DIR=/var/roon
+
+user="root:root"
+command="chrt"
+command_args="-r 88 /opt/roonserver/Server/RoonServer"
+pidfile="/run/roonserver.pid"
+command_background="yes"
+output_log="/tmp/roonserver.log"
+error_log="/tmp/roonserver.err"
+start_stop_daemon_args="--nicelevel ${SSD_NICELEVEL} --background --make-pidfile --stdout ${output_log} --stderr ${error_log} --user ${user}"
+
+depend() {
+    # use alsasound
+    after bootmisc
+}
+
+start_pre() {
+    checkpath --file --owner $user --mode 0644 $output_log
+    checkpath --file --owner $user --mode 0644 $error_log
+}
