@@ -7,13 +7,12 @@ EAPI=8
 inherit unpacker systemd
 
 MY_PN=${PN/-bin/}
-VN="67"
+MY_PV=$(ver_cut 1-3)-$(ver_cut 4)
 
 DESCRIPTION="Network Audio Daemon"
 HOMEPAGE="http://www.signalyst.com/consumer.html"
 SRC_URI="
-    amd64? ( https://www.signalyst.eu/bins/naa/linux/noble/networkaudiod_${PV}-${VN}_amd64.deb )
-    arm64? ( https://www.signalyst.eu/bins/naa/linux/noble/networkaudiod_${PV}-${VN}_arm64.deb )
+    arm64? ( https://www.signalyst.com/bins/naa/linux/noble/networkaudiod_${MY_PV}_arm64.deb )
 "
 
 LICENSE="Signalyst"
@@ -33,9 +32,9 @@ DEPEND="${RDEPEND}"
 S="${WORKDIR}"
 QA_PREBUILT="usr/sbin/networkaudiod"
 
-src_unpack() {
-	unpack_deb ${A}
-}
+#src_unpack() {
+#	unpack_deb ${A}
+#}
 
 src_install() {
 	rm -rf usr/share/
