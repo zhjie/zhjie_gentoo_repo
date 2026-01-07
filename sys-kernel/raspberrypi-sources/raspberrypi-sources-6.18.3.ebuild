@@ -64,7 +64,6 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0002-Do-not-expose-PCM-and-DSD-on-same-altsetting-unless-.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0003-autofdo.patch"
     eapply "${FILESDIR}/cachy/0004-bbr3.patch"
     eapply "${FILESDIR}/cachy/0005-block.patch"
     eapply "${FILESDIR}/cachy/0006-cachy.patch"
