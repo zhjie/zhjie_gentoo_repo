@@ -1,6 +1,6 @@
-From 8716b3a723c94c85da3c28a01ce5c23e46341562 Mon Sep 17 00:00:00 2001
+From ff4936f29c8a3ec36a8d52bb64d97f8983b38d91 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Thu, 18 Dec 2025 16:40:32 +0100
+Date: Fri, 2 Jan 2026 16:38:12 +0100
 Subject: [PATCH 01/11] amd-pstate
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>

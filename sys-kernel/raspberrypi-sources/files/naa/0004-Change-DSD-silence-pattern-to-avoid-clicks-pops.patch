@@ -1,7 +1,7 @@
-From f3eb4c81fa5a0bd51ea7ffb6fe8782af59c528c5 Mon Sep 17 00:00:00 2001
+From 2e321b41668369d3cbf4809aad14c62e43e3fb31 Mon Sep 17 00:00:00 2001
 From: Jussi Laako <jussi@sonarnerd.net>
 Date: Mon, 6 Jan 2020 20:41:42 +0200
-Subject: [PATCH 5/9] Change DSD silence pattern to avoid clicks/pops
+Subject: [PATCH 4/5] Change DSD silence pattern to avoid clicks/pops
 
 ---
  sound/usb/endpoint.c | 2 +-

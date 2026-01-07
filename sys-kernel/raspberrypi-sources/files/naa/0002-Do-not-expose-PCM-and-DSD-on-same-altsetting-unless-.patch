@@ -1,0 +1,35 @@
+From 0c24a7bcff480f142ed3f82c8fc9e23b6fd9c7c0 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Mon, 10 Nov 2025 01:12:19 +0200
+Subject: [PATCH 2/2] Do not expose PCM and DSD on same altsetting unless DoP
+
+---
+ sound/usb/format.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/sound/usb/format.c b/sound/usb/format.c
+index f33d25a4e4cc..45397bc63179 100644
+--- a/sound/usb/format.c
++++ b/sound/usb/format.c
+@@ -34,6 +34,7 @@ static u64 parse_audio_format_i_type(struct snd_usb_audio *chip,
+ {
+ 	int sample_width, sample_bytes;
+ 	u64 pcm_formats = 0;
++	u64 dsd_formats = 0;
+ 
+ 	switch (fp->protocol) {
+ 	case UAC_VERSION_1:
+@@ -156,7 +157,9 @@ static u64 parse_audio_format_i_type(struct snd_usb_audio *chip,
+ 			 fp->iface, fp->altsetting, format);
+ 	}
+ 
+-	pcm_formats |= snd_usb_interface_dsd_format_quirks(chip, fp, sample_bytes);
++	dsd_formats |= snd_usb_interface_dsd_format_quirks(chip, fp, sample_bytes);
++	if (dsd_formats && !fp->dsd_dop)
++		pcm_formats = dsd_formats;
+ 
+ 	return pcm_formats;
+ }
+-- 
+2.43.0
+

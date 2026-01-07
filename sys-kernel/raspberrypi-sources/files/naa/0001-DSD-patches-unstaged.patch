@@ -1,0 +1,47 @@
+From fb56dec63842b1cf98c62e8d6c58bed6a1be8244 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Tue, 1 Aug 2023 12:34:35 +0300
+Subject: [PATCH] DSD patches unstaged
+
+---
+ sound/usb/quirks.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index fadeffb32016..bd5e37e1a58e 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -2118,6 +2118,12 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 	DEVICE_FLG(0x0644, 0x806b, /* TEAC UD-701 */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+ 		   QUIRK_FLAG_IFACE_DELAY),
++	DEVICE_FLG(0x0644, 0x807d, /* TEAC UD-507 */
++		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
++		   QUIRK_FLAG_IFACE_DELAY),
++	DEVICE_FLG(0x0644, 0x806c, /* Esoteric XD */
++		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
++		   QUIRK_FLAG_IFACE_DELAY),
+ 	DEVICE_FLG(0x06f8, 0xb000, /* Hercules DJ Console (Windows Edition) */
+ 		   QUIRK_FLAG_IGNORE_CTL_ERROR),
+ 	DEVICE_FLG(0x06f8, 0xd002, /* Hercules DJ Console (Macintosh Edition) */
+@@ -2293,6 +2301,8 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x25ce, /* Mytek devices */
+ 		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x2772, /* Musical Fidelity devices */
++		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x278b, /* Rotel? */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x292b, /* Gustard/Ess based devices */
+@@ -2305,6 +2315,8 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x2d87, /* Cayin device */
+ 		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x2fc6, /* Comtrue Inc */
++		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x3336, /* HEM devices */
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x3353, /* Khadas devices */
+-- 
+2.43.0
+

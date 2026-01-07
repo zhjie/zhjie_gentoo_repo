@@ -1,64 +1,52 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="3"
+K_GENPATCHES_VER="5"
 K_EXP_GENPATCHES_NOUSE="1"
 
-inherit kernel-2 git-r3
-detect_version
-
 RT_VERSION="rc4-rt3"
-MINOR_VERSION=""
+MINOR_VERSION="0"
+
+inherit kernel-2
+detect_version
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64 arm64"
-IUSE="naa diretta rt"
+KEYWORDS="amd64"
+IUSE="naa diretta highhz rt amd bore"
 
 # RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
 RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
-EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
-EGIT_BRANCH="rpi-${KV_MAJOR}.${KV_MINOR}.y"
-
-SRC_URI="${GENPATCHES_URI} ${RT_URI}"
-
-S="${WORKDIR}/linux-${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}-raspberrypi"
-EXTRAVERSION="-networkaudio"
+SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
 
 src_unpack() {
     unpack "${RT_PATCH}"
     mv "${WORKDIR}"/patches "${WORKDIR}"/rtpatch
 
-    git-r3_src_unpack
-    mv "${WORKDIR}/${PF}" "${S}"
-
-    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.base.tar.xz
-    unpack genpatches-${KV_MAJOR}.${KV_MINOR}-${K_GENPATCHES_VER}.extras.tar.xz
-
-    rm -rfv "${WORKDIR}"/10*.patch
-    rm -rfv "${S}/.git"
-
-    mkdir "${WORKDIR}"/genpatch
-    mv "${WORKDIR}"/*.patch "${WORKDIR}"/genpatch/
-    unpack_set_extraversion
+    UNIPATCH_LIST_DEFAULT=""
+    UNIPATCH_EXCLUDE=""
+    kernel-2_src_unpack
 }
 
 src_prepare() {
-    # genpatch
-    eapply "${WORKDIR}"/genpatch/*.patch
-
     # naa patch
     if use naa; then
+        eapply "${FILESDIR}/naa/0001-Miscellaneous-sample-rate-extensions.patch"
         eapply "${FILESDIR}/naa/0002-Lynx-Hilo-quirk.patch"
         eapply "${FILESDIR}/naa/0003-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch"
         eapply "${FILESDIR}/naa/0004-Adjust-USB-isochronous-packet-size.patch"
         eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
+        eapply "${FILESDIR}/naa/0002-Do-not-expose-PCM-and-DSD-on-same-altsetting-unless-.patch"
+    fi
+
+    if use amd; then
+        eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
     fi
 
     eapply "${FILESDIR}/cachy/0003-autofdo.patch"
@@ -68,6 +56,17 @@ src_prepare() {
     eapply "${FILESDIR}/cachy/0007-crypto.patch"
     eapply "${FILESDIR}/cachy/0008-fixes.patch"
 
+    if use bore; then
+        eapply "${FILESDIR}/sched/0001-bore-cachy.patch"
+    fi
+
+    # highhz patch
+    if use highhz; then
+        eapply "${FILESDIR}/hz2k/0001-high-hz-0.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz-1.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz-2.patch"
+    fi
+
     # diretta alsa host driver
     if use diretta; then
         eapply "${FILESDIR}/diretta/diretta.patch"
@@ -76,10 +75,6 @@ src_prepare() {
 
     # cloudflare patch
     eapply "${FILESDIR}/xanmod/net/tcp/cloudflare/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
-
-    #if use mtu9k; then
-    #    eapply "${FILESDIR}/mtu9k/setting-9000-mtu-jumbo-frames-on-raspberry-pi-os.patch"
-    #fi
 
     if use rt; then
     # rt patch

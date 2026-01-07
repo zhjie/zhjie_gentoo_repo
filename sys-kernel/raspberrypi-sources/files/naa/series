@@ -1,0 +1,8 @@
+0001-Lynx-Hilo-quirk.patch -p1
+0002-Add-is_volatile-USB-mixer-feature-and-fix-mixer-cont.patch -p1
+0003-Adjust-USB-isochronous-packet-size.patch -p1
+0004-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch -p1
+0001-DSD-patches-unstaged.patch -p1
+0001-Try-different-order-on-mode-select-on-ITF-interface.patch -p1
+0002-Do-not-expose-PCM-and-DSD-on-same-altsetting-unless-.patch -p1
+0001-Add-support-for-TempoTec.patch -p1

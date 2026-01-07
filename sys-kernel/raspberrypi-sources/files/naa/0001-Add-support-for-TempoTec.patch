@@ -1,0 +1,25 @@
+From 954682348835f755638d2ba5431728f36e574941 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Mon, 29 Dec 2025 22:12:13 +0200
+Subject: [PATCH] Add support for TempoTec
+
+---
+ sound/usb/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index f6894011780c..938998d1a0d5 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -2314,6 +2314,8 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x22d9, /* Oppo */
+ 		   QUIRK_FLAG_DSD_RAW),
++	VENDOR_FLG(0x22e1, /* TempoTec */
++		   QUIRK_FLAG_DSD_RAW),
+ 	VENDOR_FLG(0x23ba, /* Playback Design */
+ 		   QUIRK_FLAG_CTL_MSG_DELAY | QUIRK_FLAG_IFACE_DELAY |
+ 		   QUIRK_FLAG_DSD_RAW),
+-- 
+2.43.0
+

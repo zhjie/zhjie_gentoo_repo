@@ -10,45 +10,6 @@ Subject: [PATCH 3/9] Add is_volatile USB mixer feature and fix mixer control
  sound/usb/mixer_quirks.c | 12 ++++++++----
  3 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/sound/usb/mixer.c b/sound/usb/mixer.c
-index 409fc1164694..f95ba5aa28c2 100644
---- a/sound/usb/mixer.c
-+++ b/sound/usb/mixer.c
-@@ -433,7 +433,7 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
- {
- 	int err;
- 
--	if (cval->cached & BIT(channel)) {
-+	if ((cval->cached & BIT(channel)) && !cval->is_volatile) {
- 		*value = cval->cache_val[index];
- 		return 0;
- 	}
-@@ -445,8 +445,10 @@ int snd_usb_get_cur_mix_value(struct usb_mixer_elem_info *cval,
- 				      cval->control, channel, err);
- 		return err;
- 	}
--	cval->cached |= BIT(channel);
--	cval->cache_val[index] = *value;
-+	if (!cval->is_volatile) {
-+		cval->cached |= BIT(channel);
-+		cval->cache_val[index] = *value;
-+	}
- 	return 0;
- }
- 
-@@ -536,8 +538,10 @@ int snd_usb_set_cur_mix_value(struct usb_mixer_elem_info *cval, int channel,
- 					  value);
- 	if (err < 0)
- 		return err;
--	cval->cached |= BIT(channel);
--	cval->cache_val[index] = value;
-+	if (!cval->is_volatile) {
-+		cval->cached |= BIT(channel);
-+		cval->cache_val[index] = value;
-+	}
- 	return 0;
- }
- 
 diff --git a/sound/usb/mixer.h b/sound/usb/mixer.h
 index d43895c1ae5c..f07758dad01e 100644
 --- a/sound/usb/mixer.h

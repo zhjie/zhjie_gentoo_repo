@@ -1,0 +1,66 @@
+From d0989f609fbbded41aa865a18d1471e3bd0ee958 Mon Sep 17 00:00:00 2001
+From: Jussi Laako <jussi@sonarnerd.net>
+Date: Tue, 28 Oct 2025 00:46:59 +0200
+Subject: [PATCH 1/2] Try different order on mode select on ITF interface
+
+---
+ sound/usb/endpoint.c | 6 +++---
+ sound/usb/quirks.c   | 8 ++++----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/sound/usb/endpoint.c b/sound/usb/endpoint.c
+index 9b9f0f335296..5e3521024a48 100644
+--- a/sound/usb/endpoint.c
++++ b/sound/usb/endpoint.c
+@@ -1499,15 +1499,15 @@ int snd_usb_endpoint_prepare(struct snd_usb_audio *chip,
+ 			goto unlock;
+ 	}
+ 
+-	err = snd_usb_init_pitch(chip, ep->cur_audiofmt);
++	err = snd_usb_select_mode_quirk(chip, ep->cur_audiofmt);
+ 	if (err < 0)
+ 		goto unlock;
+ 
+-	err = init_sample_rate(chip, ep);
++	err = snd_usb_init_pitch(chip, ep->cur_audiofmt);
+ 	if (err < 0)
+ 		goto unlock;
+ 
+-	err = snd_usb_select_mode_quirk(chip, ep->cur_audiofmt);
++	err = init_sample_rate(chip, ep);
+ 	if (err < 0)
+ 		goto unlock;
+ 
+diff --git a/sound/usb/quirks.c b/sound/usb/quirks.c
+index 7098cdbfef33..f6894011780c 100644
+--- a/sound/usb/quirks.c
++++ b/sound/usb/quirks.c
+@@ -2113,7 +2113,7 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_IFACE_DELAY),
+ 	DEVICE_FLG(0x0644, 0x8044, /* Esoteric D-05X */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+-		   QUIRK_FLAG_IFACE_DELAY),
++		   QUIRK_FLAG_IFACE_DELAY | QUIRK_FLAG_FORCE_IFACE_RESET),
+ 	DEVICE_FLG(0x0644, 0x804a, /* TEAC UD-301 */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+ 		   QUIRK_FLAG_IFACE_DELAY),
+@@ -2121,13 +2121,13 @@ static const struct usb_audio_quirk_flags_table quirk_flags_table[] = {
+ 		   QUIRK_FLAG_FORCE_IFACE_RESET),
+ 	DEVICE_FLG(0x0644, 0x806b, /* TEAC UD-701 */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+-		   QUIRK_FLAG_IFACE_DELAY),
++		   QUIRK_FLAG_IFACE_DELAY | QUIRK_FLAG_FORCE_IFACE_RESET),
+ 	DEVICE_FLG(0x0644, 0x807d, /* TEAC UD-507 */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+-		   QUIRK_FLAG_IFACE_DELAY),
++		   QUIRK_FLAG_IFACE_DELAY | QUIRK_FLAG_FORCE_IFACE_RESET),
+ 	DEVICE_FLG(0x0644, 0x806c, /* Esoteric XD */
+ 		   QUIRK_FLAG_ITF_USB_DSD_DAC | QUIRK_FLAG_CTL_MSG_DELAY |
+-		   QUIRK_FLAG_IFACE_DELAY),
++		   QUIRK_FLAG_IFACE_DELAY | QUIRK_FLAG_FORCE_IFACE_RESET),
+ 	DEVICE_FLG(0x06f8, 0xb000, /* Hercules DJ Console (Windows Edition) */
+ 		   QUIRK_FLAG_IGNORE_CTL_ERROR),
+ 	DEVICE_FLG(0x06f8, 0xd002, /* Hercules DJ Console (Macintosh Edition) */
+-- 
+2.43.0
+
