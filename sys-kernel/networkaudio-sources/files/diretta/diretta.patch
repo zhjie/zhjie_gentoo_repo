@@ -35,7 +35,7 @@ diff '--color=auto' -urpN 1/sound/drivers/Makefile 2/sound/drivers/Makefile
 @@ -28,3 +31,6 @@ obj-$(CONFIG_SND_PIMIDI) += snd-pimidi.o
  obj-$(CONFIG_SND_PORTMAN2X4) += snd-portman2x4.o
  
- obj-$(CONFIG_SND) += opl3/ opl4/ mpu401/ vx/ pcsp/ upisnd/
+ obj-$(CONFIG_SND) += opl3/ opl4/ mpu401/ vx/ pcsp/
 +
 +obj-$(CONFIG_ALSA_BRIDGE) += alsa_bridge.o
 +obj-$(CONFIG_DIRETTA_DIRECT) += diretta_direct.o
