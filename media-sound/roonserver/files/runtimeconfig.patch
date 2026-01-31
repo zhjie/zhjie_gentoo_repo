@@ -15,23 +15,6 @@ diff '--color=auto' -urpN a/RoonServer/Appliance/RAATServer.runtimeconfig.json b
 -}
 \ No newline at end of file
 +}
-diff '--color=auto' -urpN a/RoonServer/Appliance/remoting_codegen.runtimeconfig.json b/RoonServer/Appliance/remoting_codegen.runtimeconfig.json
---- a/RoonServer/Appliance/remoting_codegen.runtimeconfig.json	2025-12-04 21:27:51.253674664 -0000
-+++ b/RoonServer/Appliance/remoting_codegen.runtimeconfig.json	2025-12-26 06:21:42.953077526 -0000
-@@ -6,8 +6,11 @@
-       "version": "6.0.0"
-     },
-     "configProperties": {
-+      "System.GC.Server": true,
-+      "System.GC.Concurrent": true,
-+      "System.GC.ConserveMemory": 0,
-       "System.GC.RetainVM": true,
-       "System.Reflection.Metadata.MetadataUpdater.IsSupported": false
-     }
-   }
--}
-\ No newline at end of file
-+}
 diff '--color=auto' -urpN a/RoonServer/Appliance/RoonAppliance.runtimeconfig.json b/RoonServer/Appliance/RoonAppliance.runtimeconfig.json
 --- a/RoonServer/Appliance/RoonAppliance.runtimeconfig.json	2025-12-04 21:28:06.680006189 -0000
 +++ b/RoonServer/Appliance/RoonAppliance.runtimeconfig.json	2025-12-26 06:18:45.809277775 -0000
