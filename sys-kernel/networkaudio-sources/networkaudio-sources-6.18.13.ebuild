@@ -4,7 +4,7 @@
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="5"
+K_GENPATCHES_VER="14"
 K_EXP_GENPATCHES_NOUSE="1"
 
 RT_VERSION="rc4-rt3"
@@ -49,12 +49,14 @@ src_prepare() {
         eapply "${FILESDIR}/cachy/0001-amd-pstate.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0003-autofdo.patch"
-    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0005-block.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0007-crypto.patch"
-    eapply "${FILESDIR}/cachy/0008-fixes.patch"
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0005-crypto.patch"
+    eapply "${FILESDIR}/cachy/0006-fixes.patch"
+
+    if ! use amd; then
+        eapply "${FILESDIR}/cachy/0008-intel-pstate.patch"
+    fi
 
     if use bore; then
         eapply "${FILESDIR}/sched/0001-bore-cachy.patch"

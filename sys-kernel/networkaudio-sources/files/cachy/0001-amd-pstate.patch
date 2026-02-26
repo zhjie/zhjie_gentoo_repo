@@ -1,7 +1,7 @@
-From ff4936f29c8a3ec36a8d52bb64d97f8983b38d91 Mon Sep 17 00:00:00 2001
+From 657342a285cf7e95c415c1744c1b72e6997bd6e0 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 2 Jan 2026 16:38:12 +0100
-Subject: [PATCH 01/11] amd-pstate
+Date: Fri, 6 Feb 2026 18:42:08 +0100
+Subject: [PATCH 01/10] amd-pstate
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -116,5 +116,5 @@ index 602e4fa81d6c..c45bc98721d2 100644
  	if (mode_state_machine[cppc_state][mode_idx]) {
  		guard(mutex)(&amd_pstate_driver_lock);
 -- 
-2.52.0
+2.53.0
 

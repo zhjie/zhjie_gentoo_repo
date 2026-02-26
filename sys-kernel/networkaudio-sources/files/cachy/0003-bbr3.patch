@@ -1,7 +1,7 @@
-From 285dcc1a58ef629800dee9d5bfebcdbf29ecc68d Mon Sep 17 00:00:00 2001
+From cc71ffcc81e89fab98748f528a11547829691322 Mon Sep 17 00:00:00 2001
 From: Peter Jung <admin@ptr1337.dev>
-Date: Fri, 2 Jan 2026 16:38:34 +0100
-Subject: [PATCH 04/11] bbr3
+Date: Fri, 6 Feb 2026 18:43:01 +0100
+Subject: [PATCH 03/10] bbr3
 
 Signed-off-by: Peter Jung <admin@ptr1337.dev>
 ---
@@ -382,10 +382,10 @@ index e01492234b0b..27893b774e08 100644
  	.undo_cwnd = bpf_tcp_ca_undo_cwnd,
  	.sndbuf_expand = bpf_tcp_ca_sndbuf_expand,
 diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-index 8a18aeca7ab0..fe4c1b143de1 100644
+index 74079eab8980..96dbcdd2f09e 100644
 --- a/net/ipv4/tcp.c
 +++ b/net/ipv4/tcp.c
-@@ -3469,6 +3469,7 @@ int tcp_disconnect(struct sock *sk, int flags)
+@@ -3467,6 +3467,7 @@ int tcp_disconnect(struct sock *sk, int flags)
  	tp->rx_opt.dsack = 0;
  	tp->rx_opt.num_sacks = 0;
  	tp->rcv_ooopack = 0;
@@ -393,7 +393,7 @@ index 8a18aeca7ab0..fe4c1b143de1 100644
  
  
  	/* Clean up fastopen related fields */
-@@ -4226,6 +4227,8 @@ void tcp_get_info(struct sock *sk, struct tcp_info *info)
+@@ -4224,6 +4225,8 @@ void tcp_get_info(struct sock *sk, struct tcp_info *info)
  		info->tcpi_options |= TCPI_OPT_ECN;
  	if (tp->ecn_flags & TCP_ECN_SEEN)
  		info->tcpi_options |= TCPI_OPT_ECN_SEEN;
@@ -3390,5 +3390,5 @@ index 2dd73a4e8e51..3d35afdbf803 100644
  	event = icsk->icsk_pending;
  
 -- 
-2.52.0
+2.53.0
 
