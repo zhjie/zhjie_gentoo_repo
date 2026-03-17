@@ -41,11 +41,9 @@ src_prepare() {
 }
 
 src_configure() {
-    # Force CUDA architecture for RTX 4090 (Compute Capability 8.9)
-    export CUDA_ARCH="89"
 
     local mycmakeargs=(
-	-DCMAKE_CUDA_ARCHITECTURES=89
+	-DCMAKE_CUDA_ARCHITECTURES=61
 	-DGGML_NATIVE=ON
 	-DGGML_LTO=$(usex lto)
 
