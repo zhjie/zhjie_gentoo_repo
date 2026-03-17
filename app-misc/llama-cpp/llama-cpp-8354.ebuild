@@ -43,7 +43,6 @@ src_prepare() {
 src_configure() {
 
     local mycmakeargs=(
-	-DCMAKE_CUDA_ARCHITECTURES=61
 	-DGGML_NATIVE=ON
 	-DGGML_LTO=$(usex lto)
 
