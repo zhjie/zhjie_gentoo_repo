@@ -1,17 +1,14 @@
-# Copyright 1999-2023 Gentoo Authors
-# Distributed under the terms of the GNU General Public License v2
-
 EAPI="8"
 ETYPE="sources"
 K_WANT_GENPATCHES="base extras"
-K_GENPATCHES_VER="5"
+K_GENPATCHES_VER="18"
 K_EXP_GENPATCHES_NOUSE="1"
 
 inherit kernel-2 git-r3
 detect_version
 
-RT_VERSION="rc4-rt3"
-MINOR_VERSION=""
+RT_VERSION="rt4"
+MINOR_VERSION="13"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
@@ -19,8 +16,8 @@ LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
 IUSE="naa diretta rt bore"
 
-# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
-RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
+RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
+# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
 EGIT_REPO_URI="https://github.com/raspberrypi/linux.git"
@@ -64,11 +61,10 @@ src_prepare() {
         eapply "${FILESDIR}/naa/0002-Do-not-expose-PCM-and-DSD-on-same-altsetting-unless-.patch"
     fi
 
-    eapply "${FILESDIR}/cachy/0004-bbr3.patch"
-    eapply "${FILESDIR}/cachy/0005-block.patch"
-    eapply "${FILESDIR}/cachy/0006-cachy.patch"
-    eapply "${FILESDIR}/cachy/0007-crypto.patch"
-    eapply "${FILESDIR}/cachy/0008-fixes.patch"
+    eapply "${FILESDIR}/cachy/0003-bbr3.patch"
+    eapply "${FILESDIR}/cachy/0004-cachy.patch"
+    eapply "${FILESDIR}/cachy/0005-crypto.patch"
+    eapply "${FILESDIR}/cachy/0006-fixes.patch"
 
     # bore scheduler
     if use bore; then
@@ -135,7 +131,6 @@ drm-i915-Consider-RCU-read-section-as-atomic.patch
 0001-ARM-mm-fault-Move-harden_branch_predictor-before-int.patch
 0002-ARM-mm-fault-Enable-interrupts-before-invoking-__do_.patch
 0003-ARM-Disable-jump-label-on-PREEMPT_RT.patch
-0004-ARM-Disable-HIGHPTE-on-PREEMPT_RT-kernels.patch
 0005-ARM-Allow-to-enable-RT.patch
 
 ###########################################################################
