@@ -7,8 +7,8 @@ K_WANT_GENPATCHES="base extras"
 K_GENPATCHES_VER="18"
 K_EXP_GENPATCHES_NOUSE="1"
 
-RT_VERSION="rc4-rt3"
-MINOR_VERSION="0"
+RT_VERSION="rt4"
+MINOR_VERSION="13"
 
 inherit kernel-2
 detect_version
@@ -19,8 +19,8 @@ LICENSE+=" CDDL"
 KEYWORDS="amd64"
 IUSE="naa diretta highhz rt amd bore"
 
-# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
-RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
+RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}.${MINOR_VERSION}-${RT_VERSION}.tar.xz
+# RT_PATCH=patches-${KV_MAJOR}.${KV_MINOR}-${RT_VERSION}.tar.xz
 RT_URI="https://cdn.kernel.org/pub/linux/kernel/projects/rt/${KV_MAJOR}.${KV_MINOR}/older/${RT_PATCH}"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${RT_URI}"
@@ -125,7 +125,6 @@ drm-i915-Consider-RCU-read-section-as-atomic.patch
 0001-ARM-mm-fault-Move-harden_branch_predictor-before-int.patch
 0002-ARM-mm-fault-Enable-interrupts-before-invoking-__do_.patch
 0003-ARM-Disable-jump-label-on-PREEMPT_RT.patch
-0004-ARM-Disable-HIGHPTE-on-PREEMPT_RT-kernels.patch
 0005-ARM-Allow-to-enable-RT.patch
 
 ###########################################################################
@@ -143,7 +142,7 @@ sysfs__Add__sys_kernel_realtime_entry.patch
 ###########################################################################
 # RT release version
 ###########################################################################
-#Add_localversion_for_-RT_release.patch
+# Add_localversion_for_-RT_release.patch
     )
 
     for p in "${rt_patches[@]}"; do
