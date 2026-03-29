@@ -5,7 +5,7 @@ EAPI=8
 
 # We avoid xdg.eclass here because it'll pull in glib, desktop utils on
 # htop which is often used on headless machines. bug #787470
-inherit linux-info optfeature xdg-utils
+inherit fcaps linux-info optfeature xdg-utils
 
 DESCRIPTION="Interactive process viewer"
 HOMEPAGE="https://htop.dev/ https://github.com/htop-dev/htop"
@@ -14,14 +14,16 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit autotools git-r3
 else
 	SRC_URI="https://github.com/htop-dev/htop/releases/download/${PV}/${P}.tar.xz"
-	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86 ~x64-macos"
+	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86 ~arm64-macos ~x64-macos"
 fi
 
 S="${WORKDIR}/${P/_}"
 
 LICENSE="GPL-2+"
 SLOT="0"
-IUSE="caps debug delayacct hwloc lm-sensors llvm-libunwind openvz unicode unwind vserver"
+IUSE="caps debug delayacct hwloc libsensors lm-sensors llvm-libunwind openvz unicode unwind vserver"
+
+REQUIRED_USE="libsensors? ( !lm-sensors ) lm-sensors? ( !libsensors )"
 
 RDEPEND="
 	sys-libs/ncurses:=[unicode(+)?]
@@ -34,18 +36,15 @@ RDEPEND="
 		caps? ( sys-libs/libcap )
 		delayacct? ( dev-libs/libnl:3 )
 		lm-sensors? ( sys-apps/lm-sensors )
+		libsensors? ( dev-libs/libsensors )
 	)
 "
 DEPEND="${RDEPEND}"
 BDEPEND="virtual/pkgconfig"
 
-DOCS=( ChangeLog README )
+DOCS=( ChangeLog README.md )
 
 CONFIG_CHECK="~TASKSTATS ~TASK_XACCT ~TASK_IO_ACCOUNTING ~CGROUPS"
-
-PATCHES=(
-	"${FILESDIR}"/${PN}-3.3.0-display-running-tasks.patch
-)
 
 src_prepare() {
 	default
@@ -76,8 +75,12 @@ src_configure() {
 		myeconfargs+=(
 			$(use_enable caps capabilities)
 			$(use_enable delayacct)
-			$(use_enable lm-sensors sensors)
 		)
+		if use lm-sensors || use libsensors; then
+			myeconfargs+=( --enable-sensors )
+		else
+			myeconfargs+=( --disable-sensors )
+		fi
 	else
 		if use kernel_Darwin ; then
 			# Upstream default to checking but --enable-affinity
@@ -99,6 +102,9 @@ src_configure() {
 pkg_postinst() {
 	xdg_desktop_database_update
 	xdg_icon_cache_update
+
+	# Non-caps mode is blank to avoid suid with USE="-filecaps" (bug 961054)
+	fcaps -m '' cap_sys_ptrace usr/bin/htop
 
 	optfeature "Viewing processes accessing certain files" sys-process/lsof
 	optfeature "Tracing system calls and signals of processes" dev-debug/strace

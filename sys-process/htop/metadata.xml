@@ -8,6 +8,8 @@
 	<use>
 		<flag name="delayacct">Enable Linux delay accounting support via <pkg>dev-libs/libnl</pkg></flag>
 		<flag name="hwloc">Use <pkg>sys-apps/hwloc</pkg> for CPU affinity support</flag>
+		<flag name="libsensors">Enable hardware sensors support via <pkg>dev-libs/libsensors</pkg> (library only, no lm-sensors tools)</flag>
+		<flag name="lm-sensors">Enable hardware sensors support via <pkg>sys-apps/lm-sensors</pkg></flag>
 		<flag name="openvz">Enable openvz support</flag>
 		<flag name="vserver">Enable vserver support</flag>
 	</use>
