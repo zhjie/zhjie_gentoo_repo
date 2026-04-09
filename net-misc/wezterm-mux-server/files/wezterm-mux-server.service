@@ -1,0 +1,13 @@
+[Unit]
+Description=WezTerm Mux Server
+Documentation=https://wezfurlong.org/wezterm/multiplexing.html
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/wezterm-mux-server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
