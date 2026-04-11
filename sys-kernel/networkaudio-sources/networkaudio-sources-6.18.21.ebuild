@@ -63,7 +63,7 @@ src_prepare() {
     fi
 
     if use bore; then
-        eapply "${FILESDIR}/sched/0001-bore-cachy.patch"
+        eapply "${FILESDIR}/sched/0001-bore.patch"
     fi
 
     # highhz patch
