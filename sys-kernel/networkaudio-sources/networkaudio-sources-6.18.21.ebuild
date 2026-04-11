@@ -13,7 +13,7 @@ detect_version
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 
 IUSE="naa scream diretta highhz bore rpi"
 
