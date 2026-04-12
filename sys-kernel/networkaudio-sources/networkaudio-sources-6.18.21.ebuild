@@ -20,8 +20,10 @@ IUSE="naa scream diretta highhz bore rpi"
 SCREAM_EGIT_REPO_URI="https://github.com/igor63r/screamalsa.git"
 SCREAM_S="${WORKDIR}/screamalsa"
 
-DIRETTA_DIRECT_P="diretta-direct-dkms-148_00-1-aarch64.pkg.tar.xz"
-DIRETTA_ALSA_P="diretta-alsa-dkms-148_0000-1-aarch64.pkg.tar.xz"
+DIRETTA_DIRECT_VER="148_00"
+DIRETTA_ALSA_VER="148_0000"
+DIRETTA_DIRECT_P="diretta-direct-dkms-${DIRETTA_DIRECT_VER}-1-aarch64.pkg.tar.xz"
+DIRETTA_ALSA_P="diretta-alsa-dkms-${DIRETTA_ALSA_VER}-1-aarch64.pkg.tar.xz"
 DIRETTA_DIRECT_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}"
 DIRETTA_ALSA_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}"
 
@@ -84,19 +86,21 @@ src_prepare() {
     # diretta alsa host driver
     if use diretta; then
         local diretta_tmp="${T}/diretta"
-        local diretta_direct_src="${diretta_tmp}/usr/src/diretta-direct-148_00"
-        local diretta_alsa_src="${diretta_tmp}/usr/src/diretta-alsa-148_0000"
+        local diretta_direct_dir="usr/src/diretta-direct-${DIRETTA_DIRECT_VER}"
+        local diretta_alsa_dir="usr/src/diretta-alsa-${DIRETTA_ALSA_VER}"
+        local diretta_direct_src="${diretta_tmp}/${diretta_direct_dir}"
+        local diretta_alsa_src="${diretta_tmp}/${diretta_alsa_dir}"
 
         eapply "${FILESDIR}/diretta/diretta.patch"
 
         mkdir -p "${diretta_tmp}" || die "failed to create diretta temp dir"
         tar -xJf "${DISTDIR}/${DIRETTA_DIRECT_P}" -C "${diretta_tmp}" \
-            "usr/src/diretta-direct-148_00/diretta_direct.c" \
-            "usr/src/diretta-direct-148_00/diretta_direct.h" \
+            "${diretta_direct_dir}/diretta_direct.c" \
+            "${diretta_direct_dir}/diretta_direct.h" \
             || die "failed to extract Diretta Direct sources"
         tar -xJf "${DISTDIR}/${DIRETTA_ALSA_P}" -C "${diretta_tmp}" \
-            "usr/src/diretta-alsa-148_0000/alsa_bridge.c" \
-            "usr/src/diretta-alsa-148_0000/alsa_bridge.h" \
+            "${diretta_alsa_dir}/alsa_bridge.c" \
+            "${diretta_alsa_dir}/alsa_bridge.h" \
             || die "failed to extract Diretta ALSA sources"
 
         [[ -f "${diretta_direct_src}/diretta_direct.c" ]] || die "diretta_direct.c missing after extraction"
