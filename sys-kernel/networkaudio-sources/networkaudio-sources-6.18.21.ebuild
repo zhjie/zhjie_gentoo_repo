@@ -68,8 +68,7 @@ src_prepare() {
 
     # highhz patch
     if use highhz; then
-        eapply "${FILESDIR}/hz2k/0001-high-hz-0.patch"
-        eapply "${FILESDIR}/hz2k/0001-high-hz-1.patch"
+        eapply "${FILESDIR}/hz2k/0001-high-hz.patch"
         eapply "${FILESDIR}/hz2k/0001-high-hz-2.patch"
     fi
 
