@@ -17,10 +17,19 @@ KEYWORDS="amd64 arm64"
 
 IUSE="naa scream diretta highhz bore rpi"
 
-SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}"
-
 SCREAM_EGIT_REPO_URI="https://github.com/igor63r/screamalsa.git"
 SCREAM_S="${WORKDIR}/screamalsa"
+
+DIRETTA_DIRECT_P="diretta-direct-dkms-148_00-1-aarch64.pkg.tar.xz"
+DIRETTA_ALSA_P="diretta-alsa-dkms-148_0000-1-aarch64.pkg.tar.xz"
+DIRETTA_DIRECT_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}"
+DIRETTA_ALSA_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}"
+
+SRC_URI="${KERNEL_URI} ${GENPATCHES_URI}
+    diretta? (
+        ${DIRETTA_DIRECT_URI}
+        ${DIRETTA_ALSA_URI}
+    )"
 
 src_unpack() {
     if use scream; then
@@ -74,8 +83,31 @@ src_prepare() {
 
     # diretta alsa host driver
     if use diretta; then
+        local diretta_tmp="${T}/diretta"
+        local diretta_direct_src="${diretta_tmp}/usr/src/diretta-direct-148_00"
+        local diretta_alsa_src="${diretta_tmp}/usr/src/diretta-alsa-148_0000"
+
         eapply "${FILESDIR}/diretta/diretta.patch"
-        eapply "${FILESDIR}/diretta/diretta_2025.11.29.patch"
+
+        mkdir -p "${diretta_tmp}" || die "failed to create diretta temp dir"
+        tar -xJf "${DISTDIR}/${DIRETTA_DIRECT_P}" -C "${diretta_tmp}" \
+            "usr/src/diretta-direct-148_00/diretta_direct.c" \
+            "usr/src/diretta-direct-148_00/diretta_direct.h" \
+            || die "failed to extract Diretta Direct sources"
+        tar -xJf "${DISTDIR}/${DIRETTA_ALSA_P}" -C "${diretta_tmp}" \
+            "usr/src/diretta-alsa-148_0000/alsa_bridge.c" \
+            "usr/src/diretta-alsa-148_0000/alsa_bridge.h" \
+            || die "failed to extract Diretta ALSA sources"
+
+        [[ -f "${diretta_direct_src}/diretta_direct.c" ]] || die "diretta_direct.c missing after extraction"
+        [[ -f "${diretta_direct_src}/diretta_direct.h" ]] || die "diretta_direct.h missing after extraction"
+        [[ -f "${diretta_alsa_src}/alsa_bridge.c" ]] || die "alsa_bridge.c missing after extraction"
+        [[ -f "${diretta_alsa_src}/alsa_bridge.h" ]] || die "alsa_bridge.h missing after extraction"
+
+        cp "${diretta_direct_src}/diretta_direct.c" "${S}/sound/drivers/" || die "failed to copy diretta_direct.c"
+        cp "${diretta_direct_src}/diretta_direct.h" "${S}/sound/drivers/" || die "failed to copy diretta_direct.h"
+        cp "${diretta_alsa_src}/alsa_bridge.c" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.c"
+        cp "${diretta_alsa_src}/alsa_bridge.h" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.h"
     fi
 
     # screamalsa virtual ALSA driver
