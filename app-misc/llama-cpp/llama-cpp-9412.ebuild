@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{10..13} )
+PYTHON_COMPAT=( python3_{10..14} )
 inherit cmake python-single-r1 cuda
 
 DESCRIPTION="LLM inference in C/C++ optimized for Zen 5 and Ada Lovelace"
@@ -16,7 +16,7 @@ else
     MY_PV="b${PV}"
     SRC_URI="https://github.com/ggerganov/llama.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz"
     S="${WORKDIR}/${PN}-${MY_PV}"
-    KEYWORDS="~amd64"
+    KEYWORDS="amd64"
 fi
 S="${WORKDIR}/llama.cpp-${MY_PV}"
 LICENSE="MIT"
@@ -28,7 +28,6 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 RDEPEND="
     ${PYTHON_DEPS}
-    <sys-devel/gcc-15
     cuda? ( dev-util/nvidia-cuda-toolkit )
 "
 DEPEND="${RDEPEND}"
