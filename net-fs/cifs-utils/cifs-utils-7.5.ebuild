@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{11..14} )
+PYTHON_COMPAT=(python3_{11..14})
 
 inherit autotools bash-completion-r1 flag-o-matic linux-info pam python-single-r1
 
@@ -13,7 +13,7 @@ SRC_URI="https://ftp.samba.org/pub/linux-cifs/${PN}/${P}.tar.bz2"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~mips ~ppc ppc64 ~riscv ~s390 ~sparc x86"
 IUSE="+acl +ads +caps creds pam +python systemd doc"
 
 RDEPEND="
@@ -32,7 +32,7 @@ RDEPEND="
 "
 DEPEND="${RDEPEND}"
 BDEPEND="
-	doc? ( dev-python/docutils )
+    doc? ( dev-python/docutils )
 "
 PDEPEND="
 	acl? ( >=net-fs/samba-4.0.0_alpha1 )
@@ -68,7 +68,7 @@ pkg_setup() {
 src_prepare() {
 	default
 
-	if has_version app-crypt/heimdal ; then
+	if has_version app-crypt/heimdal; then
 		# bug #612584
 		eapply "${FILESDIR}/${PN}-6.7-heimdal.patch"
 	fi
@@ -81,8 +81,8 @@ src_configure() {
 	filter-flags -fno-semantic-interposition
 
 	local myeconfargs=(
-		--enable-smbinfo
 		$(use_enable doc man)
+		--enable-smbinfo
 		$(use_enable acl cifsacl cifsidmap)
 		$(use_enable ads cifsupcall)
 		$(use_with caps libcap)
@@ -104,21 +104,21 @@ src_install() {
 	# remove empty directories
 	find "${ED}" -type d -empty -delete || die
 
-	if use acl ; then
+	if use acl; then
 		dodir /etc/cifs-utils
 		dosym ../../usr/$(get_libdir)/cifs-utils/idmapwb.so \
 			/etc/cifs-utils/idmap-plugin
 		dodir /etc/request-key.d
 		echo 'create cifs.idmap * * /usr/sbin/cifs.idmap %k' \
-			> "${ED}/etc/request-key.d/cifs.idmap.conf"
+			>"${ED}/etc/request-key.d/cifs.idmap.conf"
 	fi
 
-	if use ads ; then
+	if use ads; then
 		dodir /etc/request-key.d
 		echo 'create dns_resolver * * /usr/sbin/cifs.upcall %k' \
-			> "${ED}/etc/request-key.d/cifs.upcall.conf"
+			>"${ED}/etc/request-key.d/cifs.upcall.conf"
 		echo 'create cifs.spnego * * /usr/sbin/cifs.upcall %k' \
-			> "${ED}/etc/request-key.d/cifs.spnego.conf"
+			>"${ED}/etc/request-key.d/cifs.spnego.conf"
 	fi
 
 	dobashcomp bash-completion/smbinfo
@@ -132,13 +132,13 @@ pkg_postinst() {
 	ewarn "You are free to set setuid flags by yourself"
 
 	# Inform about upcall usage
-	if use acl ; then
+	if use acl; then
 		einfo "The cifs.idmap utility has been enabled by creating the"
 		einfo "configuration file /etc/request-key.d/cifs.idmap.conf"
 		einfo "This enables you to get and set CIFS acls."
 	fi
 
-	if use ads ; then
+	if use ads; then
 		einfo "The cifs.upcall utility has been enabled by creating the"
 		einfo "configuration file /etc/request-key.d/cifs.upcall.conf"
 		einfo "This enables you to mount DFS shares."

@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{12..14} )
+PYTHON_COMPAT=(python3_{12..14})
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 TMPFILES_OPTIONAL=1
 
@@ -12,7 +12,7 @@ inherit meson linux-info python-r1 tmpfiles
 DESCRIPTION="The package management and distribution system for Gentoo"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 
-if [[ ${PV} == 9999 ]] ; then
+if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="
 		https://anongit.gentoo.org/git/proj/portage.git
 		https://github.com/gentoo/portage.git
@@ -25,7 +25,7 @@ fi
 
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="apidoc build doc gentoo-dev +ipc +native-extensions +rsync-verify selinux test xattr"
+IUSE="apidoc build doc gentoo-dev +ipc +native-extensions +rsync-verify selinux test xattr getuto debug"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 RESTRICT="!test? ( test )"
 
@@ -62,7 +62,13 @@ RDEPEND="
 	>=sys-apps/findutils-4.9
 	!build? (
 		>=app-admin/eselect-1.2
+		getuto? (
+			app-portage/getuto
+		)
 		>=app-shells/bash-5.3:0
+		debug? (
+			dev-util/debugedit
+		)
 		>=sec-keys/openpgp-keys-gentoo-release-20240703
 		>=sys-apps/sed-4.0.5
 		rsync-verify? (
@@ -89,6 +95,10 @@ PDEPEND="
 		>=sys-apps/file-5.44-r3
 	)
 "
+
+PATCHES=(
+	"${FILESDIR}/0001-Workaround-import-problem-after-Python-upgrade.patch"
+)
 
 pkg_pretend() {
 	local CONFIG_CHECK="~IPC_NS ~PID_NS ~NET_NS ~UTS_NS"
@@ -125,16 +135,16 @@ my_src_configure() {
 		$(meson_use xattr)
 	)
 
-	if use native-extensions && [[ "${EPYTHON}" != pypy3* ]] ; then
-		emesonargs+=( -Dnative-extensions=true )
+	if use native-extensions && [[ "${EPYTHON}" != pypy3* ]]; then
+		emesonargs+=(-Dnative-extensions=true)
 	else
-		emesonargs+=( -Dnative-extensions=false )
+		emesonargs+=(-Dnative-extensions=false)
 	fi
 
 	if use build; then
-		emesonargs+=( -Drsync-verify=false )
+		emesonargs+=(-Drsync-verify=false)
 	else
-		emesonargs+=( $(meson_use rsync-verify) )
+		emesonargs+=($(meson_use rsync-verify))
 	fi
 
 	meson_src_configure
@@ -206,7 +216,7 @@ pkg_preinst() {
 	# portage:portage to root:root which happens after src_install.
 	keepdir /var/log/portage/elog
 	# This is allowed to fail if the user/group are invalid for prefix users.
-	if chown portage:portage "${ED}"/var/log/portage{,/elog} 2>/dev/null ; then
+	if chown portage:portage "${ED}"/var/log/portage{,/elog} 2>/dev/null; then
 		chmod g+s,ug+rwx "${ED}"/var/log/portage{,/elog}
 	fi
 
