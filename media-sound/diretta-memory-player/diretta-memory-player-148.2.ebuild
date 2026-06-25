@@ -7,11 +7,10 @@ inherit unpacker
 MY_PV=$(ver_rs 1 '_')
 MY_MINOR=4
 
-DESCRIPTION="Linux Diretta Alsa Target"
+DESCRIPTION="Linux Diretta Memory Player"
 HOMEPAGE="https://www.diretta.link/preview/"
-
-ARM_FILE="diretta-alsa-target-${MY_PV}-${MY_MINOR}-aarch64.pkg.tar.xz"
-X86_FILE="diretta-alsa-target-${MY_PV}-${MY_MINOR}-x86_64.pkg.tar.zst"
+X86_FILE="diretta-memory-player-${MY_PV}-${MY_MINOR}-x86_64.pkg.tar.zst"
+ARM_FILE="diretta-memory-player-${MY_PV}-${MY_MINOR}-aarch64.pkg.tar.xz"
 
 SRC_URI="
 	arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_FILE} )
@@ -23,22 +22,14 @@ SLOT="0"
 LICENSE="CDDL"
 IUSE=""
 
-RDEPEND=">=dev-libs/openssl-3.0
-	net-misc/curl
-	media-libs/alsa-lib
-	sys-libs/zlib
-	net-dns/libidn2
-	>=dev-libs/libunistring-1.2
-"
-
 src_unpack() {
 	unpacker_src_unpack
-	mv opt/ "${WORKDIR}/${P}"
+	mv opt/diretta-memory-player/ "${WORKDIR}/${P}"
 }
 
 src_install() {
-	insinto "/opt/"
+	insinto "/opt/${PN}/"
 	insopts -m755
 	doins -r *
-	newinitd "${FILESDIR}/diretta-alsa-target.init.d" "diretta-alsa-target"
+	newinitd "${FILESDIR}/diretta-memoryplayer-host.init.d" "diretta-memoryplayer-host"
 }
