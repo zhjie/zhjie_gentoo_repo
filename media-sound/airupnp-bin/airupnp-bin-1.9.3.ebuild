@@ -7,7 +7,7 @@ inherit systemd
 
 DESCRIPTION="AirConnect: Send audio to UPnP players using AirPlay"
 HOMEPAGE="https://github.com/philippe44/AirConnect"
-SRC_URI="https://github.com/philippe44/AirConnect/releases/download/1.9.3/AirConnect-1.9.3.zip -> ${P}.zip"
+SRC_URI="https://github.com/philippe44/AirConnect/releases/download/${PV}/AirConnect-${PV}.zip -> ${P}.zip"
 
 LICENSE="MIT"
 SLOT="0"
@@ -26,9 +26,9 @@ src_unpack() {
 src_install() {
 	newbin "$WORKDIR/${P}"/airupnp-linux-x86_64 airupnp || die
 
-        if use systemd ; then
+	if use systemd; then
 		systemd_dounit "${FILESDIR}"/airupnp.service
-        else
+	else
 		newinitd "${FILESDIR}"/airupnp.init.d airupnp
 	fi
 }
