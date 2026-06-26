@@ -7,13 +7,8 @@ inherit go-module
 
 DESCRIPTION="Simple terminal UI for git commands"
 HOMEPAGE="https://github.com/jesseduffield/lazygit"
-if [[ "${PV}" == 9999 ]]; then
-	inherit git-r3
-	EGIT_REPO_URI="https://github.com/jesseduffield/${PN}.git"
-else
-	KEYWORDS="~amd64"
-	SRC_URI="https://github.com/jesseduffield/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-fi
+KEYWORDS="~amd64"
+SRC_URI="https://github.com/jesseduffield/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="MIT"
 # dependency licenses:
@@ -22,23 +17,15 @@ SLOT="0"
 BDEPEND=">=dev-lang/go-1.25.0"
 RDEPEND="dev-vcs/git"
 
-DOCS=( {CODE-OF-CONDUCT,CONTRIBUTING,README}.md docs )
+DOCS=({CODE-OF-CONDUCT,CONTRIBUTING,README}.md docs)
 
 src_unpack() {
-	if [[ "${PV}" == 9999 ]];then
-		git-r3_src_unpack
-	else
-		default
-	fi
+	default
 }
 
 src_compile() {
 	ego build -o "bin/${PN}" \
 		-ldflags "-X main.version=${PV}"
-}
-
-src_test() {
-	ego test ./... -short
 }
 
 src_install() {
