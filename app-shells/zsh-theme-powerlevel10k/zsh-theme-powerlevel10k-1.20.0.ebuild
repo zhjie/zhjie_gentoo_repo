@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
 DEPEND="app-shells/zsh
-		app-shells/gitstatus[zsh-completion]"
+	app-shells/gitstatus[zsh-completion]"
 RDEPEND="${DEPEND}"
 
 src_prepare() {

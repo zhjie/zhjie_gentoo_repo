@@ -24,8 +24,4 @@ src_compile() {
 
 src_install() {
 	dobin bin/glow
-	bin/glow completion bash >"${PN}" || die "generating bash completion failed"
-	dobashcomp "${PN}"
-	bin/glow completion zsh >"_${PN}" || die "generating zsh completion failed"
-	dozshcomp "_${PN}"
 }

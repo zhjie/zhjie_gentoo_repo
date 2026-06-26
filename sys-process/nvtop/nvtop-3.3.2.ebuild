@@ -8,13 +8,8 @@ inherit cmake
 DESCRIPTION="(h)top like task monitor for AMD, NVIDIA, Intel and other GPUs"
 HOMEPAGE="https://github.com/Syllo/nvtop"
 
-if [[ "${PV}" == "9999" ]]; then
-	EGIT_REPO_URI="https://github.com/Syllo/${PN}.git"
-	inherit git-r3
-else
-	SRC_URI="https://github.com/Syllo/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="amd64 ~x86"
-fi
+SRC_URI="https://github.com/Syllo/${PN}/archive/${PV}.tar.gz -> ${P}.tar.gz"
+KEYWORDS="amd64"
 
 LICENSE="GPL-3+"
 SLOT="0"

@@ -9,31 +9,20 @@ SRC_URI="
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 arm64"
-IUSE=""
 
 REQUIRED_USE=""
-
 RDEPEND=""
 
-S="${WORKDIR}"
+QA_PREBUILT="opt/bin/codex"
 
-src_unpack() {
-	if use amd64; then
-		unpack "${DISTDIR}/${P}-codex-x86_64-unknown-linux-musl.tar.gz" || die "Can't unpack archive file"
-		mv codex-x86_64-unknown-linux-musl codex
-	fi
-	if use arm64; then
-		unpack "${DISTDIR}/${P}-codex-aarch64-unknown-linux-musl.tar.gz" || die "Can't unpack archive file"
-		mv ccodex-aarch64-unknown-linux-musl codex
-	fi
-}
+S="${WORKDIR}"
 
 src_install() {
 	exeinto /opt/bin
 	if use amd64; then
-		newexe "codex" "codex" || die "Failed to install Binary"
+		newexe "codex-x86_64-unknown-linux-musl" "codex" || die "Failed to install Binary"
 	fi
 	if use arm64; then
-		newexe "codex" "codex" || die "Failed to install Binary"
+		newexe "ccodex-aarch64-unknown-linux-musl" "codex" || die "Failed to install Binary"
 	fi
 }

@@ -10,7 +10,7 @@ CRATES="
 
 RUST_MIN_VER="1.95.0"
 
-inherit cargo desktop shell-completion xdg
+inherit cargo shell-completion
 
 DESCRIPTION="Blazing fast terminal file manager written in Rust, based on async I/O."
 HOMEPAGE="https://yazi-rs.github.io"
@@ -27,12 +27,13 @@ LICENSE+="
 	Unicode-3.0 Unicode-DFS-2016 WTFPL-2 ZLIB
 "
 SLOT="0"
-KEYWORDS="~amd64 ~riscv"
+KEYWORDS="~amd64"
 
-IUSE="+cli"
+IUSE="zsh-completion bash-completion fish-completion"
 
 QA_FLAGS_IGNORED="
-	usr/bin/ya.*
+	usr/bin/ya
+	usr/bin/yazi
 "
 
 DOCS=(
@@ -47,19 +48,26 @@ src_prepare() {
 
 src_compile() {
 	cargo_src_compile --locked
-	use cli && cargo_src_compile -p "${PN}-cli"
+        cargo_src_compile -p "${PN}-cli"
 }
 
 src_install() {
-	dobin "$(cargo_target_dir)/${PN}"
-	use cli && dobin "$(cargo_target_dir)/ya"
+	dobin "$(cargo_target_dir)/yazi"
+	dobin "$(cargo_target_dir)/ya"
 
-	newbashcomp "${S}/yazi-boot/completions/${PN}.bash" "${PN}"
-	dozshcomp "${S}/yazi-boot/completions/_${PN}"
-
-	if use cli; then
+	if use bash-completion; then
+		newbashcomp "${S}/yazi-boot/completions/yazi.bash" "yazi"
 		newbashcomp "${S}/yazi-cli/completions/ya.bash" "ya"
+	fi
+
+	if use zsh-completion; then
+		dozshcomp "${S}/yazi-boot/completions/_yazi"
 		dozshcomp "${S}/yazi-cli/completions/_ya"
+	fi
+
+	if use fish-completion; then
+		dofishcomp "${S}/yazi-boot/completions/yazi.fish"
+		dofishcomp "${S}/yazi-cli/completions/ya.fish"
 	fi
 
 	einstalldocs

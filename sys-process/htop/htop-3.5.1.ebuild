@@ -9,15 +9,11 @@ inherit fcaps linux-info optfeature xdg-utils
 
 DESCRIPTION="Interactive process viewer"
 HOMEPAGE="https://htop.dev/ https://github.com/htop-dev/htop"
-if [[ ${PV} == *9999 ]]; then
-	EGIT_REPO_URI="https://github.com/htop-dev/htop.git"
-	inherit autotools git-r3
-else
-	SRC_URI="https://github.com/htop-dev/htop/releases/download/${PV}/${P}.tar.xz"
-	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86 ~arm64-macos ~x64-macos"
-fi
 
-S="${WORKDIR}/${P/_/}"
+SRC_URI="https://github.com/htop-dev/htop/releases/download/${PV}/${P}.tar.xz"
+KEYWORDS="amd64 arm64"
+
+S="${WORKDIR}/${P/_}"
 
 LICENSE="GPL-2+"
 SLOT="0"
@@ -41,7 +37,7 @@ RDEPEND="
 DEPEND="${RDEPEND}"
 BDEPEND="virtual/pkgconfig"
 
-DOCS=(ChangeLog README.md)
+DOCS=( ChangeLog README.md )
 
 CONFIG_CHECK="~TASKSTATS ~TASK_XACCT ~TASK_IO_ACCOUNTING ~CGROUPS"
 WARNING_CGROUPS="CONFIG_CGROUPS is required for the cgroups column in htop"
@@ -52,14 +48,10 @@ QA_CONFIG_IMPL_DECL_SKIP=(
 
 src_prepare() {
 	default
-
-	if [[ ${PV} == 9999 ]]; then
-		eautoreconf
-	fi
 }
 
 src_configure() {
-	if [[ ${CBUILD} != ${CHOST} ]]; then
+	if [[ ${CBUILD} != ${CHOST} ]] ; then
 		# bug #328971
 		export ac_cv_file__proc_{meminfo,stat}=yes
 	fi
@@ -77,7 +69,7 @@ src_configure() {
 		$(use_enable vserver)
 	)
 
-	if use kernel_linux; then
+	if use kernel_linux ; then
 		myeconfargs+=(
 			$(use_enable caps capabilities)
 			$(use_enable delayacct)
@@ -89,11 +81,11 @@ src_configure() {
 			myeconfargs+=(--disable-sensors)
 		fi
 	else
-		if use kernel_Darwin; then
+		if use kernel_Darwin ; then
 			# Upstream default to checking but --enable-affinity
 			# overrides this. Simplest to just disable on Darwin
 			# given it works on BSD anyway.
-			myeconfargs+=(--disable-affinity)
+			myeconfargs+=( --disable-affinity )
 		fi
 
 		myeconfargs+=(
