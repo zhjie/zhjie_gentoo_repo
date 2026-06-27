@@ -385,10 +385,12 @@ def run_update():
         "sys-apps/portage": {"type": "portage"},
         "media-sound/sacd-extract": {"type": "github", "url": "https://github.com/EuFlo/sacd-ripper.git", "prefix": "", "exclude_prerelease": True, "pattern": r"^0\.3\."},
         
+        # Auto-updatable:
+        "app-admin/chezmoi": {"type": "go", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
+        "app-misc/glow": {"type": "go", "url": "https://github.com/charmbracelet/glow.git", "prefix": "v"},
+        "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
+        
         # Notify-only / Excluded from auto-updates:
-        "app-admin/chezmoi": {"type": "notify_only", "reason": "Requires manually maintained Go dependencies archive", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
-        "app-misc/glow": {"type": "notify_only", "reason": "Requires manually maintained Go dependencies archive", "url": "https://github.com/charmbracelet/glow.git", "prefix": "v"},
-        "app-misc/yazi": {"type": "notify_only", "reason": "Requires manually maintained Rust crates archive", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
         "sys-kernel/networkaudio-sources": {"type": "notify_only", "reason": "Kernel bumps require manual adaptation of local patches (naa, diretta, scream, bore)", "url": "gentoo-sources"},
         "media-sound/mac": {"type": "mac"},
         "media-libs/libgmpris": {"type": "libgmpris"}
@@ -408,7 +410,7 @@ def run_update():
         upstream_ver = None
         
         ptype = cfg["type"]
-        if ptype == "github":
+        if ptype in ("github", "go", "yazi"):
             exclude_pre = cfg.get("exclude_prerelease", False)
             tag_pattern = cfg.get("pattern", None)
             upstream_ver = check_github_upstream(cfg["url"], cfg["prefix"], exclude_pre, tag_pattern)
@@ -468,6 +470,47 @@ def run_update():
                     new_ebuild_path = os.path.join(pkg_dir, new_ebuild_name)
                     old_ebuild_path = os.path.join(pkg_dir, local_ebuild)
                     
+                    env = os.environ.copy()
+                    
+                    if ptype == "go":
+                        print(f"  Running update_go_ebuild.py to update Go package {name} to {upstream_ver}...")
+                        try:
+                            cmd = [
+                                sys.executable,
+                                os.path.join(REPO_DIR, "scripts", "update_go_ebuild.py"),
+                                "--category", category,
+                                "--name", name,
+                                "--version", upstream_ver
+                            ]
+                            subprocess.run(cmd, env=env, check=True)
+                            results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
+                            continue
+                        except Exception as e:
+                            print(f"  Failed to update Go ebuild: {e}")
+                            results.append((pkg_path, local_ver, upstream_ver, "Go update failed", "red"))
+                            continue
+                            
+                    elif ptype == "yazi":
+                        print(f"  Running update_yazi_ebuild.py to update Rust package {name} to {upstream_ver}...")
+                        try:
+                            import shutil
+                            shutil.copy2(old_ebuild_path, new_ebuild_path)
+                            cmd = [
+                                sys.executable,
+                                os.path.join(REPO_DIR, "scripts", "update_yazi_ebuild.py"),
+                                "--ebuild", new_ebuild_path
+                            ]
+                            subprocess.run(cmd, env=env, check=True)
+                            os.remove(old_ebuild_path)
+                            results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
+                            continue
+                        except Exception as e:
+                            print(f"  Failed to update Yazi ebuild: {e}")
+                            if os.path.exists(new_ebuild_path):
+                                os.remove(new_ebuild_path)
+                            results.append((pkg_path, local_ver, upstream_ver, "Rust update failed", "red"))
+                            continue
+                            
                     success = True
                     
                     if ptype == "portage":

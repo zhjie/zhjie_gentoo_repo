@@ -593,7 +593,7 @@ CRATES="
 	zune-jpeg@0.5.15
 "
 
-inherit cargo
+inherit cargo shell-completion
 
 DESCRIPTION="Blazing fast terminal file manager written in Rust, based on async I/O."
 HOMEPAGE="https://yazi-rs.github.io"
