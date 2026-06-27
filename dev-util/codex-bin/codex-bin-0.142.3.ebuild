@@ -9,9 +9,10 @@ SRC_URI="
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 arm64"
-
+IUSE="+bubblewrap"
 REQUIRED_USE=""
-RDEPEND=""
+RDEPEND="
+	bubblewrap? ( sys-apps/bubblewrap ) "
 
 QA_PREBUILT="opt/bin/codex"
 
