@@ -1,21 +1,18 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
 inherit unpacker
-MY_PV=$(ver_rs 1 '_')
-MY_MINOR=4
+MY_PV_BASE="$(ver_cut 1)_$(ver_cut 2)"
+MY_MINOR="$(ver_cut 3)"
 
 DESCRIPTION="Linux Diretta Alsa Target"
 HOMEPAGE="https://www.diretta.link/preview/"
 
-ARM_FILE="diretta-alsa-target-${MY_PV}-${MY_MINOR}-aarch64.pkg.tar.xz"
-X86_FILE="diretta-alsa-target-${MY_PV}-${MY_MINOR}-x86_64.pkg.tar.zst"
-
 SRC_URI="
-	arm64? ( https://www.audio-linux.com/repo_aarch64/${ARM_FILE} )
-	amd64? ( https://www.audio-linux.com/ftp/temp/diretta_v2/${X86_FILE} )
+	arm64? ( https://www.audio-linux.com/repo_aarch64/diretta-alsa-target-${MY_PV_BASE}-${MY_MINOR}-aarch64.pkg.tar.xz )
+	amd64? ( https://www.audio-linux.com/ftp/temp/diretta_v2/diretta-alsa-target-${MY_PV_BASE}-${MY_MINOR}-x86_64.pkg.tar.zst )
 "
 
 KEYWORDS="amd64 arm64"
