@@ -28,7 +28,6 @@
 | sys-apps/portage | 3.0.79-r1 | 3.0.79-r1 | Up to date |
 | media-sound/sacd-extract | 0.3.9.3b | 0.3.9.3b | Up to date |
 | app-admin/chezmoi | 2.70.5 | 2.70.5 | Up to date |
-| app-misc/glow | 2.1.2-r1 | 2.1.2 | Up to date |
 | app-misc/yazi | 26.5.6 | 26.5.6 | Up to date |
 | sys-kernel/networkaudio-sources | 7.0.13 | 6.18.35-r1 | Up to date |
 | media-sound/mac | 4.11.4.5.7-r1 | 4.11.4.5.7 | Up to date |
