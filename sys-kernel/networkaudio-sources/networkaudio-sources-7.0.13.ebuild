@@ -20,10 +20,13 @@ IUSE="naa scream diretta bore rpi experimental"
 SCREAM_EGIT_REPO_URI="https://github.com/igor63r/screamalsa.git"
 SCREAM_S="${WORKDIR}/screamalsa"
 
-DIRETTA_DIRECT_VER="148_1"
-DIRETTA_ALSA_VER="148_1"
-DIRETTA_DIRECT_P="diretta-direct-dkms-${DIRETTA_DIRECT_VER}-1-aarch64.pkg.tar.xz"
-DIRETTA_ALSA_P="diretta-alsa-dkms-${DIRETTA_ALSA_VER}-1-aarch64.pkg.tar.xz"
+DIRETTA_DIRECT=148_1
+DIRETTA_ALSA=148_2
+DIRETTA_MINOR=4
+DIRETTA_DIRECT_VER="${DIRETTA_DIRECT}-${DIRETTA_MINOR}"
+DIRETTA_ALSA_VER="${DIRETTA_ALSA}-${DIRETTA_MINOR}"
+DIRETTA_DIRECT_P="diretta-direct-dkms-${DIRETTA_DIRECT_VER}-aarch64.pkg.tar.xz"
+DIRETTA_ALSA_P="diretta-alsa-dkms-${DIRETTA_ALSA_VER}-aarch64.pkg.tar.xz"
 DIRETTA_DIRECT_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}"
 DIRETTA_ALSA_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}"
 
@@ -48,6 +51,11 @@ src_unpack() {
 		[[ -f "${SCREAM_S}/snd-screamalsa.c" ]] || die "screamalsa source file missing"
 		[[ -f "${SCREAM_S}/Kconfig" ]] || die "screamalsa Kconfig missing"
 		[[ -f "${SCREAM_S}/Makefile" ]] || die "screamalsa Makefile missing"
+	fi
+
+	if use diretta; then
+		unpack ${DIRETTA_DIRECT_P}
+		unpack ${DIRETTA_ALSA_P}
 	fi
 
 	UNIPATCH_LIST_DEFAULT=""
@@ -78,33 +86,17 @@ src_prepare() {
 
 	# diretta alsa host driver
 	if use diretta; then
-		local diretta_tmp="${T}/diretta"
-		local diretta_direct_dir="usr/src/diretta-direct-${DIRETTA_DIRECT_VER}"
-		local diretta_alsa_dir="usr/src/diretta-alsa-${DIRETTA_ALSA_VER}"
-		local diretta_direct_src="${diretta_tmp}/${diretta_direct_dir}"
-		local diretta_alsa_src="${diretta_tmp}/${diretta_alsa_dir}"
-
 		eapply "${FILESDIR}/diretta/diretta.patch"
 
-		mkdir -p "${diretta_tmp}" || die "failed to create diretta temp dir"
-		tar -xJf "${DISTDIR}/${DIRETTA_DIRECT_P}" -C "${diretta_tmp}" \
-			"${diretta_direct_dir}/diretta_direct.c" \
-			"${diretta_direct_dir}/diretta_direct.h" ||
-			die "failed to extract Diretta Direct sources"
-		tar -xJf "${DISTDIR}/${DIRETTA_ALSA_P}" -C "${diretta_tmp}" \
-			"${diretta_alsa_dir}/alsa_bridge.c" \
-			"${diretta_alsa_dir}/alsa_bridge.h" ||
-			die "failed to extract Diretta ALSA sources"
+		[[ -f "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.c" ]] || die "diretta_direct.c missing after extraction"
+		[[ -f "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.h" ]] || die "diretta_direct.h missing after extraction"
+		[[ -f "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.c" ]] || die "alsa_bridge.c missing after extraction"
+		[[ -f "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.h" ]] || die "alsa_bridge.h missing after extraction"
 
-		[[ -f "${diretta_direct_src}/diretta_direct.c" ]] || die "diretta_direct.c missing after extraction"
-		[[ -f "${diretta_direct_src}/diretta_direct.h" ]] || die "diretta_direct.h missing after extraction"
-		[[ -f "${diretta_alsa_src}/alsa_bridge.c" ]] || die "alsa_bridge.c missing after extraction"
-		[[ -f "${diretta_alsa_src}/alsa_bridge.h" ]] || die "alsa_bridge.h missing after extraction"
-
-		cp "${diretta_direct_src}/diretta_direct.c" "${S}/sound/drivers/" || die "failed to copy diretta_direct.c"
-		cp "${diretta_direct_src}/diretta_direct.h" "${S}/sound/drivers/" || die "failed to copy diretta_direct.h"
-		cp "${diretta_alsa_src}/alsa_bridge.c" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.c"
-		cp "${diretta_alsa_src}/alsa_bridge.h" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.h"
+		cp "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.c" "${S}/sound/drivers/" || die "failed to copy diretta_direct.c"
+		cp "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.h" "${S}/sound/drivers/" || die "failed to copy diretta_direct.h"
+		cp "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.c" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.c"
+		cp "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.h" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.h"
 	fi
 
 	# screamalsa virtual ALSA driver
