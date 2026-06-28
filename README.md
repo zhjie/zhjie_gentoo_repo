@@ -30,6 +30,6 @@
 | app-admin/chezmoi | 2.70.5 | 2.70.5 | Up to date |
 | app-misc/yazi | 26.5.6 | 26.5.6 | Up to date |
 | app-misc/herdr-bin | 0.7.1 | 0.7.1 | Up to date |
-| sys-kernel/networkaudio-sources | 7.0.13 | 7.0.14 | Kernel bump to 7.0.14 available (manual) |
+| sys-kernel/networkaudio-sources | 7.0.13 | 7.0.14 | Kernel 7.0.14 |
 | media-sound/mac | 4.11.4.5.7-r1 | 4.11.4.5.7 | Up to date |
 | media-libs/libgmpris | 2.2.1 | 2.2.1 | Up to date |
