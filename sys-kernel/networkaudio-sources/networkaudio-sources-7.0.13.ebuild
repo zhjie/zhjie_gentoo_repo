@@ -3,56 +3,51 @@
 
 EAPI="8"
 ETYPE="sources"
-K_WANT_GENPATCHES="base extras"
+K_WANT_GENPATCHES="base extras experimental"
 K_GENPATCHES_VER="21"
 
 inherit kernel-2 git-r3
 detect_version
 detect_arch
+PV_BASE="$(ver_cut 1).$(ver_cut 2)"
 
 DESCRIPTION="NetworkAudio Kernel sources with Gentoo patchset, naa patches and diretta alsa host."
 HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
 
-IUSE="naa scream diretta bore rpi experimental"
+# bmq is already in +experimental. +bmq patch is from CachyOS
+IUSE="naa diretta xanmod rpi experimental bore bmq"
+REQUIRED_USE="?? ( bore bmq experimental )"
 
-SCREAM_EGIT_REPO_URI="https://github.com/igor63r/screamalsa.git"
-SCREAM_S="${WORKDIR}/screamalsa"
+CACHY_COMMIT="19250dcc39862169961756c733b8a6ba77754c22"
+XANMOD_COMMIT="16b5ed95569b7b66889cf34ee233a83aac9df307"
+DIRETTA_DIRECT_VER="148_1_4"
+DIRETTA_ALSA_VER="148_2_4"
 
-DIRETTA_DIRECT=148_1
-DIRETTA_ALSA=148_2
-DIRETTA_MINOR=4
-DIRETTA_DIRECT_VER="${DIRETTA_DIRECT}-${DIRETTA_MINOR}"
-DIRETTA_ALSA_VER="${DIRETTA_ALSA}-${DIRETTA_MINOR}"
-DIRETTA_DIRECT_P="diretta-direct-dkms-${DIRETTA_DIRECT_VER}-aarch64.pkg.tar.xz"
-DIRETTA_ALSA_P="diretta-alsa-dkms-${DIRETTA_ALSA_VER}-aarch64.pkg.tar.xz"
-DIRETTA_DIRECT_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}"
-DIRETTA_ALSA_URI="https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}"
+DIRETTA_DIRECT="${DIRETTA_DIRECT_VER%_*}"
+DIRETTA_ALSA="${DIRETTA_ALSA_VER%_*}"
+
+DIRETTA_DIRECT_P="diretta-direct-dkms-${DIRETTA_DIRECT}-${DIRETTA_DIRECT_VER##*_}-aarch64.pkg.tar.xz"
+DIRETTA_ALSA_P="diretta-alsa-dkms-${DIRETTA_ALSA}-${DIRETTA_ALSA_VER##*_}-aarch64.pkg.tar.xz"
 
 SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${ARCH_URI}
-    diretta? (
-        ${DIRETTA_DIRECT_URI}
-        ${DIRETTA_ALSA_URI}
-    )"
+	bore? (
+		https://raw.githubusercontent.com/CachyOS/kernel-patches/${CACHY_COMMIT}/${PV_BASE}/sched/0001-bore.patch
+	)
+	bmq? (
+		https://raw.githubusercontent.com/CachyOS/kernel-patches/${CACHY_COMMIT}/${PV_BASE}/sched/0001-prjc.patch
+	)
+	xanmod? (
+		https://gitlab.com/xanmod/linux-patches/-/raw/${XANMOD_COMMIT}/linux-${PV_BASE}.y-xanmod/net/tcp/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch
+		https://gitlab.com/xanmod/linux-patches/-/raw/${XANMOD_COMMIT}/linux-${PV_BASE}.y-xanmod/net/tcp/0001-tcp_bbr-v3-update-TCP-bbr-congestion-control-module-.patch
+	)
+	diretta? (
+		https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}
+		https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}
+	)"
 
 src_unpack() {
-	if use scream; then
-		EGIT_REPO_URI="${SCREAM_EGIT_REPO_URI}" \
-			EGIT_BRANCH= \
-			EGIT_CHECKOUT_DIR="${SCREAM_S}" \
-			git-r3_fetch
-
-		EGIT_REPO_URI="${SCREAM_EGIT_REPO_URI}" \
-			EGIT_BRANCH= \
-			EGIT_CHECKOUT_DIR="${SCREAM_S}" \
-			git-r3_checkout
-
-		[[ -f "${SCREAM_S}/snd-screamalsa.c" ]] || die "screamalsa source file missing"
-		[[ -f "${SCREAM_S}/Kconfig" ]] || die "screamalsa Kconfig missing"
-		[[ -f "${SCREAM_S}/Makefile" ]] || die "screamalsa Makefile missing"
-	fi
-
 	if use diretta; then
 		unpack ${DIRETTA_DIRECT_P}
 		unpack ${DIRETTA_ALSA_P}
@@ -64,10 +59,19 @@ src_unpack() {
 }
 
 src_prepare() {
-
 	# cloudflare patch
-	eapply "${FILESDIR}/net/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
-	eapply "${FILESDIR}/net/0001-tcp_bbr-v3-update-TCP-bbr-congestion-control-module-.patch"
+	if use xanmod; then
+		eapply "${DISTDIR}/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
+		eapply "${DISTDIR}/0001-tcp_bbr-v3-update-TCP-bbr-congestion-control-module-.patch"
+	fi
+
+	if use bore; then
+		eapply ${DISTDIR}/0001-bore.patch
+	fi
+
+	if use bmq; then
+		eapply ${DISTDIR}/0001-prjc.patch
+	fi
 
 	if use rpi; then
 		eapply "${FILESDIR}/rpi/rpi-${PVR}.patch"
@@ -80,60 +84,14 @@ src_prepare() {
 		eapply "${FILESDIR}/naa/0005-Change-DSD-silence-pattern-to-avoid-clicks-pops.patch"
 	fi
 
-	if use bore; then
-		eapply "${FILESDIR}/sched/0001-bore.patch"
-	fi
-
 	# diretta alsa host driver
 	if use diretta; then
 		eapply "${FILESDIR}/diretta/diretta.patch"
-
-		[[ -f "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.c" ]] || die "diretta_direct.c missing after extraction"
-		[[ -f "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.h" ]] || die "diretta_direct.h missing after extraction"
-		[[ -f "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.c" ]] || die "alsa_bridge.c missing after extraction"
-		[[ -f "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.h" ]] || die "alsa_bridge.h missing after extraction"
 
 		cp "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.c" "${S}/sound/drivers/" || die "failed to copy diretta_direct.c"
 		cp "${WORKDIR}/usr/src/diretta-direct-${DIRETTA_DIRECT}/diretta_direct.h" "${S}/sound/drivers/" || die "failed to copy diretta_direct.h"
 		cp "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.c" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.c"
 		cp "${WORKDIR}/usr/src/diretta-alsa-${DIRETTA_ALSA}/alsa_bridge.h" "${S}/sound/drivers/" || die "failed to copy alsa_bridge.h"
-	fi
-
-	# screamalsa virtual ALSA driver
-	if use scream; then
-		local drivers_kconfig="${S}/sound/drivers/Kconfig"
-		local drivers_makefile="${S}/sound/drivers/Makefile"
-		local scream_kconfig_tmp="${T}/sound-drivers.Kconfig.scream"
-		local scream_makefile_tmp="${T}/sound-drivers.Makefile.scream"
-		local scream_makefile_line='obj-$(CONFIG_SND_SCREAMALSA) += snd-screamalsa.o'
-
-		cp "${SCREAM_S}/snd-screamalsa.c" "${S}/sound/drivers/" || die "failed to copy snd-screamalsa.c"
-
-		[[ -r "${drivers_kconfig}" ]] || die "sound/drivers/Kconfig missing or unreadable"
-		[[ -r "${drivers_makefile}" ]] || die "sound/drivers/Makefile missing or unreadable"
-
-		if grep -q '^config SND_SCREAMALSA$' "${drivers_kconfig}"; then
-			:
-		elif [[ $? -eq 1 ]]; then
-			cp "${drivers_kconfig}" "${scream_kconfig_tmp}" || die "failed to stage sound/drivers/Kconfig update"
-			{
-				printf '\n'
-				cat "${SCREAM_S}/Kconfig"
-			} >>"${scream_kconfig_tmp}" || die "failed to stage sound/drivers/Kconfig update"
-			mv "${scream_kconfig_tmp}" "${drivers_kconfig}" || die "failed to update sound/drivers/Kconfig"
-		else
-			die "failed to read sound/drivers/Kconfig"
-		fi
-
-		if grep -qxF "${scream_makefile_line}" "${drivers_makefile}"; then
-			:
-		elif [[ $? -eq 1 ]]; then
-			cp "${drivers_makefile}" "${scream_makefile_tmp}" || die "failed to stage sound/drivers/Makefile update"
-			printf '\n%s\n' "${scream_makefile_line}" >>"${scream_makefile_tmp}" || die "failed to stage sound/drivers/Makefile update"
-			mv "${scream_makefile_tmp}" "${drivers_makefile}" || die "failed to update sound/drivers/Makefile"
-		else
-			die "failed to read sound/drivers/Makefile"
-		fi
 	fi
 
 	rm "${S}/tools/testing/selftests/tc-testing/action-ebpf"

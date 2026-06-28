@@ -151,6 +151,19 @@ def patch_portage_ebuild(content):
 
 # ── Upstream Version Checkers ──────────────────────────────────────────────────
 
+def check_git_commit_upstream(url, ref="HEAD"):
+    """Gets the latest commit hash for a given git repository URL and ref."""
+    try:
+        cmd = ["git", "ls-remote", url, ref]
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        if res.stdout:
+            parts = res.stdout.strip().split()
+            if parts:
+                return parts[0]
+    except Exception as e:
+        print(f"Error fetching git commit from {url}: {e}")
+    return None
+
 def check_github_upstream(url, prefix, exclude_prerelease=False, pattern=None):
     tags = get_git_tags(url, prefix, exclude_prerelease, pattern)
     return tags[0] if tags else None
@@ -390,7 +403,7 @@ def run_update():
         "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
         
         # Notify-only / Excluded from auto-updates:
-        "sys-kernel/networkaudio-sources": {"type": "notify_only", "reason": "Kernel bumps require manual adaptation of local patches (naa, diretta, scream, bore)", "url": "gentoo-sources"},
+        "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
         "media-sound/mac": {"type": "mac"},
         "media-libs/libgmpris": {"type": "libgmpris"}
     }
@@ -435,6 +448,105 @@ def run_update():
             upstream_ver = check_mac_upstream()
         elif ptype == "libgmpris":
             upstream_ver = check_libgmpris_upstream()
+        elif ptype == "networkaudio_sources":
+            upstream_ver = get_main_tree_kernel_version()
+            if not upstream_ver:
+                upstream_ver = local_ver
+                
+            # 1. Fetch latest values
+            latest_cachy = check_git_commit_upstream("https://github.com/CachyOS/kernel-patches.git")
+            latest_xanmod = check_git_commit_upstream("https://gitlab.com/xanmod/linux-patches.git")
+            
+            diretta_direct = check_diretta_upstream("diretta-direct-dkms-")
+            latest_diretta_direct = diretta_direct.replace(".", "_") if diretta_direct else None
+            
+            diretta_alsa = check_diretta_upstream("diretta-alsa-dkms-")
+            latest_diretta_alsa = diretta_alsa.replace(".", "_") if diretta_alsa else None
+            
+            # Read current ebuild
+            pkg_dir = os.path.join(REPO_DIR, category, name)
+            ebuild_path = os.path.join(pkg_dir, local_ebuild)
+            
+            try:
+                with open(ebuild_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+            except Exception as e:
+                print(f"  Failed to read ebuild {local_ebuild}: {e}")
+                results.append((pkg_path, local_ver, upstream_ver, f"Read failed: {e}", "red"))
+                continue
+                
+            cachy_match = re.search(r'CACHY_COMMIT="([^"]+)"', content)
+            xanmod_match = re.search(r'XANMOD_COMMIT="([^"]+)"', content)
+            direct_match = re.search(r'DIRETTA_DIRECT_VER="([^"]+)"', content)
+            alsa_match = re.search(r'DIRETTA_ALSA_VER="([^"]+)"', content)
+            
+            curr_cachy = cachy_match.group(1) if cachy_match else None
+            curr_xanmod = xanmod_match.group(1) if xanmod_match else None
+            curr_direct = direct_match.group(1) if direct_match else None
+            curr_alsa = alsa_match.group(1) if alsa_match else None
+            
+            needs_update = False
+            update_details = []
+            
+            if latest_cachy and latest_cachy != curr_cachy:
+                needs_update = True
+                update_details.append(f"Cachy: {curr_cachy[:8]}->{latest_cachy[:8]}")
+            if latest_xanmod and latest_xanmod != curr_xanmod:
+                needs_update = True
+                update_details.append(f"Xanmod: {curr_xanmod[:8]}->{latest_xanmod[:8]}")
+            if latest_diretta_direct and latest_diretta_direct != curr_direct:
+                needs_update = True
+                update_details.append(f"Diretta Direct: {curr_direct}->{latest_diretta_direct}")
+            if latest_diretta_alsa and latest_diretta_alsa != curr_alsa:
+                needs_update = True
+                update_details.append(f"Diretta Alsa: {curr_alsa}->{latest_diretta_alsa}")
+                
+            has_kernel_bump = parse_version(upstream_ver) > parse_version(local_ver)
+            
+            status_parts = []
+            if has_kernel_bump:
+                status_parts.append(f"Kernel bump to {upstream_ver} available (manual)")
+            
+            if needs_update:
+                if args.dry_run:
+                    status_parts.append(f"Updates available: {', '.join(update_details)}")
+                    results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "green"))
+                else:
+                    new_content = content
+                    if latest_cachy and curr_cachy:
+                        new_content = re.sub(r'CACHY_COMMIT="[^"]+"', f'CACHY_COMMIT="{latest_cachy}"', new_content)
+                    if latest_xanmod and curr_xanmod:
+                        new_content = re.sub(r'XANMOD_COMMIT="[^"]+"', f'XANMOD_COMMIT="{latest_xanmod}"', new_content)
+                    if latest_diretta_direct and curr_direct:
+                        new_content = re.sub(r'DIRETTA_DIRECT_VER="[^"]+"', f'DIRETTA_DIRECT_VER="{latest_diretta_direct}"', new_content)
+                    if latest_diretta_alsa and curr_alsa:
+                        new_content = re.sub(r'DIRETTA_ALSA_VER="[^"]+"', f'DIRETTA_ALSA_VER="{latest_diretta_alsa}"', new_content)
+                        
+                    try:
+                        with open(ebuild_path, "w", encoding="utf-8") as f:
+                            f.write(new_content)
+                        print(f"  Updated ebuild {local_ebuild} with new variables.")
+                        
+                        manifest_ok = run_ebuild_manifest(ebuild_path)
+                        if manifest_ok:
+                            status_parts.append(f"Updated: {', '.join(update_details)}")
+                            results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "green"))
+                        else:
+                            # Revert
+                            with open(ebuild_path, "w", encoding="utf-8") as f:
+                                f.write(content)
+                            run_ebuild_manifest(ebuild_path)
+                            status_parts.append("Manifest failed (rolled back)")
+                            results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
+                    except Exception as e:
+                        print(f"  Failed to update ebuild: {e}")
+                        status_parts.append(f"Update failed: {e}")
+                        results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
+            else:
+                if not status_parts:
+                    status_parts.append("Up to date")
+                results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "cyan" if not has_kernel_bump else "yellow"))
+            continue
         elif ptype == "notify_only":
             if cfg["url"] == "gentoo-sources":
                 upstream_ver = get_main_tree_kernel_version()
