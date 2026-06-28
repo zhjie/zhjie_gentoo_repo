@@ -273,16 +273,27 @@ def check_libgmpris_upstream():
         return versions[0]
     return None
 
-def get_main_tree_kernel_version():
+def get_main_tree_kernel_version(local_ver=None):
     main_dir = "/var/db/repos/gentoo/sys-kernel/gentoo-sources"
     if not os.path.isdir(main_dir):
         return None
     ebuilds = [f for f in os.listdir(main_dir) if f.endswith(".ebuild")]
-    stable_versions = []
+    versions = []
+    
+    # Extract branch prefix, e.g., "7.0." from "7.0.13"
+    prefix = None
+    if local_ver:
+        parts = local_ver.split(".")
+        if len(parts) >= 2:
+            prefix = f"{parts[0]}.{parts[1]}."
+            
     for eb in ebuilds:
         if eb == "gentoo-sources-9999.ebuild":
             continue
         ver_str = eb[len("gentoo-sources")+1:-7]
+        if prefix and not ver_str.startswith(prefix):
+            continue
+            
         eb_path = os.path.join(main_dir, eb)
         try:
             with open(eb_path, "r", encoding="utf-8") as f:
@@ -290,13 +301,19 @@ def get_main_tree_kernel_version():
             keywords_match = re.search(r'\bKEYWORDS="([^"]+)"', content)
             if keywords_match:
                 keywords = keywords_match.group(1).split()
-                if "amd64" in keywords:
-                    stable_versions.append((parse_version(ver_str), ver_str))
+                if prefix:
+                    # For branch-specific kernel, accept both stable and unstable keyword configurations
+                    if "amd64" in keywords or "~amd64" in keywords:
+                        versions.append((parse_version(ver_str), ver_str))
+                else:
+                    # For general check, require stable amd64
+                    if "amd64" in keywords:
+                        versions.append((parse_version(ver_str), ver_str))
         except Exception:
             pass
-    if stable_versions:
-        stable_versions.sort(reverse=True)
-        return stable_versions[0][1]
+    if versions:
+        versions.sort(reverse=True)
+        return versions[0][1]
     return None
 
 def check_gitstatus_extra_patch(new_ebuild_path, new_version):
@@ -372,6 +389,10 @@ def run_update():
     parser.add_argument("--dry-run", action="store_true", help="Find updates without applying them.")
     args = parser.parse_args()
     
+    # Save standard stdout and redirect sys.stdout to sys.stderr for all logging print statements
+    original_stdout = sys.stdout
+    sys.stdout = sys.stderr
+    
     packages = {
         # Auto-updatable:
         "dev-util/antigravity-cli": {"type": "github", "url": "https://github.com/google-antigravity/antigravity-cli.git", "prefix": ""},
@@ -401,6 +422,7 @@ def run_update():
         # Auto-updatable:
         "app-admin/chezmoi": {"type": "go", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
         "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
+        "app-misc/herdr-bin": {"type": "github", "url": "https://github.com/ogulcancelik/herdr.git", "prefix": "v"},
         
         # Notify-only / Excluded from auto-updates:
         "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
@@ -449,7 +471,7 @@ def run_update():
         elif ptype == "libgmpris":
             upstream_ver = check_libgmpris_upstream()
         elif ptype == "networkaudio_sources":
-            upstream_ver = get_main_tree_kernel_version()
+            upstream_ver = get_main_tree_kernel_version(local_ver)
             if not upstream_ver:
                 upstream_ver = local_ver
                 
@@ -484,6 +506,12 @@ def run_update():
             curr_xanmod = xanmod_match.group(1) if xanmod_match else None
             curr_direct = direct_match.group(1) if direct_match else None
             curr_alsa = alsa_match.group(1) if alsa_match else None
+            
+            # Print current vs latest values in the first phase
+            print(f"  CachyOS patches: {curr_cachy[:8] if curr_cachy else 'None'} -> {latest_cachy[:8] if latest_cachy else 'Unknown'}")
+            print(f"  Xanmod patches: {curr_xanmod[:8] if curr_xanmod else 'None'} -> {latest_xanmod[:8] if latest_xanmod else 'Unknown'}")
+            print(f"  Diretta Direct: {curr_direct} -> {latest_diretta_direct if latest_diretta_direct else 'Unknown'}")
+            print(f"  Diretta Alsa: {curr_alsa} -> {latest_diretta_alsa if latest_diretta_alsa else 'Unknown'}")
             
             needs_update = False
             update_details = []
@@ -611,7 +639,7 @@ def run_update():
                                 os.path.join(REPO_DIR, "scripts", "update_yazi_ebuild.py"),
                                 "--ebuild", new_ebuild_path
                             ]
-                            subprocess.run(cmd, env=env, check=True)
+                            subprocess.run(cmd, env=env, stdout=sys.stderr, check=True)
                             os.remove(old_ebuild_path)
                             results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
                             continue
@@ -621,6 +649,8 @@ def run_update():
                                 os.remove(new_ebuild_path)
                             results.append((pkg_path, local_ver, upstream_ver, "Rust update failed", "red"))
                             continue
+                            
+
                             
                     success = True
                     
@@ -660,14 +690,14 @@ def run_update():
             print(f"  Already up-to-date.")
             results.append((pkg_path, local_ver, upstream_ver, "Up to date", "cyan"))
             
-    print("\n" + "="*80)
-    print(f"{'PACKAGE UPDATE SUMMARY':^80}")
-    print("="*80)
-    print(f"{'Package':<35} | {'Local':<12} | {'Upstream':<12} | {'Status/Action'}")
-    print("-"*80)
+    # Restore stdout for the summary markdown table
+    sys.stdout = original_stdout
+    
+    print("\n## Package Update Summary\n")
+    print("| Package | Local | Upstream | Status/Action |")
+    print("| :--- | :--- | :--- | :--- |")
     for pkg, lv, uv, status, color in results:
-        print(f"{pkg:<35} | {lv:<12} | {uv:<12} | {status}")
-    print("="*80)
+        print(f"| {pkg} | {lv} | {uv if uv else 'Unknown'} | {status} |")
 
 if __name__ == "__main__":
     run_update()

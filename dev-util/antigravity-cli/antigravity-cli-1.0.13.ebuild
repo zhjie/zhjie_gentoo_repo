@@ -16,9 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64"
 RESTRICT="bindist mirror strip"
 
-QA_PREBUILT="opt/bin/antigravity"
-
 src_install() {
-	exeinto "/opt/bin"
-	doexe "antigravity"
+	into /opt
+	newbin antigravity agy
 }
