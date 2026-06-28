@@ -533,7 +533,7 @@ def run_update():
             
             status_parts = []
             if has_kernel_bump:
-                status_parts.append(f"Kernel {upstream_ver} available")
+                status_parts.append(f"Kernel {upstream_ver} (manual)")
             
             if needs_update:
                 if args.dry_run:
