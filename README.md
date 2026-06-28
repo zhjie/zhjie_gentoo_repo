@@ -9,11 +9,11 @@
 | dev-util/claude-code | 2.1.195 | 2.1.195 | Up to date |
 | app-shells/zsh-autosuggestions | 0.7.1 | 0.7.1 | Up to date |
 | app-shells/zsh-theme-powerlevel10k | 1.20.0 | 1.20.0 | Up to date |
-| app-shells/gitstatus | 1.5.5-r1 | Unknown | Error checking upstream |
+| app-shells/gitstatus | 1.5.5-r1 | 1.5.5-r1 | Up to date |
 | sys-process/htop | 3.5.1 | 3.5.1 | Up to date |
 | sys-process/nvtop | 3.3.2 | 3.3.2 | Up to date |
 | dev-libs/libsensors | 3.6.2 | 3.6.2 | Up to date |
-| media-libs/alac | 0.0.7 | Unknown | Error checking upstream |
+| media-libs/alac | 0.0.7 | 0.0.7 | Up to date |
 | media-sound/airupnp-bin | 1.9.3 | 1.9.3 | Up to date |
 | dev-vcs/lazygit | 0.62.2 | 0.62.2 | Up to date |
 | media-sound/roonserver | 2.67 | 2.67 | Up to date |
