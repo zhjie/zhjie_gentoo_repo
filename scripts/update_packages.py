@@ -387,7 +387,6 @@ def run_update():
         
         # Auto-updatable:
         "app-admin/chezmoi": {"type": "go", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
-        "app-misc/glow": {"type": "go", "url": "https://github.com/charmbracelet/glow.git", "prefix": "v"},
         "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
         
         # Notify-only / Excluded from auto-updates:
