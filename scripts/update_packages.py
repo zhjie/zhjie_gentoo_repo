@@ -423,6 +423,7 @@ def run_update():
         "app-admin/chezmoi": {"type": "go", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
         "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
         "app-misc/herdr-bin": {"type": "github", "url": "https://github.com/ogulcancelik/herdr.git", "prefix": "v"},
+        "dev-util/copilot-language-server-bin": {"type": "github", "url": "https://github.com/github/copilot-language-server-release.git", "prefix": ""},
         
         # Notify-only / Excluded from auto-updates:
         "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
