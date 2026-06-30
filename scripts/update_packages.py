@@ -694,6 +694,7 @@ def run_update():
     # Restore stdout for the summary markdown table
     sys.stdout = original_stdout
     
+    print("# zhjie's personal overlay for network audio\n")
     print("\n## Package Update Summary\n")
     print("| Package | Local | Upstream | Status/Action |")
     print("| :--- | :--- | :--- | :--- |")

@@ -16,11 +16,11 @@ HOMEPAGE="https://github.com/zhjie/zhjie_gentoo_repo"
 LICENSE+=" CDDL"
 KEYWORDS="amd64 arm64"
 
-# bmq is already in +experimental. +bmq patch is from CachyOS
-IUSE="naa diretta xanmod rpi experimental bore bmq"
+# BMQ is already in +experimental. +bmq patch is from CachyOS
+IUSE="naa diretta xanmod rpi experimental bore bmq clang"
 REQUIRED_USE="?? ( bore bmq experimental )"
 
-CACHY_COMMIT="19250dcc39862169961756c733b8a6ba77754c22"
+CACHY_COMMIT="7ae0737bab25246bbd393eb6424c86b42649abb1"
 XANMOD_COMMIT="16b5ed95569b7b66889cf34ee233a83aac9df307"
 DIRETTA_DIRECT_VER="148_1_4"
 DIRETTA_ALSA_VER="148_2_4"
@@ -45,7 +45,12 @@ SRC_URI="${KERNEL_URI} ${GENPATCHES_URI} ${ARCH_URI}
 	diretta? (
 		https://www.audio-linux.com/repo_aarch64/${DIRETTA_DIRECT_P}
 		https://www.audio-linux.com/repo_aarch64/${DIRETTA_ALSA_P}
-	)"
+	)
+	clang? (
+		https://raw.githubusercontent.com/CachyOS/kernel-patches/${CACHY_COMMIT}/${PV_BASE}/misc/dkms-clang.patch
+		https://raw.githubusercontent.com/CachyOS/kernel-patches/${CACHY_COMMIT}/${PV_BASE}/misc/0001-clang-polly.patch
+	)
+"
 
 src_unpack() {
 	if use diretta; then
@@ -59,20 +64,29 @@ src_unpack() {
 }
 
 src_prepare() {
-	# cloudflare patch
+	# clang patch from CachyOS
+	if use clang; then
+		eapply "${DISTDIR}/dkms-clang.patch"
+		eapply "${DISTDIR}/0001-clang-polly.patch"
+	fi
+
+	# cloudflare net patch and bbr3 from xanmod
 	if use xanmod; then
 		eapply "${DISTDIR}/0001-tcp-Add-a-sysctl-to-skip-tcp-collapse-processing-whe.patch"
 		eapply "${DISTDIR}/0001-tcp_bbr-v3-update-TCP-bbr-congestion-control-module-.patch"
 	fi
 
+	# BORE CPU Scheduler from CachyOS
 	if use bore; then
 		eapply ${DISTDIR}/0001-bore.patch
 	fi
 
+	# BMQ CPU Scheduler from BMQ
 	if use bmq; then
 		eapply ${DISTDIR}/0001-prjc.patch
 	fi
 
+	# raspberry pi
 	if use rpi; then
 		eapply "${FILESDIR}/rpi/rpi-${PVR}.patch"
 	fi
