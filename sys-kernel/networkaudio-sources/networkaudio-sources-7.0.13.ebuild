@@ -20,7 +20,7 @@ KEYWORDS="amd64 arm64"
 IUSE="naa diretta xanmod rpi experimental bore bmq clang"
 REQUIRED_USE="?? ( bore bmq experimental )"
 
-CACHY_COMMIT="7ae0737bab25246bbd393eb6424c86b42649abb1"
+CACHY_COMMIT="f98908d8b5cacc4c24a6039ffd9f41f6a0de4ba2"
 XANMOD_COMMIT="16b5ed95569b7b66889cf34ee233a83aac9df307"
 DIRETTA_DIRECT_VER="148_1_4"
 DIRETTA_ALSA_VER="148_2_4"

@@ -397,6 +397,7 @@ def run_update():
         # Auto-updatable:
         "dev-util/antigravity-cli": {"type": "github", "url": "https://github.com/google-antigravity/antigravity-cli.git", "prefix": ""},
         "dev-util/codex-bin": {"type": "github", "url": "https://github.com/openai/codex.git", "prefix": "rust-v", "exclude_prerelease": True},
+        "dev-util/codex": {"type": "codex", "url": "https://github.com/openai/codex.git", "prefix": "rust-v", "exclude_prerelease": True},
         "dev-util/claude-code": {"type": "claude_code"},
         "app-shells/zsh-autosuggestions": {"type": "github", "url": "https://github.com/zsh-users/zsh-autosuggestions.git", "prefix": "v"},
         "app-shells/zsh-theme-powerlevel10k": {"type": "github", "url": "https://github.com/romkatv/powerlevel10k.git", "prefix": "v"},
@@ -445,7 +446,7 @@ def run_update():
         upstream_ver = None
         
         ptype = cfg["type"]
-        if ptype in ("github", "go", "yazi"):
+        if ptype in ("github", "go", "yazi", "codex"):
             exclude_pre = cfg.get("exclude_prerelease", False)
             tag_pattern = cfg.get("pattern", None)
             upstream_ver = check_github_upstream(cfg["url"], cfg["prefix"], exclude_pre, tag_pattern)
@@ -646,6 +647,27 @@ def run_update():
                             continue
                         except Exception as e:
                             print(f"  Failed to update Yazi ebuild: {e}")
+                            if os.path.exists(new_ebuild_path):
+                                os.remove(new_ebuild_path)
+                            results.append((pkg_path, local_ver, upstream_ver, "Rust update failed", "red"))
+                            continue
+                            
+                    elif ptype == "codex":
+                        print(f"  Running update_codex_ebuild.py to update Rust package {name} to {upstream_ver}...")
+                        try:
+                            import shutil
+                            shutil.copy2(old_ebuild_path, new_ebuild_path)
+                            cmd = [
+                                sys.executable,
+                                os.path.join(REPO_DIR, "scripts", "update_codex_ebuild.py"),
+                                "--ebuild", new_ebuild_path
+                            ]
+                            subprocess.run(cmd, env=env, stdout=sys.stderr, check=True)
+                            os.remove(old_ebuild_path)
+                            results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
+                            continue
+                        except Exception as e:
+                            print(f"  Failed to update Codex ebuild: {e}")
                             if os.path.exists(new_ebuild_path):
                                 os.remove(new_ebuild_path)
                             results.append((pkg_path, local_ver, upstream_ver, "Rust update failed", "red"))
