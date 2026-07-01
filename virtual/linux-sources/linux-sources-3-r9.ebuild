@@ -5,7 +5,7 @@ EAPI=9
 
 DESCRIPTION="Virtual for Linux kernel sources"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 IUSE="firmware"
 
 RDEPEND="
@@ -25,5 +25,5 @@ RDEPEND="
 		sys-kernel/linux-next
 		sys-kernel/asahi-sources
 		sys-kernel/gentoo-kernel-modprep
-        sys-kernel/networkaudio-sources
+		sys-kernel/networkaudio-sources
 	)"
