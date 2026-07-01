@@ -428,7 +428,6 @@ def run_update():
         
         # Notify-only / Excluded from auto-updates:
         "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
-        "media-sound/mac": {"type": "mac"},
         "media-libs/libgmpris": {"type": "libgmpris"}
     }
     
