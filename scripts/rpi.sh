@@ -1,5 +1,5 @@
-M=6.18
-V=21
+M=7.0
+V=13
 
 # 1. clone first time
 # git clone https://github.com/raspberrypi/linux.git raspberrypi

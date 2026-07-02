@@ -611,7 +611,7 @@ LICENSE+="
 SLOT="0"
 KEYWORDS="~amd64"
 
-IUSE="+cli zsh-completion bash-completion fish-completion"
+IUSE="cli"
 
 DOCS=(
 	README.md
@@ -635,25 +635,13 @@ src_install() {
 		dobin "$(cargo_target_dir)/ya"
 	fi
 
-	if use bash-completion; then
-		newbashcomp "${S}/yazi-boot/completions/yazi.bash" "yazi"
-		if use cli; then
-			newbashcomp "${S}/yazi-cli/completions/ya.bash" "ya"
-		fi
-	fi
-
-	if use zsh-completion; then
-		dozshcomp "${S}/yazi-boot/completions/_yazi"
-		if use cli; then
-			dozshcomp "${S}/yazi-cli/completions/_ya"
-		fi
-	fi
-
-	if use fish-completion; then
-		dofishcomp "${S}/yazi-boot/completions/yazi.fish"
-		if use cli; then
-			dofishcomp "${S}/yazi-cli/completions/ya.fish"
-		fi
+	newbashcomp "${S}/yazi-boot/completions/yazi.bash" "yazi"
+	dozshcomp "${S}/yazi-boot/completions/_yazi"
+	dofishcomp "${S}/yazi-boot/completions/yazi.fish"
+	if use cli; then
+		newbashcomp "${S}/yazi-cli/completions/ya.bash" "ya"
+		dozshcomp "${S}/yazi-boot/completions/_ya"
+		dofishcomp "${S}/yazi-boot/completions/ya.fish"
 	fi
 
 	einstalldocs

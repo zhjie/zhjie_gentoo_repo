@@ -15,7 +15,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 ~arm arm64 ~riscv ~x86"
 
-IUSE="zsh-completion bash-completion fish-completion"
+IUSE=""
 
 BDEPEND=">=dev-lang/go-1.26"
 
@@ -45,13 +45,7 @@ src_install() {
 
 	einstalldocs
 
-	if use bash-completion; then
-		newbashcomp completions/${PN}-completion.bash ${PN}
-	fi
-	if use fish-completion; then
-		dofishcomp completions/${PN}.fish
-	fi
-	if use zsh-completion; then
-		newzshcomp completions/${PN}.zsh _${PN}
-	fi
+	newbashcomp completions/${PN}-completion.bash ${PN}
+	dofishcomp completions/${PN}.fish
+	newzshcomp completions/${PN}.zsh _${PN}
 }

@@ -382,6 +382,75 @@ def run_ebuild_manifest(ebuild_path):
         print(e.stderr)
         return False
 
+def generate_rpi_patch(upstream_ver):
+    """Generates the rpi kernel patch by integrating rpi.sh logic."""
+    rpi_repo = "/home/zhjie/workspace/src/raspberrypi"
+    if not os.path.isdir(rpi_repo):
+        print(f"Error: Raspberry Pi repository directory not found: {rpi_repo}")
+        return False
+        
+    parts = upstream_ver.split(".")
+    if len(parts) < 2:
+        print(f"Error: Invalid upstream version format: {upstream_ver}")
+        return False
+    M = f"{parts[0]}.{parts[1]}"
+    
+    try:
+        print(f"Checking out rpi-{M}.y in {rpi_repo}...")
+        subprocess.run(["git", "checkout", f"rpi-{M}.y"], cwd=rpi_repo, check=True)
+        
+        print(f"Pulling latest origin/rpi-{M}.y...")
+        subprocess.run(["git", "pull", "-v", "origin", f"rpi-{M}.y"], cwd=rpi_repo, check=True)
+        
+        print(f"Fetching latest upstream linux-{M}.y...")
+        subprocess.run(["git", "fetch", "-v", "upstream", f"linux-{M}.y"], cwd=rpi_repo, check=True)
+        
+        print("Finding merge base...")
+        res = subprocess.run(
+            ["git", "merge-base", f"rpi-{M}.y", "FETCH_HEAD"],
+            cwd=rpi_repo,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        base_commit = res.stdout.strip()
+        print(f"Found base commit: {base_commit}")
+        
+        patch_dir = os.path.join(REPO_DIR, "sys-kernel", "networkaudio-sources", "files", "rpi")
+        os.makedirs(patch_dir, exist_ok=True)
+        patch_file = os.path.join(patch_dir, f"rpi-{upstream_ver}.patch")
+        print(f"Generating patch to {patch_file}...")
+        
+        with open(patch_file, "w", encoding="utf-8") as f:
+            subprocess.run(
+                ["git", "diff", f"{base_commit}..rpi-{M}.y"],
+                cwd=rpi_repo,
+                stdout=f,
+                check=True
+            )
+        print("Patch generated successfully.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error during rpi patch generation: {e}")
+        return False
+
+def get_gentoo_sources_genpatches_ver(version):
+    """Extracts K_GENPATCHES_VER from the matching gentoo-sources ebuild in the gentoo main tree."""
+    main_dir = "/var/db/repos/gentoo/sys-kernel/gentoo-sources"
+    eb_path = os.path.join(main_dir, f"gentoo-sources-{version}.ebuild")
+    if not os.path.isfile(eb_path):
+        print(f"Error: Matching gentoo-sources ebuild not found at {eb_path}")
+        return None
+    try:
+        with open(eb_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        match = re.search(r'\bK_GENPATCHES_VER="([^"]+)"', content)
+        if match:
+            return match.group(1)
+    except Exception as e:
+        print(f"Error reading gentoo-sources ebuild: {e}")
+    return None
+
 # ── Main Updater Logic ─────────────────────────────────────────────────────────
 
 def run_update():
@@ -421,13 +490,13 @@ def run_update():
         "media-sound/sacd-extract": {"type": "github", "url": "https://github.com/EuFlo/sacd-ripper.git", "prefix": "", "exclude_prerelease": True, "pattern": r"^0\.3\."},
         
         # Auto-updatable:
+        "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
         "app-admin/chezmoi": {"type": "go", "url": "https://github.com/twpayne/chezmoi.git", "prefix": "v"},
         "app-misc/yazi": {"type": "yazi", "url": "https://github.com/sxyazi/yazi.git", "prefix": "v"},
         "app-misc/herdr-bin": {"type": "github", "url": "https://github.com/ogulcancelik/herdr.git", "prefix": "v"},
         "dev-util/copilot-language-server-bin": {"type": "github", "url": "https://github.com/github/copilot-language-server-release.git", "prefix": ""},
         
         # Notify-only / Excluded from auto-updates:
-        "sys-kernel/networkaudio-sources": {"type": "networkaudio_sources"},
         "media-libs/libgmpris": {"type": "libgmpris"}
     }
     
@@ -502,17 +571,24 @@ def run_update():
             xanmod_match = re.search(r'XANMOD_COMMIT="([^"]+)"', content)
             direct_match = re.search(r'DIRETTA_DIRECT_VER="([^"]+)"', content)
             alsa_match = re.search(r'DIRETTA_ALSA_VER="([^"]+)"', content)
+            genpatches_match = re.search(r'K_GENPATCHES_VER="([^"]+)"', content)
             
             curr_cachy = cachy_match.group(1) if cachy_match else None
             curr_xanmod = xanmod_match.group(1) if xanmod_match else None
             curr_direct = direct_match.group(1) if direct_match else None
             curr_alsa = alsa_match.group(1) if alsa_match else None
+            curr_genpatches = genpatches_match.group(1) if genpatches_match else None
+            
+            latest_genpatches = get_gentoo_sources_genpatches_ver(upstream_ver)
             
             # Print current vs latest values in the first phase
             print(f"  CachyOS patches: {curr_cachy[:8] if curr_cachy else 'None'} -> {latest_cachy[:8] if latest_cachy else 'Unknown'}")
             print(f"  Xanmod patches: {curr_xanmod[:8] if curr_xanmod else 'None'} -> {latest_xanmod[:8] if latest_xanmod else 'Unknown'}")
             print(f"  Diretta Direct: {curr_direct} -> {latest_diretta_direct if latest_diretta_direct else 'Unknown'}")
             print(f"  Diretta Alsa: {curr_alsa} -> {latest_diretta_alsa if latest_diretta_alsa else 'Unknown'}")
+            print(f"  Genpatches: {curr_genpatches} -> {latest_genpatches if latest_genpatches else 'Unknown'}")
+            
+            has_kernel_bump = parse_version(upstream_ver) > parse_version(local_ver)
             
             needs_update = False
             update_details = []
@@ -529,12 +605,14 @@ def run_update():
             if latest_diretta_alsa and latest_diretta_alsa != curr_alsa:
                 needs_update = True
                 update_details.append(f"Diretta Alsa: {curr_alsa}->{latest_diretta_alsa}")
-                
-            has_kernel_bump = parse_version(upstream_ver) > parse_version(local_ver)
-            
-            status_parts = []
+            if latest_genpatches and latest_genpatches != curr_genpatches:
+                needs_update = True
+                update_details.append(f"Genpatches: {curr_genpatches}->{latest_genpatches}")
             if has_kernel_bump:
-                status_parts.append(f"Kernel {upstream_ver} (manual)")
+                needs_update = True
+                update_details.append(f"Kernel bump: {local_ver}->{upstream_ver}")
+                
+            status_parts = []
             
             if needs_update:
                 if args.dry_run:
@@ -551,30 +629,78 @@ def run_update():
                     if latest_diretta_alsa and curr_alsa:
                         new_content = re.sub(r'DIRETTA_ALSA_VER="[^"]+"', f'DIRETTA_ALSA_VER="{latest_diretta_alsa}"', new_content)
                         
-                    try:
-                        with open(ebuild_path, "w", encoding="utf-8") as f:
-                            f.write(new_content)
-                        print(f"  Updated ebuild {local_ebuild} with new variables.")
+                    if not latest_genpatches:
+                        print(f"  Error: Could not determine K_GENPATCHES_VER for gentoo-sources-{upstream_ver}")
+                        status_parts.append("Failed to find K_GENPATCHES_VER")
+                        results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
+                        continue
+                    new_content = re.sub(r'K_GENPATCHES_VER="[^"]+"', f'K_GENPATCHES_VER="{latest_genpatches}"', new_content)
                         
-                        manifest_ok = run_ebuild_manifest(ebuild_path)
+                    # Handle rpi patch generation if kernel bump
+                    rpi_ok = True
+                    new_patch_path = None
+                    if has_kernel_bump:
+                        rpi_ok = generate_rpi_patch(upstream_ver)
+                        if rpi_ok:
+                            new_patch_path = os.path.join(pkg_dir, "files", "rpi", f"rpi-{upstream_ver}.patch")
+                            
+                    if not rpi_ok:
+                        print("  Failed to generate rpi patch. Rolling back/aborting.")
+                        status_parts.append("rpi patch generation failed")
+                        results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
+                        continue
+                        
+                    target_ebuild_path = os.path.join(pkg_dir, f"{name}-{upstream_ver}.ebuild") if has_kernel_bump else ebuild_path
+                    
+                    try:
+                        with open(target_ebuild_path, "w", encoding="utf-8") as f:
+                            f.write(new_content)
+                        print(f"  Written ebuild {os.path.basename(target_ebuild_path)} with new variables.")
+                        
+                        manifest_ok = run_ebuild_manifest(target_ebuild_path)
                         if manifest_ok:
+                            if has_kernel_bump:
+                                # Remove old ebuild
+                                os.remove(ebuild_path)
+                                # Remove old patch
+                                old_patch_path = os.path.join(pkg_dir, "files", "rpi", f"rpi-{local_ver}.patch")
+                                if os.path.exists(old_patch_path):
+                                    os.remove(old_patch_path)
+                                # Clean up manifest again after deleting files
+                                run_ebuild_manifest(target_ebuild_path)
+                                print(f"  Successfully bumped kernel to {upstream_ver}")
+                            else:
+                                print(f"  Successfully updated existing ebuild to new variables.")
+                                
                             status_parts.append(f"Updated: {', '.join(update_details)}")
                             results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "green"))
                         else:
                             # Revert
-                            with open(ebuild_path, "w", encoding="utf-8") as f:
-                                f.write(content)
+                            if has_kernel_bump:
+                                if os.path.exists(target_ebuild_path):
+                                    os.remove(target_ebuild_path)
+                                if new_patch_path and os.path.exists(new_patch_path):
+                                    os.remove(new_patch_path)
+                            else:
+                                with open(ebuild_path, "w", encoding="utf-8") as f:
+                                    f.write(content)
                             run_ebuild_manifest(ebuild_path)
                             status_parts.append("Manifest failed (rolled back)")
                             results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
                     except Exception as e:
                         print(f"  Failed to update ebuild: {e}")
+                        if has_kernel_bump:
+                            if os.path.exists(target_ebuild_path):
+                                os.remove(target_ebuild_path)
+                            if new_patch_path and os.path.exists(new_patch_path):
+                                os.remove(new_patch_path)
+                            run_ebuild_manifest(ebuild_path)
                         status_parts.append(f"Update failed: {e}")
                         results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "red"))
             else:
                 if not status_parts:
                     status_parts.append("Up to date")
-                results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "cyan" if not has_kernel_bump else "yellow"))
+                results.append((pkg_path, local_ver, upstream_ver, "; ".join(status_parts), "cyan"))
             continue
         elif ptype == "notify_only":
             if cfg["url"] == "gentoo-sources":
@@ -642,6 +768,7 @@ def run_update():
                             ]
                             subprocess.run(cmd, env=env, stdout=sys.stderr, check=True)
                             os.remove(old_ebuild_path)
+                            run_ebuild_manifest(new_ebuild_path)
                             results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
                             continue
                         except Exception as e:
@@ -663,6 +790,7 @@ def run_update():
                             ]
                             subprocess.run(cmd, env=env, stdout=sys.stderr, check=True)
                             os.remove(old_ebuild_path)
+                            run_ebuild_manifest(new_ebuild_path)
                             results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
                             continue
                         except Exception as e:
@@ -697,6 +825,7 @@ def run_update():
                         manifest_ok = run_ebuild_manifest(new_ebuild_path)
                         if manifest_ok:
                             os.remove(old_ebuild_path)
+                            run_ebuild_manifest(new_ebuild_path)
                             print(f"  Successfully updated to {upstream_ver} and removed old ebuild.")
                             results.append((pkg_path, local_ver, upstream_ver, "Updated successfully", "green"))
                         else:

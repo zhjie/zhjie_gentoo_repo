@@ -103,6 +103,7 @@ def main():
         if latest_ebuild_path != new_ebuild_path:
             os.remove(latest_ebuild_path)
             print(f"Removed older ebuild: {latest_ebuild_path}")
+            subprocess.run(["ebuild", new_ebuild_name, "manifest"], cwd=pkg_dir, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error: Manifest generation failed (likely because dependencies are not uploaded yet): {e}")
         if os.path.exists(new_ebuild_path):
